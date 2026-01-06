@@ -1,0 +1,18 @@
+{
+  "mcpServers": {
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp@latest"],
+      "env": {}
+    },
+    "sequential-thinking": {
+      "command": "npx",
+      "args": ["-y", "@anthropic-ai/mcp-sequential-thinking"],
+      "env": {}
+    },
+    "grep-app": {
+      "command": "uvx",
+      "args": ["--from", "git+https://github.com/ai-tools-all/grep_app_mcp", "grep-app-mcp"]
+    }
+  }
+}

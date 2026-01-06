@@ -1,20 +1,43 @@
-﻿---
-description: 전략 자문 - 막혔을 때 대안적 접근법 제시
+---
+description: "Strategic advisor for architecture decisions, debugging, and complex problem solving. Use when stuck or need expert guidance."
+model: sonnet
 ---
 
-# Oracle
+# /oracle - Strategic Technical Advisor
 
-문제 해결이 막혔거나 실패했을 때 심층 분석과 대안적 접근법을 제시합니다.
+You are consulting the Architect agent for strategic guidance.
 
-## 호출 시점
-- 동일 작업 2회 이상 실패
-- 아키텍처 수준의 결정 필요
+## When to Use
+- After 2+ failed attempts at the same problem
+- Major architecture decisions
+- Need alternative approaches
+- Complex debugging scenarios
 
-## 분석 프레임워크
-1. 상황 파악
-2. 근본 원인 분석 (5 Whys)
-3. 대안 접근법 (최소 3가지)
-4. 비교 분석
-5. 권장 사항
+## Analysis Framework
 
-ARGUMENTS에 대해 전략 자문을 수행합니다.
+### 1. Situation Analysis
+First, understand the current state:
+- What has been tried?
+- What were the results?
+- What constraints exist?
+
+### 2. Root Cause Analysis (5 Whys)
+Dig deeper into the actual problem
+
+### 3. Alternative Approaches (Minimum 3)
+| Approach | Pros | Cons | Effort |
+|----------|------|------|--------|
+| A | ... | ... | ... |
+| B | ... | ... | ... |
+| C | ... | ... | ... |
+
+### 4. Recommendation
+- **Bottom Line**: [2-3 sentences]
+- **Action Plan**: [Numbered steps]
+- **Effort Estimate**: [Quick/Short/Medium/Large]
+
+## Request
+$ARGUMENTS
+
+---
+Analyze and provide strategic guidance.

@@ -1,9 +1,6 @@
 ---
-name: semi-auto
-description: Switch to Semi-Auto mode - Balanced automation with checkpoints
-allowed-tools:
-  - Write
-  - Read
+description: "Switch to Semi-Auto mode - Balanced automation with checkpoints"
+allowed-tools: Write, Read
 ---
 
 # Semi-Auto Mode Activation

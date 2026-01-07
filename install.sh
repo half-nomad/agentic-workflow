@@ -24,6 +24,21 @@ print_warn() { echo -e "${YELLOW}[!] $1${NC}"; }
 print_error() { echo -e "${RED}[-] $1${NC}"; }
 print_dim() { echo -e "${GRAY}    $1${NC}"; }
 
+# 경로 변환 함수: PowerShell 명령어를 bash로 변환 (Linux/macOS용)
+convert_hooks_path() {
+    local content="$1"
+    local hooks_path="$HOME/.claude/hooks"
+    # 경로의 sed 특수문자 이스케이프 (& / \ 등)
+    local escaped_path
+    escaped_path=$(printf '%s\n' "$hooks_path" | sed 's/[&/\]/\\&/g')
+
+    # PowerShell 명령어를 bash로 변환
+    # powershell -NoProfile -ExecutionPolicy Bypass -File "hooks/xxx.ps1" -> bash "$HOME/.claude/hooks/xxx.sh"
+    echo "$content" | sed -E \
+        -e "s|powershell -NoProfile -ExecutionPolicy Bypass -File \"hooks/([^\"]+)\\.ps1\"|bash \"${escaped_path}/\\1.sh\"|g" \
+        -e "s|\"hooks/|\"${escaped_path}/|g"
+}
+
 # 스크립트 위치 찾기
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SOURCE_PATH="$SCRIPT_DIR"
@@ -116,26 +131,38 @@ fi
 # 4. 설정 파일 병합
 print_step "설정 파일 병합..."
 
-if command -v jq &> /dev/null; then
-    # settings.json 병합
-    SETTINGS_SOURCE="$SOURCE_PATH/settings.json"
-    SETTINGS_DEST="$CLAUDE_HOME/settings.json"
+SETTINGS_SOURCE="$SOURCE_PATH/settings.json"
+SETTINGS_DEST="$CLAUDE_HOME/settings.json"
+MCP_SOURCE="$SOURCE_PATH/.mcp.json"
+MCP_DEST="$HOME/.mcp.json"
 
+if command -v jq &> /dev/null; then
+    # settings.json 병합 (hooks 이벤트별 배열 병합 포함)
     if [ -f "$SETTINGS_SOURCE" ]; then
+        # 플랫폼별 경로 변환 적용
+        SETTINGS_CONVERTED=$(convert_hooks_path "$(cat "$SETTINGS_SOURCE")")
+
         if [ -f "$SETTINGS_DEST" ]; then
-            jq -s '.[0] * .[1] | .permissions.allow = ((.[0].permissions.allow // []) + (.[1].permissions.allow // []) | unique)' \
-                "$SETTINGS_DEST" "$SETTINGS_SOURCE" > "$SETTINGS_DEST.tmp" && mv "$SETTINGS_DEST.tmp" "$SETTINGS_DEST"
-            print_success "settings.json 병합됨"
+            # hooks 이벤트별 배열 병합 + permissions.allow 병합
+            echo "$SETTINGS_CONVERTED" | jq -s '
+              .[0] as $old | .[1] as $new |
+              $old * $new |
+              .hooks = (
+                ($old.hooks // {}) | to_entries | map({key, value: .value}) |
+                . + (($new.hooks // {}) | to_entries | map({key, value: .value})) |
+                group_by(.key) | map({key: .[0].key, value: (map(.value) | add)}) |
+                from_entries
+              ) |
+              .permissions.allow = (($old.permissions.allow // []) + ($new.permissions.allow // []) | unique)
+            ' "$SETTINGS_DEST" - > "$SETTINGS_DEST.tmp" && mv "$SETTINGS_DEST.tmp" "$SETTINGS_DEST"
+            print_success "settings.json 병합됨 (hooks 이벤트별 배열 병합)"
         else
-            cp "$SETTINGS_SOURCE" "$SETTINGS_DEST"
-            print_success "settings.json 복사됨 (새 파일)"
+            echo "$SETTINGS_CONVERTED" > "$SETTINGS_DEST"
+            print_success "settings.json 복사됨 (새 파일, 경로 변환 적용)"
         fi
     fi
 
     # .mcp.json 병합
-    MCP_SOURCE="$SOURCE_PATH/.mcp.json"
-    MCP_DEST="$HOME/.mcp.json"
-
     if [ -f "$MCP_SOURCE" ]; then
         if [ -f "$MCP_DEST" ]; then
             jq -s '.[0] * .[1] | .mcpServers = (.[0].mcpServers // {}) * (.[1].mcpServers // {})' \
@@ -147,9 +174,39 @@ if command -v jq &> /dev/null; then
         fi
     fi
 else
-    print_warn "jq가 설치되지 않아 설정 파일을 단순 복사합니다."
-    [ -f "$SOURCE_PATH/settings.json" ] && cp "$SOURCE_PATH/settings.json" "$CLAUDE_HOME/settings.json"
-    [ -f "$SOURCE_PATH/.mcp.json" ] && cp "$SOURCE_PATH/.mcp.json" "$HOME/.mcp.json"
+    print_warn "============================================"
+    print_warn "jq가 설치되지 않았습니다!"
+    print_warn "설정 파일을 단순 복사하므로 기존 설정이 손실됩니다."
+    print_warn "jq 설치 권장: sudo apt install jq (Ubuntu/Debian)"
+    print_warn "             brew install jq (macOS)"
+    print_warn "============================================"
+
+    # settings.json 처리 (백업 후 복사)
+    if [ -f "$SETTINGS_SOURCE" ]; then
+        # 플랫폼별 경로 변환 적용
+        SETTINGS_CONVERTED=$(convert_hooks_path "$(cat "$SETTINGS_SOURCE")")
+
+        if [ -f "$SETTINGS_DEST" ]; then
+            BACKUP_PATH="$SETTINGS_DEST.backup.$(date +%Y%m%d_%H%M%S)"
+            cp "$SETTINGS_DEST" "$BACKUP_PATH"
+            print_warn "기존 settings.json 백업됨: $BACKUP_PATH"
+            print_warn "기존 설정이 덮어쓰기됩니다 (jq 없이 병합 불가)"
+        fi
+        echo "$SETTINGS_CONVERTED" > "$SETTINGS_DEST"
+        print_success "settings.json 복사됨 (경로 변환 적용)"
+    fi
+
+    # .mcp.json 처리 (백업 후 복사)
+    if [ -f "$MCP_SOURCE" ]; then
+        if [ -f "$MCP_DEST" ]; then
+            BACKUP_PATH="$MCP_DEST.backup.$(date +%Y%m%d_%H%M%S)"
+            cp "$MCP_DEST" "$BACKUP_PATH"
+            print_warn "기존 .mcp.json 백업됨: $BACKUP_PATH"
+            print_warn "기존 설정이 덮어쓰기됩니다 (jq 없이 병합 불가)"
+        fi
+        cp "$MCP_SOURCE" "$MCP_DEST"
+        print_success ".mcp.json 복사됨"
+    fi
 fi
 
 # 5. MCP 설치 안내

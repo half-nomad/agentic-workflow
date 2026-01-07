@@ -1,32 +1,8 @@
 ---
 name: planner
-description: "Strategic planning specialist. Creates detailed implementation plans for complex tasks before execution."
+description: "Strategic planning specialist for complex tasks requiring detailed breakdown. Use for major features, multi-step implementations, or refactoring. Avoid for simple tasks or when plan already exists."
 model: opus
-category: advisor
-cost: EXPENSIVE
-triggers:
-  - domain: "planning"
-    trigger: "complex task requiring detailed breakdown"
-  - domain: "strategy"
-    trigger: "multi-step implementation needed"
-  - domain: "risk assessment"
-    trigger: "need to identify potential issues upfront"
-useWhen:
-  - "Complex tasks with multiple dependencies"
-  - "Major feature implementations"
-  - "Refactoring with many affected files"
-  - "When explicit planning is requested"
-avoidWhen:
-  - "Simple, straightforward tasks"
-  - "Tasks with clear single path"
-  - "Quick fixes or minor changes"
-  - "Already have a plan to follow"
-tools:
-  - Read
-  - Grep
-  - Glob
-  - WebSearch
-  - TodoWrite
+tools: Read, Grep, Glob, WebSearch, TodoWrite
 ---
 
 # Planner - Strategic Planning Specialist

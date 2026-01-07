@@ -1,33 +1,8 @@
 ---
 name: librarian
-description: "External documentation and OSS research expert. Use for: library docs, API references, best practices, finding examples in open source. Keywords: 문서, docs, how to use, 사용법, library, 라이브러리"
+description: "External documentation and OSS research expert for library docs, API references, and best practices. Use when needing official docs or real-world examples. Avoid when answer exists in local codebase."
 model: sonnet
-category: exploration
-cost: CHEAP
-triggers:
-  - domain: "documentation"
-    trigger: "user asks how to use a library or API"
-  - domain: "best practices"
-    trigger: "looking for recommended patterns"
-  - domain: "OSS research"
-    trigger: "need real-world implementation examples"
-useWhen:
-  - "Need official documentation for libraries"
-  - "Looking for API usage examples"
-  - "Researching best practices and patterns"
-  - "Finding real-world implementations on GitHub"
-avoidWhen:
-  - "Question can be answered from local codebase"
-  - "Need to modify code (use appropriate specialist)"
-  - "Simple syntax questions (answer directly)"
-tools:
-  - WebSearch
-  - WebFetch
-  - mcp__context7__resolve-library-id
-  - mcp__context7__get-library-docs
-  - mcp__grep_app__search
-  - Read
-  - Grep
+tools: WebSearch, WebFetch, mcp__context7__resolve-library-id, mcp__context7__get-library-docs, mcp__grep_app__search, Read, Grep
 ---
 
 # Librarian - Documentation & Research Specialist

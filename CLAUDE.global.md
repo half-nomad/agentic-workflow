@@ -141,3 +141,26 @@ Requirements before signaling:
 3. **Ignoring Failures** - Escalate to `@architect` after 2 failures
 4. **Premature Completion** - Verify before claiming done
 5. **Single Sequential Search** - Always run parallel searches
+
+---
+
+## Extended Documentation Triggers
+
+상세한 규칙이 필요할 때 `docs/rules/` 디렉토리의 문서를 참조합니다.
+
+### TypeScript 작업 시
+TypeScript/TSX 파일 작업 시 → `docs/rules/typescript.md` 참조
+- 타입 안전성, strict mode, null handling
+- import 구조, async/await 패턴
+
+### 코드 품질 규칙
+품질/스타일 가이드 필요 시 → `docs/rules/global.md` 참조
+- Simplicity First 원칙
+- Clean Code 규칙
+- Communication 스타일
+
+### Sisyphus Phase 상세
+Phase 시스템 상세 규칙 필요 시 → `docs/rules/sisyphus-phases.md` 참조
+- 각 Phase별 상세 프로토콜
+- 모드별 동작 차이
+- Recovery 전략

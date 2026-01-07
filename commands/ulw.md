@@ -1,10 +1,6 @@
 ---
-name: ulw
-description: Switch to Ultrawork mode - Full automation with Ralph Loop
-allowed-tools:
-  - Write
-  - Read
-  - TodoWrite
+description: "Switch to Ultrawork mode - Full automation with Ralph Loop"
+allowed-tools: Write, Read, TodoWrite
 ---
 
 # Ultrawork Mode Activation

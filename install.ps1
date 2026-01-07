@@ -19,6 +19,15 @@ function Write-Success { param($Message) Write-Host "[+] $Message" -ForegroundCo
 function Write-Warn { param($Message) Write-Host "[!] $Message" -ForegroundColor Yellow }
 function Write-Err { param($Message) Write-Host "[-] $Message" -ForegroundColor Red }
 
+# hooks 경로 변환 함수: 상대 경로 "hooks/"를 절대 경로로 변환
+function Convert-HooksPath {
+    param([string]$JsonContent)
+    $hooksPath = Join-Path $env:USERPROFILE ".claude\hooks"
+    # JSON 내에서 이스케이프된 백슬래시로 변환
+    $escaped = $hooksPath -replace '\\', '\\\\'
+    return $JsonContent -replace '"hooks/', "`"$escaped\\"
+}
+
 # 경로 설정
 $SourcePath = $PSScriptRoot
 $ClaudeHome = Join-Path $env:USERPROFILE ".claude"
@@ -137,7 +146,10 @@ $SettingsSource = Join-Path $SourcePath "settings.json"
 $SettingsDest = Join-Path $ClaudeHome "settings.json"
 
 if (Test-Path $SettingsSource) {
-    $NewSettings = Get-Content -Path $SettingsSource -Raw | ConvertFrom-Json
+    # 소스 파일 읽기 및 hooks 경로 변환
+    $SourceContent = Get-Content -Path $SettingsSource -Raw
+    $SourceContent = Convert-HooksPath -JsonContent $SourceContent
+    $NewSettings = $SourceContent | ConvertFrom-Json
 
     if (Test-Path $SettingsDest) {
         $ExistingSettings = Get-Content -Path $SettingsDest -Raw | ConvertFrom-Json
@@ -154,15 +166,34 @@ if (Test-Path $SettingsSource) {
             $ExistingSettings.permissions.allow = $AllPermissions
         }
 
-        # hooks 병합
+        # hooks 병합: 각 이벤트별로 배열 병합
         if ($NewSettings.hooks) {
-            $ExistingSettings | Add-Member -NotePropertyName "hooks" -NotePropertyValue $NewSettings.hooks -Force
+            if (-not $ExistingSettings.hooks) {
+                $ExistingSettings | Add-Member -NotePropertyName "hooks" -NotePropertyValue @{} -Force
+            }
+
+            # 각 이벤트 타입(UserPromptSubmit, PostToolUse, Stop 등)을 순회
+            foreach ($EventType in $NewSettings.hooks.PSObject.Properties) {
+                $EventName = $EventType.Name
+                $NewHooksArray = @($EventType.Value)
+
+                if ($ExistingSettings.hooks.PSObject.Properties[$EventName]) {
+                    # 기존 이벤트가 있으면 배열 병합 (중복 제거 안함)
+                    $ExistingHooksArray = @($ExistingSettings.hooks.$EventName)
+                    $MergedArray = $ExistingHooksArray + $NewHooksArray
+                    $ExistingSettings.hooks.$EventName = $MergedArray
+                } else {
+                    # 기존 이벤트가 없으면 새로 추가
+                    $ExistingSettings.hooks | Add-Member -NotePropertyName $EventName -NotePropertyValue $NewHooksArray -Force
+                }
+            }
         }
 
         $ExistingSettings | ConvertTo-Json -Depth 10 | Out-File -FilePath $SettingsDest -Encoding UTF8
         Write-Success "settings.json 병합됨"
     } else {
-        Copy-Item -Path $SettingsSource -Destination $SettingsDest -Force
+        # 새 파일: 경로 변환 적용된 내용 저장
+        $NewSettings | ConvertTo-Json -Depth 10 | Out-File -FilePath $SettingsDest -Encoding UTF8
         Write-Success "settings.json 복사됨 (새 파일)"
     }
 }

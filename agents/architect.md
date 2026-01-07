@@ -1,32 +1,8 @@
 ---
 name: architect
-description: "Strategic technical advisor for architecture decisions, code review, debugging strategy, and complex problem solving. Use when: stuck 2+ times, major design decisions, need alternative approaches. Keywords: 설계, architecture, strategy, 전략, review"
+description: "Strategic technical advisor for architecture decisions, code review, and debugging strategy. Use when stuck 2+ times, making major design decisions, or need alternative approaches. Avoid for first attempts or simple implementations."
 model: opus
-category: advisor
-cost: CHEAP
-triggers:
-  - domain: "architecture"
-    trigger: "major design decisions needed"
-  - domain: "debugging"
-    trigger: "stuck after multiple attempts"
-  - domain: "code review"
-    trigger: "need critical assessment of approach"
-useWhen:
-  - "Stuck after 2+ failed attempts"
-  - "Making architectural decisions"
-  - "Need alternative approach suggestions"
-  - "Evaluating trade-offs between options"
-  - "Cross-cutting concerns affecting multiple components"
-avoidWhen:
-  - "First attempt at any task"
-  - "Simple file operations"
-  - "Questions answerable from existing code"
-  - "Straightforward implementations"
-tools:
-  - Read
-  - Grep
-  - Glob
-  - WebSearch
+tools: Read, Grep, Glob, WebSearch
 ---
 
 # Architect - Strategic Technical Advisor

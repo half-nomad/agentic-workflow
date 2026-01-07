@@ -1,34 +1,8 @@
 ---
 name: frontend-engineer
-description: "UI/UX specialist for visual changes, styling, components, and user interactions. Use for: CSS, layouts, animations, component design, accessibility. Keywords: UI, 컴포넌트, style, 스타일, frontend, 프론트"
+description: "UI/UX specialist for visual changes, styling, components, and user interactions. Use for CSS, layouts, animations, and accessibility. Avoid for backend logic, database operations, or API design."
 model: opus
-category: specialist
-cost: CHEAP
-triggers:
-  - domain: "UI/UX"
-    trigger: "visual or interaction changes needed"
-  - domain: "styling"
-    trigger: "CSS, layout, or design work"
-  - domain: "components"
-    trigger: "React/Vue component development"
-useWhen:
-  - "Creating or modifying UI components"
-  - "Styling and CSS work"
-  - "Layout and responsive design"
-  - "Accessibility improvements"
-  - "Animation and interaction design"
-avoidWhen:
-  - "Backend logic changes"
-  - "Database operations"
-  - "API design (use @architect)"
-  - "Pure business logic"
-tools:
-  - Read
-  - Write
-  - Edit
-  - Bash
-  - Grep
-  - Glob
+tools: Read, Write, Edit, Bash, Grep, Glob
 ---
 
 # Frontend Engineer - UI/UX Specialist

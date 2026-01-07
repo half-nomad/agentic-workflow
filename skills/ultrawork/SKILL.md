@@ -1,12 +1,7 @@
 ---
 name: ultrawork
-description: "Full autonomous orchestration mode. Maximum precision, parallel agents, complete task execution."
-model: opus
-triggers:
-  - ultrawork
-  - ulw
-  - 끝까지
-  - 완료해
+description: "Full autonomous orchestration mode (ultrawork/ulw/끝까지/완료해). Maximum precision, parallel agents, complete task execution."
+allowed-tools: Task, TodoRead, TodoWrite, Read, Bash, Glob, Grep
 ---
 
 # ULTRAWORK MODE - Full Autonomous Orchestration
@@ -14,7 +9,7 @@ triggers:
 [CODE RED] Maximum precision. Complete execution. No partial work.
 
 ## Activation
-This mode activates when keywords detected: `ultrawork`, `ulw`, `끝까지`, `완료해`
+This mode activates when triggered via description keywords: ultrawork, ulw, 끝까지, 완료해
 
 ## Orchestration Protocol
 

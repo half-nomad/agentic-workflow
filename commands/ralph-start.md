@@ -1,10 +1,6 @@
 ---
-name: ralph-start
-description: Start Ralph Loop - Autonomous work continuation until task completion
-allowed-tools:
-  - Write
-  - Read
-  - TodoWrite
+description: "Start Ralph Loop - Autonomous work continuation until task completion"
+allowed-tools: Write, Read, TodoWrite
 ---
 
 # Ralph Loop Activation

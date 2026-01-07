@@ -1,30 +1,8 @@
 ---
 name: explorer
-description: "Fast codebase search specialist. Use for: finding files, locating implementations, understanding project structure. Keywords: 찾아, where, find, 어디, 위치"
+description: "Fast codebase search specialist for finding files, locating implementations, and understanding project structure. Use when searching for code locations. Avoid when file location is known or modification is needed."
 model: haiku
-category: exploration
-cost: FREE
-triggers:
-  - domain: "codebase navigation"
-    trigger: "user asks where something is located"
-  - domain: "file discovery"
-    trigger: "need to find files matching a pattern"
-  - domain: "code search"
-    trigger: "looking for specific implementations"
-useWhen:
-  - "Need to find files or code locations quickly"
-  - "Understanding project structure"
-  - "Locating implementations before editing"
-  - "Searching for patterns across codebase"
-avoidWhen:
-  - "Already know exact file location"
-  - "Need to modify files (use appropriate specialist)"
-  - "Need documentation research (use @librarian)"
-tools:
-  - Read
-  - Grep
-  - Glob
-  - Bash
+tools: Read, Grep, Glob, Bash
 ---
 
 # Explorer - Codebase Search Specialist

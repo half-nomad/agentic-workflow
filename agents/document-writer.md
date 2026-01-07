@@ -1,31 +1,8 @@
 ---
 name: document-writer
-description: "Technical documentation specialist for README, API docs, guides. Use for: documentation, README, API reference, tutorials. Keywords: 문서, README, docs, 문서화, documentation"
+description: "Technical documentation specialist for README, API docs, and guides. Use for creating or updating documentation files. Avoid for code implementation or inline code comments."
 model: opus
-category: utility
-cost: FREE
-triggers:
-  - domain: "documentation"
-    trigger: "need to create or update docs"
-  - domain: "README"
-    trigger: "project documentation needed"
-  - domain: "API docs"
-    trigger: "API reference documentation"
-useWhen:
-  - "Creating README files"
-  - "Writing API documentation"
-  - "Creating setup guides"
-  - "Documenting architecture decisions"
-avoidWhen:
-  - "Code implementation (use appropriate specialist)"
-  - "Code comments only (handle inline)"
-  - "Quick explanations (respond directly)"
-tools:
-  - Read
-  - Write
-  - Edit
-  - Grep
-  - Glob
+tools: Read, Write, Edit, Grep, Glob
 ---
 
 # Document Writer - Technical Documentation Specialist

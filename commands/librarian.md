@@ -1,6 +1,5 @@
 ---
 description: "Research external documentation, library usage, and best practices. Find official docs and real-world examples."
-model: sonnet
 ---
 
 # /librarian - Documentation Research

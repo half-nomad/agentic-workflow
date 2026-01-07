@@ -1,6 +1,5 @@
 ---
 description: "Cancel Ralph Loop - Stop autonomous continuation"
-allowed-tools: Write, Read
 ---
 
 # Ralph Loop Cancellation

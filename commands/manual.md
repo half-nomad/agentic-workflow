@@ -1,6 +1,5 @@
 ---
 description: "Switch to Manual mode - No automation, full user control"
-allowed-tools: Write, Read
 ---
 
 # Manual Mode Activation

@@ -1,6 +1,5 @@
 ---
 description: "Execute an approved plan step by step. Use after reviewing a plan created with /plan."
-model: sonnet
 ---
 
 # /execute - Execute Approved Plan

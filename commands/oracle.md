@@ -1,6 +1,6 @@
 ---
 description: "Strategic advisor for architecture decisions, debugging, and complex problem solving. Use when stuck or need expert guidance."
-model: sonnet
+model: opus
 ---
 
 # /oracle - Strategic Technical Advisor

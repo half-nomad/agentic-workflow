@@ -1,6 +1,5 @@
 ---
 description: "UI/UX specialist for visual changes, components, styling, and accessibility."
-model: sonnet
 ---
 
 # /frontend - UI/UX Engineering

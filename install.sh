@@ -25,9 +25,10 @@ print_error() { echo -e "${RED}[-] $1${NC}"; }
 print_dim() { echo -e "${GRAY}    $1${NC}"; }
 
 # 경로 변환 함수: PowerShell 명령어를 bash로 변환 (Linux/macOS용)
+# 주의: 이 함수는 CLAUDE_HOME 설정 후에 호출되어야 함
 convert_hooks_path() {
     local content="$1"
-    local hooks_path="$HOME/.claude/hooks"
+    local hooks_path="$CLAUDE_HOME/hooks"
     # 경로의 sed 특수문자 이스케이프 (& / \ 등)
     local escaped_path
     escaped_path=$(printf '%s\n' "$hooks_path" | sed 's/[&/\]/\\&/g')
@@ -42,13 +43,32 @@ convert_hooks_path() {
 # 스크립트 위치 찾기
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SOURCE_PATH="$SCRIPT_DIR"
-CLAUDE_HOME="$HOME/.claude"
+
+# WSL 환경에서 Windows 파일시스템 작업 감지
+if [[ "$SCRIPT_DIR" =~ ^/mnt/c/Users/([^/]+) ]]; then
+    WIN_USER="${BASH_REMATCH[1]}"
+    CLAUDE_HOME="/mnt/c/Users/$WIN_USER/.claude"
+    WSL_WINDOWS_MODE=true
+else
+    CLAUDE_HOME="$HOME/.claude"
+    WSL_WINDOWS_MODE=false
+fi
 
 echo ""
 echo -e "${MAGENTA}========================================${NC}"
 echo -e "${MAGENTA}  Agentic Workflow Installer (Bash)${NC}"
 echo -e "${MAGENTA}========================================${NC}"
 echo ""
+
+# WSL Windows 모드 감지 결과 출력
+if [ "$WSL_WINDOWS_MODE" = true ]; then
+    print_warn "WSL에서 Windows 파일시스템 감지됨"
+    print_warn "Windows 홈에 설치: $CLAUDE_HOME"
+    echo ""
+else
+    print_step "설치 위치: $CLAUDE_HOME"
+    echo ""
+fi
 
 # 1. 프로젝트 소스 경로 저장
 print_step "프로젝트 소스 경로 저장..."
@@ -134,7 +154,12 @@ print_step "설정 파일 병합..."
 SETTINGS_SOURCE="$SOURCE_PATH/settings.json"
 SETTINGS_DEST="$CLAUDE_HOME/settings.json"
 MCP_SOURCE="$SOURCE_PATH/.mcp.json"
-MCP_DEST="$HOME/.mcp.json"
+# MCP는 사용자 홈에 설치 (WSL Windows 모드면 Windows 홈)
+if [ "$WSL_WINDOWS_MODE" = true ]; then
+    MCP_DEST="/mnt/c/Users/$WIN_USER/.mcp.json"
+else
+    MCP_DEST="$HOME/.mcp.json"
+fi
 
 if command -v jq &> /dev/null; then
     # settings.json 병합 (hooks 이벤트별 배열 병합 포함)

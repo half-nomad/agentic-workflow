@@ -11,8 +11,8 @@
       "env": {}
     },
     "grep-app": {
-      "command": "uvx",
-      "args": ["--from", "git+https://github.com/ai-tools-all/grep_app_mcp", "grep-app-mcp"]
+      "type": "http",
+      "url": "https://mcp.grep.app"
     }
   }
 }

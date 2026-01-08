@@ -5,11 +5,6 @@
       "args": ["-y", "@upstash/context7-mcp@latest"],
       "env": {}
     },
-    "sequential-thinking": {
-      "command": "npx",
-      "args": ["-y", "@anthropic-ai/mcp-sequential-thinking"],
-      "env": {}
-    },
     "grep-app": {
       "type": "http",
       "url": "https://mcp.grep.app"

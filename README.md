@@ -133,11 +133,11 @@ claude commands
 키워드로 전체 자동화를 트리거합니다.
 
 ```bash
-# 다음 키워드 중 하나 사용
-ultrawork 전체 기능 테스트까지 완료해줘
-ulw 모든 TODO 구현하고 검증
-끝까지 진행해줘
-완료해
+# Trigger keywords
+ultrawork implement all features and test
+ulw complete all TODOs and verify
+finish everything
+complete all
 ```
 
 **토큰 사용량**: ~36K/세션 (기존 대비 67% 절감)

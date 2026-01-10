@@ -18,7 +18,7 @@
   "hooks": {
     "UserPromptSubmit": [
       {
-        "matcher": "ultrawork|ulw|끝까지|완료해|finish everything|complete all",
+        "matcher": "ultrawork|ulw|finish everything|complete all",
         "hooks": [
           {
             "type": "command",
@@ -27,7 +27,7 @@
         ]
       },
       {
-        "matcher": "ultrathink|깊게생각|deeply|think hard|심층분석",
+        "matcher": "ultrathink|deeply|think hard",
         "hooks": [
           {
             "type": "command",
@@ -36,16 +36,16 @@
         ]
       },
       {
-        "matcher": "search|찾아|검색|find|where|어디|위치",
+        "matcher": "search|find|where|locate",
         "hooks": [
           {
             "type": "command",
-            "command": "echo '[SEARCH MODE] Use @explorer agent for comprehensive codebase search'"
+            "command": "echo '[SEARCH MODE] Use @codebase-explorer agent for comprehensive codebase search'"
           }
         ]
       },
       {
-        "matcher": "analyze|분석|investigate|조사|살펴|review",
+        "matcher": "analyze|investigate|review|examine",
         "hooks": [
           {
             "type": "command",
@@ -54,7 +54,7 @@
         ]
       },
       {
-        "matcher": "docs|문서|library|라이브러리|how to use|사용법|documentation",
+        "matcher": "docs|library|how to use|documentation|reference",
         "hooks": [
           {
             "type": "command",

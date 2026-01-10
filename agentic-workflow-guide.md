@@ -13,8 +13,9 @@ agentic-workflow는 Claude Code CLI를 위한 토큰 효율적인 전문 에이�
 
 ### 주요 특징
 - 6개 전문 에이전트 (Explorer, Librarian, Architect, Frontend Engineer, Document Writer, Planner)
-- 7개 슬래시 커맨드 직접 호출 인터페이스
-- 자동화 훅 (키워드 감지, TODO 추적, 실패 복구)
+- 13개 슬래시 커맨드 (에이전트 호출, 모드 전환, 유틸리티)
+- 5개 자동화 훅 (키워드 감지, 컨텍스트 모니터, TODO 추적, 실패 복구)
+- 2개 스킬 (codebase-analysis, deep-research)
 - 3가지 작업 모드 (Manual, Semi-Auto, Ultrawork)
 
 ---
@@ -38,15 +39,33 @@ agentic-workflow는 Claude Code CLI를 위한 토큰 효율적인 전문 에이�
 
 에이전트를 직접 호출하거나 워크플로우를 실행하는 명령어입니다.
 
+#### 에이전트 호출
 | 커맨드 | 기능 | 사용 예시 |
 |--------|------|-----------|
-| `/explorer` | 코드베이스 검색 | `/explorer "인증 로직 찾아줘"` |
+| `/codebase-explorer` | 코드베이스 검색 | `/codebase-explorer "인증 로직 찾아줘"` |
 | `/librarian` | 문서 리서치 | `/librarian "React Query v5 사용법"` |
 | `/oracle` | 전략적 자문 (Architect) | `/oracle "이 에러 해결 방법"` |
 | `/frontend` | UI/UX 작업 | `/frontend "버튼 컴포넌트 만들어줘"` |
-| `/plan` | 작업 계획 수립 | `/plan "사용자 인증 구현"` |
-| `/execute` | 계획 실행 | `/execute` 또는 `/execute plan.md` |
-| `/ultrawork` | 완전 자동화 모드 | `/ultrawork "전체 기능 구현해줘"` |
+
+#### 워크플로우 실행
+| 커맨드 | 기능 |
+|--------|------|
+| `/plan` | 작업 계획 수립 |
+| `/execute` | 계획 실행 |
+| `/ultrawork`, `/ulw` | 완전 자동화 모드 |
+
+#### 모드 전환
+| 커맨드 | 기능 |
+|--------|------|
+| `/manual` | 수동 모드 전환 |
+| `/semi-auto` | 반자동 모드 전환 |
+| `/ralph-start` | Ralph Loop 시작 (자동 반복) |
+| `/ralph-cancel` | Ralph Loop 중지 |
+
+#### 유틸리티
+| 커맨드 | 기능 |
+|--------|------|
+| `/session-summary` | 세션에서 사용된 Claude Code 기능 요약 |
 
 ### 훅 (Hooks)
 
@@ -54,10 +73,22 @@ agentic-workflow는 Claude Code CLI를 위한 토큰 효율적인 전문 에이�
 
 | 훅 이름 | 트리거 이벤트 | 기능 설명 |
 |---------|--------------|----------|
-| `keyword-detector.ps1` | UserPromptSubmit | ultrawork/ulw 키워드 감지 및 자동화 모드 활성화 |
-| `todo-enforcer.ps1` | Stop | 미완료 TODO 확인 및 계속 진행 유도 |
-| `ralph-loop.ps1` | Stop | 자동 반복 실행 (완료 시그널까지) |
-| `failure-tracker.ps1` | PostToolUse | 반복 실패 감지 및 복구 전략 제안 |
+| `keyword-detector` | UserPromptSubmit | ultrawork/ulw 키워드 감지 및 자동화 모드 활성화 |
+| `context-monitor` | UserPromptSubmit | 컨텍스트 키워드 감지 (search, analyze, docs 등) |
+| `failure-tracker` | PostToolUse | 반복 실패 감지 및 복구 전략 제안 |
+| `todo-enforcer` | Stop | 미완료 TODO 확인 및 계속 진행 유도 |
+| `ralph-loop` | Stop | 자동 반복 실행 (완료 시그널까지) |
+
+※ Windows: `.ps1`, Linux/macOS: `.sh` 확장자 사용
+
+### 스킬 (Skills)
+
+재사용 가능한 복잡한 워크플로우입니다.
+
+| 스킬 | 설명 |
+|------|------|
+| `codebase-analysis` | 체계적인 코드베이스 탐색 및 이해 |
+| `deep-research` | 여러 소스를 활용한 심층 조사 |
 
 ### 작업 모드 (Operating Modes)
 

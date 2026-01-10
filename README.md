@@ -10,8 +10,9 @@ agentic-workflow는 Claude Code CLI에 최적화된 작업 자동화 시스템�
 
 - **3가지 작업 모드**: Manual, Semi-Auto, Ultrawork
 - **6개 전문 에이전트**: 작업 유형별 최적화된 모델 사용
-- **7개 슬래시 커맨드**: 직접 호출 가능한 작업 인터페이스
-- **자동화 훅**: 키워드 감지, TODO 추적, 실패 복구
+- **13개 슬래시 커맨드**: 에이전트 호출, 모드 전환, 유틸리티
+- **5개 자동화 훅**: 키워드 감지, 컨텍스트 모니터, TODO 추적, 실패 복구
+- **2개 스킬**: codebase-analysis, deep-research
 - **토큰 효율성**: 최대 96% 토큰 절감
 
 ## 설치 방법
@@ -72,15 +73,33 @@ claude commands
 
 에이전트를 직접 호출하거나 워크플로우를 실행하는 명령어입니다.
 
+#### 에이전트 호출
 | 커맨드 | 설명 | 예시 |
 |--------|------|------|
-| `/explorer` | 코드베이스 검색 | `/explorer "인증 로직 찾아줘"` |
-| `/librarian` | 문서 리서치 | `/librarian "React Query v5 사용법"` |
-| `/oracle` | 전략적 자문 | `/oracle "이 에러 해결 방법"` |
-| `/frontend` | UI/UX 작업 | `/frontend "버튼 컴포넌트 만들어줘"` |
-| `/plan` | 작업 계획 수립 | `/plan "사용자 인증 구현"` |
-| `/execute` | 계획 실행 | `/execute` 또는 `/execute plan-file.md` |
-| `/ultrawork` | 완전 자동화 | `/ultrawork "전체 기능 구현해줘"` |
+| `/codebase-explorer` | 코드베이스 검색 | `/codebase-explorer "find auth logic"` |
+| `/librarian` | 문서 리서치 | `/librarian "React Query v5 usage"` |
+| `/oracle` | 전략적 자문 (Architect) | `/oracle "how to fix this error"` |
+| `/frontend` | UI/UX 작업 | `/frontend "create button component"` |
+
+#### 워크플로우 실행
+| 커맨드 | 설명 |
+|--------|------|
+| `/plan` | 작업 계획 수립 |
+| `/execute` | 계획 실행 |
+| `/ultrawork`, `/ulw` | 완전 자동화 모드 |
+
+#### 모드 전환
+| 커맨드 | 설명 |
+|--------|------|
+| `/manual` | 수동 모드 전환 |
+| `/semi-auto` | 반자동 모드 전환 |
+| `/ralph-start` | Ralph Loop 시작 |
+| `/ralph-cancel` | Ralph Loop 중지 |
+
+#### 유틸리티
+| 커맨드 | 설명 |
+|--------|------|
+| `/session-summary` | 세션에서 사용된 기능 요약 |
 
 ### 3. Hooks (훅)
 
@@ -88,12 +107,24 @@ claude commands
 
 | 훅 | 이벤트 | 기능 |
 |----|--------|------|
-| `keyword-detector.ps1` | UserPromptSubmit | ultrawork/ulw 키워드 감지 및 모드 활성화 |
-| `todo-enforcer.ps1` | Stop | 미완료 TODO 확인 및 계속 진행 유도 |
-| `ralph-loop.ps1` | Stop | 자동 반복 실행 (완료 시그널까지) |
-| `failure-tracker.ps1` | PostToolUse | 반복 실패 감지 및 복구 전략 제안 |
+| `keyword-detector` | UserPromptSubmit | ultrawork/ulw 키워드 감지 및 모드 활성화 |
+| `context-monitor` | UserPromptSubmit | 컨텍스트 키워드 감지 (search, analyze, docs 등) |
+| `failure-tracker` | PostToolUse | 반복 실패 감지 및 복구 전략 제안 |
+| `todo-enforcer` | Stop | 미완료 TODO 확인 및 계속 진행 유도 |
+| `ralph-loop` | Stop | 자동 반복 실행 (완료 시그널까지) |
 
-### 4. Operating Modes (작업 모드)
+※ Windows: `.ps1`, Linux/macOS: `.sh` 확장자 사용
+
+### 4. Skills (스킬)
+
+재사용 가능한 복잡한 워크플로우입니다.
+
+| 스킬 | 설명 |
+|------|------|
+| `codebase-analysis` | 체계적인 코드베이스 탐색 및 이해 |
+| `deep-research` | 여러 소스를 활용한 심층 조사 |
+
+### 5. Operating Modes (작업 모드)
 
 #### Mode 1: Manual (수동)
 
@@ -278,38 +309,52 @@ $ARGUMENTS
 
 ```
 agentic-workflow/
-├── agents/                 # 에이전트 정의
-│   ├── codebase-explorer.md
-│   ├── librarian.md
+├── agents/                 # 에이전트 정의 (6개)
 │   ├── architect.md
-│   ├── frontend-engineer.md
+│   ├── codebase-explorer.md
 │   ├── document-writer.md
+│   ├── frontend-engineer.md
+│   ├── librarian.md
 │   └── task-planner.md
 │
-├── commands/               # 슬래시 커맨드
+├── commands/               # 슬래시 커맨드 (13개)
 │   ├── codebase-explorer.md
-│   ├── librarian.md
-│   ├── oracle.md
-│   ├── frontend.md
-│   ├── plan.md
 │   ├── execute.md
-│   └── ultrawork.md
+│   ├── frontend.md
+│   ├── librarian.md
+│   ├── manual.md
+│   ├── oracle.md
+│   ├── plan.md
+│   ├── ralph-cancel.md
+│   ├── ralph-start.md
+│   ├── semi-auto.md
+│   ├── session-summary.md
+│   ├── ultrawork.md
+│   └── ulw.md
 │
-├── hooks/                  # 훅 스크립트
-│   ├── keyword-detector.ps1
-│   ├── todo-enforcer.ps1
-│   ├── ralph-loop.ps1
-│   └── failure-tracker.ps1
+├── hooks/                  # 훅 스크립트 (5종 x 2 플랫폼)
+│   ├── context-monitor.ps1/.sh
+│   ├── failure-tracker.ps1/.sh
+│   ├── keyword-detector.ps1/.sh
+│   ├── ralph-loop.ps1/.sh
+│   └── todo-enforcer.ps1/.sh
 │
-├── rules/                  # 코딩 규칙 (선택사항)
+├── rules/                  # 코딩 규칙
+│   ├── global.md
+│   ├── sisyphus-phases.md
+│   └── typescript.md
 │
-├── skills/                 # 재사용 가능한 스킬 (선택사항)
+├── skills/                 # 재사용 가능한 스킬
+│   ├── codebase-analysis/
+│   └── deep-research/
 │
 ├── settings.json           # Claude Code 설정
 ├── .mcp.json              # MCP 서버 설정
 ├── CLAUDE.global.md       # 글로벌 규칙 템플릿
 ├── install.ps1            # Windows 설치 스크립트
 ├── install.sh             # Linux/macOS 설치 스크립트
+├── update.ps1/.sh         # 업데이트 스크립트
+├── uninstall.ps1/.sh      # 제거 스크립트
 └── README.md
 ```
 

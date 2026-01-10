@@ -188,8 +188,9 @@ Planner가 TODO 리스트 작성
 키워드 기반으로 전체 자동화를 트리거하는 완전 자동 모드입니다.
 
 ```
-Keyword input
+키워드 입력
 (ultrawork, ulw, finish everything, complete all)
+※ 한국어 키워드는 인코딩 문제로 제거됨
     ↓
 keyword-detector 훅 감지
     ↓
@@ -254,11 +255,13 @@ ulw API 라우트 작성하고 Prisma 스키마 업데이트하고 타입 생성
 # <promise>DONE</promise>
 ```
 
-**Trigger keywords:**
+**자동화 키워드:**
 - `ultrawork`
 - `ulw`
 - `finish everything`
 - `complete all`
+
+※ 한국어 키워드 (끝까지, 완료해 등)는 PowerShell 인코딩 문제로 제거됨
 
 **완료 시그널:**
 모든 작업이 완료되면 `<promise>DONE</promise>` 출력

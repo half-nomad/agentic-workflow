@@ -42,12 +42,12 @@ EOF
 
 ORCHESTRATION RULES:
 1. Create comprehensive TODO list IMMEDIATELY using TodoWrite
-2. Use Task tool for parallel exploration with @explorer/@librarian agents
+2. Use Task tool for parallel exploration with @codebase-explorer/@librarian agents
 3. Delegate specialized work to appropriate agents:
    - UI/UX changes -> @frontend-engineer
    - Architecture questions -> @architect
    - Documentation -> @document-writer
-   - Planning -> @planner
+   - Planning -> @task-planner
 4. NEVER stop until ALL TODOs are marked as completed
 5. VERIFY each step with evidence before marking complete
 6. If stuck 2+ times -> consult @architect for alternative approaches
@@ -58,7 +58,7 @@ RALPH LOOP STATUS:
 - Completion Signal: <promise>DONE</promise>
 
 EXECUTION FLOW (Sisyphus Phases):
-Phase 1: EXPLORE - Parallel discovery with @explorer, @librarian
+Phase 1: EXPLORE - Parallel discovery with @codebase-explorer, @librarian
 Phase 2: PLAN - Create detailed TODO list with success criteria
 Phase 3: EXECUTE - Work through tasks, delegate to specialists
 Phase 4: VERIFY - Validate results, run tests

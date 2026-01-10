@@ -68,12 +68,12 @@ Switching to Ultrawork mode - Full automation with Ralph Loop enabled.
 ### Delegation Strategy
 | Task Type | Delegate To |
 |-----------|-------------|
-| Codebase search | @explorer |
+| Codebase search | @codebase-explorer |
 | Documentation lookup | @librarian |
 | Architecture decisions | @architect |
 | UI/UX implementation | @frontend-engineer |
 | Documentation writing | @document-writer |
-| Planning complex tasks | @planner |
+| Planning complex tasks | @task-planner |
 
 ### Recovery Protocol
 1. First failure: Retry with adjusted approach

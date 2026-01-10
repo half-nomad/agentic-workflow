@@ -1,8 +1,8 @@
 <#
 .SYNOPSIS
-    Agentic Workflow 업데이트 스크립트 (Windows PowerShell)
+    Agentic Workflow Update Script (Windows PowerShell)
 .DESCRIPTION
-    소스 경로에서 변경된 파일을 ~/.claude/로 동기화합니다.
+    Syncs changed files from source path to ~/.claude/.
 #>
 
 param([switch]$Verbose)
@@ -23,26 +23,26 @@ Write-Host "========================================" -ForegroundColor Magenta
 Write-Host ""
 
 if (-not (Test-Path $SourceFile)) {
-    Write-Host "[-] 설치 정보를 찾을 수 없습니다." -ForegroundColor Red
-    Write-Host "먼저 install.ps1 스크립트를 실행하세요." -ForegroundColor Yellow
+    Write-Host "[-] Installation info not found." -ForegroundColor Red
+    Write-Host "Run install.ps1 script first." -ForegroundColor Yellow
     exit 1
 }
 
 $SourcePath = (Get-Content $SourceFile -Raw).Trim()
-Write-Info "소스 경로: $SourcePath"
+Write-Info "Source path: $SourcePath"
 
 if (-not (Test-Path $SourcePath)) {
-    Write-Host "[-] 소스 경로가 존재하지 않습니다: $SourcePath" -ForegroundColor Red
+    Write-Host "[-] Source path does not exist: $SourcePath" -ForegroundColor Red
     exit 1
 }
 
-Write-Success "소스 경로 확인됨"
+Write-Success "Source path verified"
 
 $SyncCount = 0
 $Directories = @("agents", "rules", "hooks", "commands", "skills")
 
 Write-Host ""
-Write-Info "디렉토리 동기화 중..."
+Write-Info "Syncing directories..."
 
 foreach ($Dir in $Directories) {
     $SrcDir = Join-Path $SourcePath $Dir
@@ -66,7 +66,7 @@ foreach ($Dir in $Directories) {
 
         Write-Success "$Dir/ ($($Files.Count) files)"
     } else {
-        Write-Warn "$Dir/ 디렉토리 없음 - 건너뜀"
+        Write-Warn "$Dir/ directory not found - skipping"
     }
 }
 
@@ -77,11 +77,11 @@ $DestMd = Join-Path $ClaudeDir "CLAUDE.md"
 if (Test-Path $GlobalMd) {
     Copy-Item -Path $GlobalMd -Destination $DestMd -Force
     $SyncCount++
-    Write-Success "CLAUDE.md 업데이트됨"
+    Write-Success "CLAUDE.md updated"
 }
 
 Write-Host ""
-Write-Info "설정 파일 병합 중..."
+Write-Info "Merging config files..."
 
 # settings.json
 $SrcSettings = Join-Path $SourcePath "settings.json"
@@ -96,7 +96,7 @@ if (Test-Path $SrcSettings) {
         Copy-Item -Path $SrcSettings -Destination $DestSettings -Force
     }
     $SyncCount++
-    Write-Success "settings.json 병합됨"
+    Write-Success "settings.json merged"
 }
 
 # .mcp.json
@@ -115,14 +115,14 @@ if (Test-Path $SrcMcp) {
         Copy-Item -Path $SrcMcp -Destination $DestMcp -Force
     }
     $SyncCount++
-    Write-Success ".mcp.json 병합됨"
+    Write-Success ".mcp.json merged"
 }
 
 Write-Host ""
 Write-Host "========================================" -ForegroundColor Green
-Write-Host "  업데이트 완료!" -ForegroundColor Green
+Write-Host "  Update Complete!" -ForegroundColor Green
 Write-Host "========================================" -ForegroundColor Green
 Write-Host ""
-Write-Host "동기화된 항목: $SyncCount 개" -ForegroundColor Cyan
-Write-Host "대상 경로: $ClaudeDir" -ForegroundColor DarkGray
+Write-Host "Items synced: $SyncCount" -ForegroundColor Cyan
+Write-Host "Target path: $ClaudeDir" -ForegroundColor DarkGray
 Write-Host ""

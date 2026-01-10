@@ -1,8 +1,13 @@
 {
+  "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
     "grep_app",
     "context7",
     "grep-app"
   ],
-  "enableAllProjectMcpServers": true
+  "permissions": {
+    "allow": [
+      "mcp__grep-app__searchGitHub"
+    ]
+  }
 }

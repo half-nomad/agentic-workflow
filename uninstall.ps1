@@ -1,8 +1,8 @@
 <#
 .SYNOPSIS
-    agentic-workflow 제거 스크립트 (Windows PowerShell)
+    agentic-workflow Uninstall Script (Windows PowerShell)
 .DESCRIPTION
-    ~/.claude/에 설치된 agentic-workflow 관련 파일들을 제거합니다.
+    Removes agentic-workflow related files installed in ~/.claude/.
 #>
 
 param([switch]$Force)
@@ -22,25 +22,25 @@ Write-Host "  agentic-workflow Uninstaller" -ForegroundColor Magenta
 Write-Host "========================================" -ForegroundColor Magenta
 Write-Host ""
 
-Write-Info "설치 상태 확인 중..."
+Write-Info "Checking installation status..."
 
 if (-not (Test-Path $SourceFile)) {
-    Write-Warn "agentic-workflow가 설치되지 않았습니다."
+    Write-Warn "agentic-workflow is not installed."
     exit 0
 }
 
 $SourcePath = (Get-Content $SourceFile -Raw).Trim()
-Write-Info "설치된 소스 경로: $SourcePath"
+Write-Info "Installed source path: $SourcePath"
 
 if (-not $Force) {
-    $confirm = Read-Host "agentic-workflow를 제거하시겠습니까? (y/N)"
+    $confirm = Read-Host "Remove agentic-workflow? (y/N)"
     if ($confirm -ne "y" -and $confirm -ne "Y") {
-        Write-Info "제거가 취소되었습니다."
+        Write-Info "Removal cancelled."
         exit 0
     }
 }
 
-# 파일 제거 함수
+# File removal function
 function Remove-InstalledFiles {
     param([string]$FolderName, [string]$SourceSubDir)
 
@@ -59,38 +59,38 @@ function Remove-InstalledFiles {
         }
     }
 
-    if ($removedCount -gt 0) { Write-Success "$FolderName 에서 $removedCount 개 파일 제거됨" }
+    if ($removedCount -gt 0) { Write-Success "$removedCount files removed from $FolderName" }
 }
 
-Write-Info "설치된 파일들을 제거하는 중..."
+Write-Info "Removing installed files..."
 Remove-InstalledFiles -FolderName "agents" -SourceSubDir "agents"
 Remove-InstalledFiles -FolderName "rules" -SourceSubDir "rules"
 Remove-InstalledFiles -FolderName "hooks" -SourceSubDir "hooks"
 Remove-InstalledFiles -FolderName "commands" -SourceSubDir "commands"
 Remove-InstalledFiles -FolderName "skills" -SourceSubDir "skills"
 
-# CLAUDE.md 처리
+# CLAUDE.md handling
 $ClaudeMd = Join-Path $ClaudeDir "CLAUDE.md"
 $ClaudeMdBackups = Get-ChildItem -Path $ClaudeDir -Filter "CLAUDE.md.backup.*" 2>$null | Sort-Object LastWriteTime -Descending | Select-Object -First 1
 if ($ClaudeMdBackups) {
     Copy-Item $ClaudeMdBackups.FullName $ClaudeMd -Force
     Remove-Item $ClaudeMdBackups.FullName -Force
-    Write-Success "CLAUDE.md가 백업에서 복원되었습니다."
+    Write-Success "CLAUDE.md restored from backup."
 } elseif (Test-Path $ClaudeMd) {
     Remove-Item $ClaudeMd -Force
-    Write-Success "CLAUDE.md가 제거되었습니다."
+    Write-Success "CLAUDE.md removed."
 }
 
-# 소스 경로 파일 제거
+# Remove source path file
 if (Test-Path $SourceFile) {
     Remove-Item $SourceFile -Force
-    Write-Success ".agentic-workflow-source 파일이 제거되었습니다."
+    Write-Success ".agentic-workflow-source file removed."
 }
 
 Write-Host ""
 Write-Host "========================================" -ForegroundColor Green
-Write-Host "  제거 완료!" -ForegroundColor Green
+Write-Host "  Uninstall Complete!" -ForegroundColor Green
 Write-Host "========================================" -ForegroundColor Green
 Write-Host ""
-Write-Host "재설치하려면 install.ps1을 실행하세요." -ForegroundColor Gray
+Write-Host "To reinstall, run install.ps1." -ForegroundColor Gray
 Write-Host ""

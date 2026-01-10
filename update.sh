@@ -1,5 +1,5 @@
 #!/bin/bash
-# Agentic Workflow 업데이트 스크립트 (WSL/Linux/macOS Bash)
+# Agentic Workflow Update Script (WSL/Linux/macOS Bash)
 
 set -e
 
@@ -21,26 +21,26 @@ echo -e "${MAGENTA}========================================${NC}"
 echo ""
 
 if [[ ! -f "$SOURCE_FILE" ]]; then
-    echo -e "${RED}[-] 설치 정보를 찾을 수 없습니다.${NC}"
-    echo -e "${YELLOW}먼저 install.sh 스크립트를 실행하세요.${NC}"
+    echo -e "${RED}[-] Installation info not found.${NC}"
+    echo -e "${YELLOW}Run install.sh script first.${NC}"
     exit 1
 fi
 
 SOURCE_PATH=$(cat "$SOURCE_FILE" | tr -d '\n\r')
-info "소스 경로: $SOURCE_PATH"
+info "Source path: $SOURCE_PATH"
 
 if [[ ! -d "$SOURCE_PATH" ]]; then
-    echo -e "${RED}[-] 소스 경로가 존재하지 않습니다: $SOURCE_PATH${NC}"
+    echo -e "${RED}[-] Source path does not exist: $SOURCE_PATH${NC}"
     exit 1
 fi
 
-success "소스 경로 확인됨"
+success "Source path verified"
 
 SYNC_COUNT=0
 declare -a DIRECTORIES=("agents" "rules" "hooks" "commands" "skills")
 
 echo ""
-info "디렉토리 동기화 중..."
+info "Syncing directories..."
 
 for dir in "${DIRECTORIES[@]}"; do
     src_dir="$SOURCE_PATH/$dir"
@@ -61,7 +61,7 @@ for dir in "${DIRECTORIES[@]}"; do
 
         success "$dir/ ($file_count files)"
     else
-        warn "$dir/ 디렉토리 없음 - 건너뜀"
+        warn "$dir/ directory not found - skipping"
     fi
 done
 
@@ -71,11 +71,11 @@ dest_md="$CLAUDE_DIR/CLAUDE.md"
 if [[ -f "$global_md" ]]; then
     cp -f "$global_md" "$dest_md"
     ((SYNC_COUNT++))
-    success "CLAUDE.md 업데이트됨"
+    success "CLAUDE.md updated"
 fi
 
 echo ""
-info "설정 파일 병합 중..."
+info "Merging config files..."
 
 if command -v jq &> /dev/null; then
     src_settings="$SOURCE_PATH/settings.json"
@@ -87,7 +87,7 @@ if command -v jq &> /dev/null; then
             cp -f "$src_settings" "$dest_settings"
         fi
         ((SYNC_COUNT++))
-        success "settings.json 병합됨"
+        success "settings.json merged"
     fi
 
     src_mcp="$SOURCE_PATH/.mcp.json"
@@ -99,19 +99,19 @@ if command -v jq &> /dev/null; then
             cp -f "$src_mcp" "$dest_mcp"
         fi
         ((SYNC_COUNT++))
-        success ".mcp.json 병합됨"
+        success ".mcp.json merged"
     fi
 else
-    warn "jq 미설치. 설정 파일 단순 복사."
+    warn "jq not installed. Simple copy for config files."
     [ -f "$SOURCE_PATH/settings.json" ] && cp -f "$SOURCE_PATH/settings.json" "$CLAUDE_DIR/settings.json" && ((SYNC_COUNT++))
     [ -f "$SOURCE_PATH/.mcp.json" ] && cp -f "$SOURCE_PATH/.mcp.json" "$HOME/.mcp.json" && ((SYNC_COUNT++))
 fi
 
 echo ""
 echo -e "${GREEN}========================================${NC}"
-echo -e "${GREEN}  업데이트 완료!${NC}"
+echo -e "${GREEN}  Update Complete!${NC}"
 echo -e "${GREEN}========================================${NC}"
 echo ""
-echo -e "${CYAN}동기화된 항목: $SYNC_COUNT 개${NC}"
-echo -e "${GRAY}대상 경로: $CLAUDE_DIR${NC}"
+echo -e "${CYAN}Items synced: $SYNC_COUNT${NC}"
+echo -e "${GRAY}Target path: $CLAUDE_DIR${NC}"
 echo ""

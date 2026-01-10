@@ -1,9 +1,9 @@
 #Requires -Version 5.1
 <#
 .SYNOPSIS
-    Agentic Workflow 설치 스크립트 (Windows PowerShell)
+    Agentic Workflow Installation Script (Windows PowerShell)
 .DESCRIPTION
-    Claude Code용 agentic-workflow 구성 파일들을 ~/.claude/ 디렉토리에 설치합니다.
+    Installs agentic-workflow configuration files to ~/.claude/ directory for Claude Code.
 .EXAMPLE
     .\install.ps1
 #>
@@ -13,22 +13,22 @@ param()
 
 $ErrorActionPreference = "Stop"
 
-# 색상 출력 함수
+# Color output functions
 function Write-Step { param($Message) Write-Host "[*] $Message" -ForegroundColor Cyan }
 function Write-Success { param($Message) Write-Host "[+] $Message" -ForegroundColor Green }
 function Write-Warn { param($Message) Write-Host "[!] $Message" -ForegroundColor Yellow }
 function Write-Err { param($Message) Write-Host "[-] $Message" -ForegroundColor Red }
 
-# hooks 경로 변환 함수: 상대 경로 "hooks/"를 절대 경로로 변환
+# Convert hooks path: Convert relative path "hooks/" to absolute path
 function Convert-HooksPath {
     param([string]$JsonContent)
     $hooksPath = Join-Path $env:USERPROFILE ".claude\hooks"
-    # JSON 내에서 이스케이프된 백슬래시로 변환
+    # Convert to escaped backslashes for JSON
     $escaped = $hooksPath -replace '\\', '\\\\'
     return $JsonContent -replace '"hooks/', "`"$escaped\\"
 }
 
-# 경로 설정
+# Path setup
 $SourcePath = $PSScriptRoot
 $ClaudeHome = Join-Path $env:USERPROFILE ".claude"
 
@@ -38,8 +38,8 @@ Write-Host "  Agentic Workflow Installer (Windows)" -ForegroundColor Magenta
 Write-Host "========================================" -ForegroundColor Magenta
 Write-Host ""
 
-# 1. 프로젝트 소스 경로 저장
-Write-Step "프로젝트 소스 경로 저장..."
+# 1. Save project source path
+Write-Step "Saving project source path..."
 
 if (-not (Test-Path $ClaudeHome)) {
     New-Item -ItemType Directory -Path $ClaudeHome -Force | Out-Null
@@ -47,10 +47,10 @@ if (-not (Test-Path $ClaudeHome)) {
 
 $SourceFilePath = Join-Path $ClaudeHome ".agentic-workflow-source"
 $SourcePath | Out-File -FilePath $SourceFilePath -Encoding UTF8 -NoNewline
-Write-Success "소스 경로 저장됨: $SourceFilePath"
+Write-Success "Source path saved: $SourceFilePath"
 
-# 2. 디렉토리 생성
-Write-Step "디렉토리 생성..."
+# 2. Create directories
+Write-Step "Creating directories..."
 
 $Directories = @(
     $ClaudeHome,
@@ -64,13 +64,13 @@ $Directories = @(
 foreach ($Dir in $Directories) {
     if (-not (Test-Path $Dir)) {
         New-Item -ItemType Directory -Path $Dir -Force | Out-Null
-        Write-Success "생성됨: $Dir"
+        Write-Success "Created: $Dir"
     } else {
-        Write-Host "    이미 존재: $Dir" -ForegroundColor DarkGray
+        Write-Host "    Already exists: $Dir" -ForegroundColor DarkGray
     }
 }
 
-# 3. 파일 복사 함수
+# 3. File copy function
 function Copy-DirectoryContents {
     param(
         [string]$Source,
@@ -82,47 +82,47 @@ function Copy-DirectoryContents {
         foreach ($Item in $Items) {
             $DestFile = Join-Path $Destination $Item.Name
             Copy-Item -Path $Item.FullName -Destination $DestFile -Force
-            Write-Host "    복사됨: $($Item.Name)" -ForegroundColor DarkGray
+            Write-Host "    Copied: $($Item.Name)" -ForegroundColor DarkGray
         }
         return $Items.Count
     }
     return 0
 }
 
-# 파일 복사
-Write-Step "파일 복사..."
+# Copy files
+Write-Step "Copying files..."
 
 # agents/
-Write-Host "  agents/ 복사 중..."
+Write-Host "  Copying agents/..."
 $count = Copy-DirectoryContents -Source (Join-Path $SourcePath "agents") -Destination (Join-Path $ClaudeHome "agents")
-Write-Success "agents: $count 파일 복사됨"
+Write-Success "agents: $count files copied"
 
 # rules/
-Write-Host "  rules/ 복사 중..."
+Write-Host "  Copying rules/..."
 $count = Copy-DirectoryContents -Source (Join-Path $SourcePath "rules") -Destination (Join-Path $ClaudeHome "rules")
-Write-Success "rules: $count 파일 복사됨"
+Write-Success "rules: $count files copied"
 
 # hooks/
-Write-Host "  hooks/ 복사 중..."
+Write-Host "  Copying hooks/..."
 $count = Copy-DirectoryContents -Source (Join-Path $SourcePath "hooks") -Destination (Join-Path $ClaudeHome "hooks")
-Write-Success "hooks: $count 파일 복사됨"
+Write-Success "hooks: $count files copied"
 
 # commands/
-Write-Host "  commands/ 복사 중..."
+Write-Host "  Copying commands/..."
 $count = Copy-DirectoryContents -Source (Join-Path $SourcePath "commands") -Destination (Join-Path $ClaudeHome "commands")
-Write-Success "commands: $count 파일 복사됨"
+Write-Success "commands: $count files copied"
 
-# skills/ (재귀 복사)
-Write-Host "  skills/ 복사 중..."
+# skills/ (recursive copy)
+Write-Host "  Copying skills/..."
 $SkillsSource = Join-Path $SourcePath "skills"
 $SkillsDest = Join-Path $ClaudeHome "skills"
 if (Test-Path $SkillsSource) {
     Copy-Item -Path "$SkillsSource\*" -Destination $SkillsDest -Recurse -Force
-    Write-Success "skills: 복사 완료"
+    Write-Success "skills: copy complete"
 }
 
 # CLAUDE.global.md -> CLAUDE.md
-Write-Host "  CLAUDE.md 설정 중..."
+Write-Host "  Setting up CLAUDE.md..."
 $GlobalMdSource = Join-Path $SourcePath "CLAUDE.global.md"
 $ClaudeMdDest = Join-Path $ClaudeHome "CLAUDE.md"
 
@@ -130,23 +130,23 @@ if (Test-Path $GlobalMdSource) {
     if (Test-Path $ClaudeMdDest) {
         $BackupPath = "$ClaudeMdDest.backup.$(Get-Date -Format 'yyyyMMdd_HHmmss')"
         Copy-Item -Path $ClaudeMdDest -Destination $BackupPath -Force
-        Write-Warn "기존 CLAUDE.md 백업됨: $BackupPath"
+        Write-Warn "Existing CLAUDE.md backed up: $BackupPath"
     }
     Copy-Item -Path $GlobalMdSource -Destination $ClaudeMdDest -Force
-    Write-Success "CLAUDE.md 복사됨"
+    Write-Success "CLAUDE.md copied"
 } else {
-    Write-Host "    CLAUDE.global.md 파일 없음 (건너뜀)" -ForegroundColor DarkGray
+    Write-Host "    CLAUDE.global.md not found (skipping)" -ForegroundColor DarkGray
 }
 
-# 4. 설정 파일 병합
-Write-Step "설정 파일 병합..."
+# 4. Merge configuration files
+Write-Step "Merging configuration files..."
 
-# settings.json 병합
+# Merge settings.json
 $SettingsSource = Join-Path $SourcePath "settings.json"
 $SettingsDest = Join-Path $ClaudeHome "settings.json"
 
 if (Test-Path $SettingsSource) {
-    # 소스 파일 읽기 및 hooks 경로 변환
+    # Read source file and convert hooks path
     $SourceContent = Get-Content -Path $SettingsSource -Raw
     $SourceContent = Convert-HooksPath -JsonContent $SourceContent
     $NewSettings = $SourceContent | ConvertFrom-Json
@@ -154,7 +154,7 @@ if (Test-Path $SettingsSource) {
     if (Test-Path $SettingsDest) {
         $ExistingSettings = Get-Content -Path $SettingsDest -Raw | ConvertFrom-Json
 
-        # 권한 병합
+        # Merge permissions
         if ($NewSettings.permissions -and $NewSettings.permissions.allow) {
             if (-not $ExistingSettings.permissions) {
                 $ExistingSettings | Add-Member -NotePropertyName "permissions" -NotePropertyValue @{ allow = @() } -Force
@@ -166,39 +166,39 @@ if (Test-Path $SettingsSource) {
             $ExistingSettings.permissions.allow = $AllPermissions
         }
 
-        # hooks 병합: 각 이벤트별로 배열 병합
+        # Merge hooks: merge arrays per event type
         if ($NewSettings.hooks) {
             if (-not $ExistingSettings.hooks) {
                 $ExistingSettings | Add-Member -NotePropertyName "hooks" -NotePropertyValue @{} -Force
             }
 
-            # 각 이벤트 타입(UserPromptSubmit, PostToolUse, Stop 등)을 순회
+            # Iterate through each event type (UserPromptSubmit, PostToolUse, Stop, etc.)
             foreach ($EventType in $NewSettings.hooks.PSObject.Properties) {
                 $EventName = $EventType.Name
                 $NewHooksArray = @($EventType.Value)
 
                 if ($ExistingSettings.hooks.PSObject.Properties[$EventName]) {
-                    # 기존 이벤트가 있으면 배열 병합 (중복 제거 안함)
+                    # If event exists, merge arrays (no deduplication)
                     $ExistingHooksArray = @($ExistingSettings.hooks.$EventName)
                     $MergedArray = $ExistingHooksArray + $NewHooksArray
                     $ExistingSettings.hooks.$EventName = $MergedArray
                 } else {
-                    # 기존 이벤트가 없으면 새로 추가
+                    # If event doesn't exist, add new
                     $ExistingSettings.hooks | Add-Member -NotePropertyName $EventName -NotePropertyValue $NewHooksArray -Force
                 }
             }
         }
 
         $ExistingSettings | ConvertTo-Json -Depth 10 | Out-File -FilePath $SettingsDest -Encoding UTF8
-        Write-Success "settings.json 병합됨"
+        Write-Success "settings.json merged"
     } else {
-        # 새 파일: 경로 변환 적용된 내용 저장
+        # New file: save with path conversion applied
         $NewSettings | ConvertTo-Json -Depth 10 | Out-File -FilePath $SettingsDest -Encoding UTF8
-        Write-Success "settings.json 복사됨 (새 파일)"
+        Write-Success "settings.json copied (new file)"
     }
 }
 
-# .mcp.json 병합
+# Merge .mcp.json
 $McpSource = Join-Path $SourcePath ".mcp.json"
 $McpDest = Join-Path $env:USERPROFILE ".mcp.json"
 
@@ -218,42 +218,42 @@ if (Test-Path $McpSource) {
         }
 
         $ExistingMcp | ConvertTo-Json -Depth 10 | Out-File -FilePath $McpDest -Encoding UTF8
-        Write-Success ".mcp.json 병합됨: $McpDest"
+        Write-Success ".mcp.json merged: $McpDest"
     } else {
         Copy-Item -Path $McpSource -Destination $McpDest -Force
-        Write-Success ".mcp.json 복사됨 (새 파일): $McpDest"
+        Write-Success ".mcp.json copied (new file): $McpDest"
     }
 }
 
-# 5. MCP 설치 안내
+# 5. MCP installation guide
 Write-Host ""
 Write-Host "========================================" -ForegroundColor Yellow
-Write-Host "  MCP 도구 설치 안내" -ForegroundColor Yellow
+Write-Host "  MCP Tools Installation Guide" -ForegroundColor Yellow
 Write-Host "========================================" -ForegroundColor Yellow
 Write-Host ""
-Write-Host "grep_app_mcp 설치가 필요합니다. 다음 명령어를 실행하세요:" -ForegroundColor White
+Write-Host "grep_app_mcp installation required. Run the following command:" -ForegroundColor White
 Write-Host ""
 Write-Host "  uvx --from git+https://github.com/ai-tools-all/grep_app_mcp grep-app-mcp" -ForegroundColor Cyan
 Write-Host ""
-Write-Host "uv가 설치되어 있지 않다면:" -ForegroundColor DarkGray
+Write-Host "If uv is not installed:" -ForegroundColor DarkGray
 Write-Host "  pip install uv" -ForegroundColor DarkGray
 Write-Host ""
 
-# 6. 완료 메시지
+# 6. Completion message
 Write-Host "========================================" -ForegroundColor Green
-Write-Host "  설치 완료!" -ForegroundColor Green
+Write-Host "  Installation Complete!" -ForegroundColor Green
 Write-Host "========================================" -ForegroundColor Green
 Write-Host ""
-Write-Host "설치된 위치: $ClaudeHome" -ForegroundColor White
+Write-Host "Installation location: $ClaudeHome" -ForegroundColor White
 Write-Host ""
-Write-Host "설치된 구성요소:" -ForegroundColor White
-Write-Host "  - agents/     : AI 에이전트 프롬프트"
-Write-Host "  - rules/      : 코딩 규칙"
-Write-Host "  - hooks/      : Claude Code 훅 스크립트"
-Write-Host "  - commands/   : 슬래시 명령어"
-Write-Host "  - skills/     : 스킬 정의"
-Write-Host "  - settings.json : Claude Code 설정"
-Write-Host "  - ~/.mcp.json   : MCP 서버 설정"
+Write-Host "Installed components:" -ForegroundColor White
+Write-Host "  - agents/     : AI agent prompts"
+Write-Host "  - rules/      : Coding rules"
+Write-Host "  - hooks/      : Claude Code hook scripts"
+Write-Host "  - commands/   : Slash commands"
+Write-Host "  - skills/     : Skill definitions"
+Write-Host "  - settings.json : Claude Code settings"
+Write-Host "  - ~/.mcp.json   : MCP server settings"
 Write-Host ""
-Write-Host "Claude Code를 재시작하여 변경사항을 적용하세요." -ForegroundColor Yellow
+Write-Host "Restart Claude Code to apply changes." -ForegroundColor Yellow
 Write-Host ""

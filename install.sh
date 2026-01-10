@@ -1,14 +1,14 @@
 #!/bin/bash
 #
-# Agentic Workflow 설치 스크립트 (WSL/Linux/macOS Bash)
-# Claude Code용 agentic-workflow 구성 파일들을 ~/.claude/ 디렉토리에 설치합니다.
+# Agentic Workflow Installation Script (WSL/Linux/macOS Bash)
+# Installs agentic-workflow configuration files to ~/.claude/ directory for Claude Code.
 #
 # Usage: ./install.sh
 #
 
 set -e
 
-# 색상 정의
+# Color definitions
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
@@ -17,34 +17,34 @@ MAGENTA='\033[0;35m'
 GRAY='\033[0;90m'
 NC='\033[0m'
 
-# 출력 함수
+# Output functions
 print_step() { echo -e "${CYAN}[*] $1${NC}"; }
 print_success() { echo -e "${GREEN}[+] $1${NC}"; }
 print_warn() { echo -e "${YELLOW}[!] $1${NC}"; }
 print_error() { echo -e "${RED}[-] $1${NC}"; }
 print_dim() { echo -e "${GRAY}    $1${NC}"; }
 
-# 경로 변환 함수: PowerShell 명령어를 bash로 변환 (Linux/macOS용)
-# 주의: 이 함수는 CLAUDE_HOME 설정 후에 호출되어야 함
+# Path conversion function: Convert PowerShell commands to bash (for Linux/macOS)
+# Note: This function must be called after CLAUDE_HOME is set
 convert_hooks_path() {
     local content="$1"
     local hooks_path="$CLAUDE_HOME/hooks"
-    # 경로의 sed 특수문자 이스케이프 (& / \ 등)
+    # Escape special sed characters in path (& / \ etc.)
     local escaped_path
     escaped_path=$(printf '%s\n' "$hooks_path" | sed 's/[&/\]/\\&/g')
 
-    # PowerShell 명령어를 bash로 변환
+    # Convert PowerShell commands to bash
     # powershell -NoProfile -ExecutionPolicy Bypass -File "hooks/xxx.ps1" -> bash "$HOME/.claude/hooks/xxx.sh"
     echo "$content" | sed -E \
         -e "s|powershell -NoProfile -ExecutionPolicy Bypass -File \"hooks/([^\"]+)\\.ps1\"|bash \"${escaped_path}/\\1.sh\"|g" \
         -e "s|\"hooks/|\"${escaped_path}/|g"
 }
 
-# 스크립트 위치 찾기
+# Find script location
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SOURCE_PATH="$SCRIPT_DIR"
 
-# WSL 환경에서 Windows 파일시스템 작업 감지
+# Detect WSL environment working with Windows filesystem
 if [[ "$SCRIPT_DIR" =~ ^/mnt/c/Users/([^/]+) ]]; then
     WIN_USER="${BASH_REMATCH[1]}"
     CLAUDE_HOME="/mnt/c/Users/$WIN_USER/.claude"
@@ -60,36 +60,36 @@ echo -e "${MAGENTA}  Agentic Workflow Installer (Bash)${NC}"
 echo -e "${MAGENTA}========================================${NC}"
 echo ""
 
-# WSL Windows 모드 감지 결과 출력
+# WSL Windows mode detection output
 if [ "$WSL_WINDOWS_MODE" = true ]; then
-    print_warn "WSL에서 Windows 파일시스템 감지됨"
-    print_warn "Windows 홈에 설치: $CLAUDE_HOME"
+    print_warn "WSL Windows filesystem detected"
+    print_warn "Installing to Windows home: $CLAUDE_HOME"
     echo ""
 else
-    print_step "설치 위치: $CLAUDE_HOME"
+    print_step "Installation location: $CLAUDE_HOME"
     echo ""
 fi
 
-# 1. 프로젝트 소스 경로 저장
-print_step "프로젝트 소스 경로 저장..."
+# 1. Save project source path
+print_step "Saving project source path..."
 mkdir -p "$CLAUDE_HOME"
 SOURCE_FILE_PATH="$CLAUDE_HOME/.agentic-workflow-source"
 echo -n "$SOURCE_PATH" > "$SOURCE_FILE_PATH"
-print_success "소스 경로 저장됨: $SOURCE_FILE_PATH"
+print_success "Source path saved: $SOURCE_FILE_PATH"
 
-# 2. 디렉토리 생성
-print_step "디렉토리 생성..."
+# 2. Create directories
+print_step "Creating directories..."
 DIRECTORIES=("$CLAUDE_HOME" "$CLAUDE_HOME/agents" "$CLAUDE_HOME/rules" "$CLAUDE_HOME/hooks" "$CLAUDE_HOME/commands" "$CLAUDE_HOME/skills")
 for dir in "${DIRECTORIES[@]}"; do
     if [ ! -d "$dir" ]; then
         mkdir -p "$dir"
-        print_success "생성됨: $dir"
+        print_success "Created: $dir"
     else
-        print_dim "이미 존재: $dir"
+        print_dim "Already exists: $dir"
     fi
 done
 
-# 3. 파일 복사 함수
+# 3. File copy function
 copy_directory_contents() {
     local source_dir="$1"
     local dest_dir="$2"
@@ -98,7 +98,7 @@ copy_directory_contents() {
         for file in "$source_dir"/*; do
             if [ -f "$file" ]; then
                 cp -f "$file" "$dest_dir/"
-                print_dim "복사됨: $(basename "$file")"
+                print_dim "Copied: $(basename "$file")"
                 ((count++))
             fi
         done
@@ -106,33 +106,33 @@ copy_directory_contents() {
     echo $count
 }
 
-# 파일 복사
-print_step "파일 복사..."
+# Copy files
+print_step "Copying files..."
 
-echo "  agents/ 복사 중..."
+echo "  Copying agents/..."
 count=$(copy_directory_contents "$SOURCE_PATH/agents" "$CLAUDE_HOME/agents")
-print_success "agents: $count 파일 복사됨"
+print_success "agents: $count files copied"
 
-echo "  rules/ 복사 중..."
+echo "  Copying rules/..."
 count=$(copy_directory_contents "$SOURCE_PATH/rules" "$CLAUDE_HOME/rules")
-print_success "rules: $count 파일 복사됨"
+print_success "rules: $count files copied"
 
-echo "  hooks/ 복사 중..."
+echo "  Copying hooks/..."
 count=$(copy_directory_contents "$SOURCE_PATH/hooks" "$CLAUDE_HOME/hooks")
-print_success "hooks: $count 파일 복사됨"
+print_success "hooks: $count files copied"
 
-echo "  commands/ 복사 중..."
+echo "  Copying commands/..."
 count=$(copy_directory_contents "$SOURCE_PATH/commands" "$CLAUDE_HOME/commands")
-print_success "commands: $count 파일 복사됨"
+print_success "commands: $count files copied"
 
-echo "  skills/ 복사 중..."
+echo "  Copying skills/..."
 if [ -d "$SOURCE_PATH/skills" ]; then
     cp -rf "$SOURCE_PATH/skills/"* "$CLAUDE_HOME/skills/" 2>/dev/null || true
-    print_success "skills: 복사 완료"
+    print_success "skills: copy complete"
 fi
 
 # CLAUDE.global.md -> CLAUDE.md
-echo "  CLAUDE.md 설정 중..."
+echo "  Setting up CLAUDE.md..."
 GLOBAL_MD_SOURCE="$SOURCE_PATH/CLAUDE.global.md"
 CLAUDE_MD_DEST="$CLAUDE_HOME/CLAUDE.md"
 
@@ -140,21 +140,21 @@ if [ -f "$GLOBAL_MD_SOURCE" ]; then
     if [ -f "$CLAUDE_MD_DEST" ]; then
         BACKUP_PATH="$CLAUDE_MD_DEST.backup.$(date +%Y%m%d_%H%M%S)"
         cp "$CLAUDE_MD_DEST" "$BACKUP_PATH"
-        print_warn "기존 CLAUDE.md 백업됨: $BACKUP_PATH"
+        print_warn "Existing CLAUDE.md backed up: $BACKUP_PATH"
     fi
     cp "$GLOBAL_MD_SOURCE" "$CLAUDE_MD_DEST"
-    print_success "CLAUDE.md 복사됨"
+    print_success "CLAUDE.md copied"
 else
-    print_dim "CLAUDE.global.md 파일 없음 (건너뜀)"
+    print_dim "CLAUDE.global.md not found (skipping)"
 fi
 
-# 4. 설정 파일 병합
-print_step "설정 파일 병합..."
+# 4. Merge configuration files
+print_step "Merging configuration files..."
 
 SETTINGS_SOURCE="$SOURCE_PATH/settings.json"
 SETTINGS_DEST="$CLAUDE_HOME/settings.json"
 MCP_SOURCE="$SOURCE_PATH/.mcp.json"
-# MCP는 사용자 홈에 설치 (WSL Windows 모드면 Windows 홈)
+# MCP installed to user home (Windows home if WSL Windows mode)
 if [ "$WSL_WINDOWS_MODE" = true ]; then
     MCP_DEST="/mnt/c/Users/$WIN_USER/.mcp.json"
 else
@@ -162,13 +162,13 @@ else
 fi
 
 if command -v jq &> /dev/null; then
-    # settings.json 병합 (hooks 이벤트별 배열 병합 포함)
+    # Merge settings.json (including per-event array merge for hooks)
     if [ -f "$SETTINGS_SOURCE" ]; then
-        # 플랫폼별 경로 변환 적용
+        # Apply platform-specific path conversion
         SETTINGS_CONVERTED=$(convert_hooks_path "$(cat "$SETTINGS_SOURCE")")
 
         if [ -f "$SETTINGS_DEST" ]; then
-            # hooks 이벤트별 배열 병합 + permissions.allow 병합
+            # Merge hooks arrays per event + permissions.allow merge
             echo "$SETTINGS_CONVERTED" | jq -s '
               .[0] as $old | .[1] as $new |
               $old * $new |
@@ -180,89 +180,89 @@ if command -v jq &> /dev/null; then
               ) |
               .permissions.allow = (($old.permissions.allow // []) + ($new.permissions.allow // []) | unique)
             ' "$SETTINGS_DEST" - > "$SETTINGS_DEST.tmp" && mv "$SETTINGS_DEST.tmp" "$SETTINGS_DEST"
-            print_success "settings.json 병합됨 (hooks 이벤트별 배열 병합)"
+            print_success "settings.json merged (per-event array merge for hooks)"
         else
             echo "$SETTINGS_CONVERTED" > "$SETTINGS_DEST"
-            print_success "settings.json 복사됨 (새 파일, 경로 변환 적용)"
+            print_success "settings.json copied (new file, path conversion applied)"
         fi
     fi
 
-    # .mcp.json 병합
+    # Merge .mcp.json
     if [ -f "$MCP_SOURCE" ]; then
         if [ -f "$MCP_DEST" ]; then
             jq -s '.[0] * .[1] | .mcpServers = (.[0].mcpServers // {}) * (.[1].mcpServers // {})' \
                 "$MCP_DEST" "$MCP_SOURCE" > "$MCP_DEST.tmp" && mv "$MCP_DEST.tmp" "$MCP_DEST"
-            print_success ".mcp.json 병합됨: $MCP_DEST"
+            print_success ".mcp.json merged: $MCP_DEST"
         else
             cp "$MCP_SOURCE" "$MCP_DEST"
-            print_success ".mcp.json 복사됨 (새 파일): $MCP_DEST"
+            print_success ".mcp.json copied (new file): $MCP_DEST"
         fi
     fi
 else
     print_warn "============================================"
-    print_warn "jq가 설치되지 않았습니다!"
-    print_warn "설정 파일을 단순 복사하므로 기존 설정이 손실됩니다."
-    print_warn "jq 설치 권장: sudo apt install jq (Ubuntu/Debian)"
+    print_warn "jq is not installed!"
+    print_warn "Config files will be simply copied, existing settings may be lost."
+    print_warn "Recommended: sudo apt install jq (Ubuntu/Debian)"
     print_warn "             brew install jq (macOS)"
     print_warn "============================================"
 
-    # settings.json 처리 (백업 후 복사)
+    # settings.json handling (backup then copy)
     if [ -f "$SETTINGS_SOURCE" ]; then
-        # 플랫폼별 경로 변환 적용
+        # Apply platform-specific path conversion
         SETTINGS_CONVERTED=$(convert_hooks_path "$(cat "$SETTINGS_SOURCE")")
 
         if [ -f "$SETTINGS_DEST" ]; then
             BACKUP_PATH="$SETTINGS_DEST.backup.$(date +%Y%m%d_%H%M%S)"
             cp "$SETTINGS_DEST" "$BACKUP_PATH"
-            print_warn "기존 settings.json 백업됨: $BACKUP_PATH"
-            print_warn "기존 설정이 덮어쓰기됩니다 (jq 없이 병합 불가)"
+            print_warn "Existing settings.json backed up: $BACKUP_PATH"
+            print_warn "Existing settings will be overwritten (merge not possible without jq)"
         fi
         echo "$SETTINGS_CONVERTED" > "$SETTINGS_DEST"
-        print_success "settings.json 복사됨 (경로 변환 적용)"
+        print_success "settings.json copied (path conversion applied)"
     fi
 
-    # .mcp.json 처리 (백업 후 복사)
+    # .mcp.json handling (backup then copy)
     if [ -f "$MCP_SOURCE" ]; then
         if [ -f "$MCP_DEST" ]; then
             BACKUP_PATH="$MCP_DEST.backup.$(date +%Y%m%d_%H%M%S)"
             cp "$MCP_DEST" "$BACKUP_PATH"
-            print_warn "기존 .mcp.json 백업됨: $BACKUP_PATH"
-            print_warn "기존 설정이 덮어쓰기됩니다 (jq 없이 병합 불가)"
+            print_warn "Existing .mcp.json backed up: $BACKUP_PATH"
+            print_warn "Existing settings will be overwritten (merge not possible without jq)"
         fi
         cp "$MCP_SOURCE" "$MCP_DEST"
-        print_success ".mcp.json 복사됨"
+        print_success ".mcp.json copied"
     fi
 fi
 
-# 5. MCP 설치 안내
+# 5. MCP installation guide
 echo ""
 echo -e "${YELLOW}========================================${NC}"
-echo -e "${YELLOW}  MCP 도구 설치 안내${NC}"
+echo -e "${YELLOW}  MCP Tools Installation Guide${NC}"
 echo -e "${YELLOW}========================================${NC}"
 echo ""
-echo "grep_app_mcp 설치가 필요합니다. 다음 명령어를 실행하세요:"
+echo "grep_app_mcp installation required. Run the following command:"
 echo ""
 echo -e "${CYAN}  uvx --from git+https://github.com/ai-tools-all/grep_app_mcp grep-app-mcp${NC}"
 echo ""
-echo -e "${GRAY}uv가 설치되어 있지 않다면:${NC}"
+echo -e "${GRAY}If uv is not installed:${NC}"
 echo -e "${GRAY}  pip install uv${NC}"
 echo ""
 
-# 6. 완료 메시지
+# 6. Completion message
 echo -e "${GREEN}========================================${NC}"
-echo -e "${GREEN}  설치 완료!${NC}"
+echo -e "${GREEN}  Installation Complete!${NC}"
 echo -e "${GREEN}========================================${NC}"
 echo ""
-echo "설치된 위치: $CLAUDE_HOME"
+echo "Installation location: $CLAUDE_HOME"
 echo ""
-echo "설치된 구성요소:"
-echo "  - agents/     : AI 에이전트 프롬프트"
-echo "  - rules/      : 코딩 규칙"
-echo "  - hooks/      : Claude Code 훅 스크립트"
-echo "  - commands/   : 슬래시 명령어"
-echo "  - skills/     : 스킬 정의"
-echo "  - settings.json : Claude Code 설정"
-echo "  - ~/.mcp.json   : MCP 서버 설정"
+echo "Installed components:"
+echo "  - agents/     : AI agent prompts"
+echo "  - rules/      : Coding rules"
+echo "  - hooks/      : Claude Code hook scripts"
+echo "  - commands/   : Slash commands"
+echo "  - skills/     : Skill definitions"
+echo "  - settings.json : Claude Code settings"
+echo "  - ~/.mcp.json   : MCP server settings"
 echo ""
-echo -e "${YELLOW}Claude Code를 재시작하여 변경사항을 적용하세요.${NC}"
+echo -e "${YELLOW}Restart Claude Code to apply changes.${NC}"
 echo ""

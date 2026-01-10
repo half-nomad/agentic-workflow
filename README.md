@@ -61,12 +61,12 @@ claude commands
 
 | 에이전트 | 모델 | 용도 | 사용 시점 |
 |---------|------|------|-----------|
-| `@explorer` | Haiku | 코드베이스 탐색 | 파일 찾기, 구조 파악 |
+| `@codebase-explorer` | Haiku | 코드베이스 탐색 | 파일 찾기, 구조 파악 |
 | `@librarian` | Sonnet | 문서 리서치 | 라이브러리 사용법, 공식 문서 검색 |
 | `@architect` | Opus | 아키텍처 자문 | 2회 이상 실패 시, 중요한 설계 결정 |
 | `@frontend-engineer` | Opus | UI/UX 작업 | 컴포넌트, 스타일링, 접근성 |
 | `@document-writer` | Opus | 문서 작성 | README, API 문서, 주석 |
-| `@planner` | Opus | 작업 계획 | 복잡한 기능 구현 전 계획 수립 |
+| `@task-planner` | Opus | 작업 계획 | 복잡한 기능 구현 전 계획 수립 |
 
 ### 2. Commands (슬래시 커맨드)
 
@@ -143,7 +143,7 @@ ulw 모든 TODO 구현하고 검증
 **토큰 사용량**: ~36K/세션 (기존 대비 67% 절감)
 
 **자동 실행 흐름**:
-1. EXPLORE - 병렬 탐색 (@explorer, @librarian)
+1. EXPLORE - 병렬 탐색 (@codebase-explorer, @librarian)
 2. PLAN - TODO 리스트 작성
 3. EXECUTE - 작업 수행, 전문가에게 위임
 4. VERIFY - 결과 검증, 테스트 실행
@@ -216,7 +216,7 @@ Architect가 상황을 분석하고 대안을 제시합니다.
 
 ```markdown
 ---
-name: explorer
+name: codebase-explorer
 description: "설명 수정 가능"
 model: haiku  # haiku, sonnet, opus 중 선택
 tools: Read, Grep, Glob, Bash  # 사용 가능한 도구
@@ -279,15 +279,15 @@ $ARGUMENTS
 ```
 agentic-workflow/
 ├── agents/                 # 에이전트 정의
-│   ├── explorer.md
+│   ├── codebase-explorer.md
 │   ├── librarian.md
 │   ├── architect.md
 │   ├── frontend-engineer.md
 │   ├── document-writer.md
-│   └── planner.md
+│   └── task-planner.md
 │
 ├── commands/               # 슬래시 커맨드
-│   ├── explorer.md
+│   ├── codebase-explorer.md
 │   ├── librarian.md
 │   ├── oracle.md
 │   ├── frontend.md

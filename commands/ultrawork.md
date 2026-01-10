@@ -54,7 +54,7 @@ You have requested maximum precision autonomous execution.
 | Documentation | @document-writer |
 | Architecture | @architect |
 | Research | @librarian |
-| Code search | @explorer |
+| Code search | @codebase-explorer |
 
 ## Request
 $ARGUMENTS

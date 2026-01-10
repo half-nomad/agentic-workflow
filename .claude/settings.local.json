@@ -1,0 +1,8 @@
+{
+  "enabledMcpjsonServers": [
+    "grep_app",
+    "context7",
+    "grep-app"
+  ],
+  "enableAllProjectMcpServers": true
+}

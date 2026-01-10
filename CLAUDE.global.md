@@ -29,7 +29,7 @@ A 4-phase approach to structured task execution.
 
 ### Phase 1: EXPLORE
 - Launch 3+ parallel searches using Task tool
-- Use `@explorer` for codebase, `@librarian` for docs
+- Use `@codebase-explorer` for codebase, `@librarian` for docs
 - Output: Files found, patterns, constraints
 
 ### Phase 2: PLAN
@@ -53,12 +53,12 @@ A 4-phase approach to structured task execution.
 
 | Agent | Role | Use When |
 |-------|------|----------|
-| `@explorer` | Codebase search (Haiku) | Find files, locate implementations |
+| `@codebase-explorer` | Codebase search (Haiku) | Find files, locate implementations |
 | `@librarian` | Documentation research (Sonnet) | Library docs, API references, OSS examples |
 | `@architect` | Strategic advisor (Opus) | Stuck 2+ times, major decisions |
 | `@frontend-engineer` | UI specialist (Opus) | Visual/UI work |
 | `@document-writer` | Documentation (Opus) | README, docs updates |
-| `@planner` | Task planning (Opus) | Complex task breakdown |
+| `@task-planner` | Task planning (Opus) | Complex task breakdown |
 
 ---
 

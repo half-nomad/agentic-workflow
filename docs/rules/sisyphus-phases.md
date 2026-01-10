@@ -21,7 +21,7 @@ The name reflects the persistent, never-give-up nature of the workflow.
 
 **Actions**:
 - Launch 3+ parallel exploration tasks using Task tool
-- Use @explorer for codebase navigation
+- Use @codebase-explorer for codebase navigation
 - Use @librarian for documentation research
 - Identify all relevant files, patterns, and constraints
 

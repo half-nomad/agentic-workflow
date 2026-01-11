@@ -11,7 +11,7 @@ agentic-workflow는 Claude Code CLI에 최적화된 **Maestro** 오케스트레�
 - **Maestro 오케스트레이션**: `/maestro` 명령으로 패턴 기반 계획 수립
 - **Anthropic 4+1 패턴**: Chaining, Parallelization, Routing, Orchestrator-Workers, Evaluator
 - **4개 전문 에이전트**: 영역별 최적화 (architect, frontend, librarian, document-writer)
-- **3가지 작업 모드**: Manual, Semi-Auto, Ultrawork
+- **2가지 작업 모드**: Maestro (계획 기반), Ultrawork (완전 자동)
 - **Ralph Loop**: 완료 시그널까지 자동 반복 실행
 
 ## 설치 방법
@@ -81,11 +81,9 @@ chmod +x install.sh
 | `/maestro` | 오케스트레이터 모드 활성화 |
 | `/ultrawork`, `/ulw` | 완전 자동화 모드 |
 
-#### 모드 전환
+#### Ralph Loop 제어
 | 커맨드 | 설명 |
 |--------|------|
-| `/manual` | 수동 모드 |
-| `/semi-auto` | 반자동 모드 |
 | `/ralph-start` | Ralph Loop 시작 |
 | `/ralph-cancel` | Ralph Loop 중지 |
 
@@ -98,11 +96,11 @@ chmod +x install.sh
 
 ### Operating Modes (작업 모드)
 
-| 모드 | 특징 | Maestro 동작 |
-|------|------|-------------|
-| **Manual** | 전체 사용자 제어 | 단계별 승인 필요 |
-| **Semi-Auto** | 체크포인트 자동화 | 계획 승인 후 자동 실행 |
-| **Ultrawork** | 완전 자동화 | 승인 없이 즉시 실행 |
+| 모드 | 활성화 | 특징 |
+|------|--------|------|
+| **Default** | (명령 없음) | 일반 Claude 상호작용 |
+| **Maestro** | `/maestro` | 계획 수립 후 승인 필요 |
+| **Ultrawork** | `/ultrawork` | 완전 자동화 + Ralph Loop |
 
 ## 사용 예시
 
@@ -135,10 +133,9 @@ Parallelization 패턴으로 3개 프레임워크를 동시에 조사합니다.
 ```
 agentic-workflow/
 ├── agents/           # 전문 에이전트 (4개)
-├── commands/         # 슬래시 커맨드 (11개)
+├── commands/         # 슬래시 커맨드 (9개)
 ├── hooks/            # 자동화 훅 (5종)
 ├── rules/            # 코딩 규칙
-├── skills/           # 재사용 스킬
 ├── docs/             # 문서
 ├── CLAUDE.md         # Maestro 워크플로우 정의
 ├── settings.json     # Claude Code 설정

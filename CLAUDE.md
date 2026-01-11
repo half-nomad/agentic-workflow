@@ -75,19 +75,18 @@ Complex, multi-domain?         → Orchestrator-Workers
 
 | Mode | Activation | Behavior |
 |------|------------|----------|
-| **Manual** | `/manual` | User approval at each step |
-| **Semi-Auto** | `/semi-auto` | Autonomous with checkpoints |
-| **Ultrawork** | `/ultrawork`, `/ulw` | Full autonomy until completion |
+| **Default** | (no command) | Normal Claude interaction |
+| **Maestro** | `/maestro` | Plan-first with user approval |
+| **Ultrawork** | `/ultrawork`, `/ulw` | Full autonomy + Ralph Loop |
 
-### Mode Effects on Maestro
+### Mode Comparison
 
-| Phase | Manual | Semi-Auto | Ultrawork |
-|-------|--------|-----------|-----------|
-| ANALYZE | User guided | Autonomous | Autonomous |
-| PATTERN | User selects | Suggested | Autonomous |
-| AGENTS | User confirms | Suggested | Autonomous |
-| APPROVE | Required | Required | Skip |
-| EXECUTE | Step-by-step | Autonomous | Autonomous |
+| Aspect | Default | Maestro | Ultrawork |
+|--------|---------|---------|-----------|
+| Planning | As needed | Required | Required |
+| Approval | N/A | Required | Skipped |
+| Ralph Loop | OFF | OFF | ON |
+| Use Case | Simple tasks | Complex planned work | Full automation |
 
 ---
 

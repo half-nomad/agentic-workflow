@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.1] - 2026-01-11
+
+### Added
+- `docs/maestro-summary.md`: Comprehensive Maestro workflow documentation
+
+### Removed
+- `commands/manual.md`: Redundant (default mode is manual)
+- `commands/semi-auto.md`: Redundant (merged into Maestro/Ultrawork)
+- `skills/codebase-analysis/`: Replaced by built-in Explore + @architect
+- `skills/deep-research/`: Replaced by @librarian agent
+
+### Changed
+- **Mode system simplified**: Default / Maestro / Ultrawork (was 3 modes)
+- Updated README.md and CLAUDE.md to reflect mode changes
+
+---
+
 ## [1.0.0] - 2026-01-11
 
 ### Added

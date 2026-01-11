@@ -121,21 +121,21 @@ if (Test-Path $SkillsSource) {
     Write-Success "skills: copy complete"
 }
 
-# CLAUDE.global.md -> CLAUDE.md
+# CLAUDE.md
 Write-Host "  Setting up CLAUDE.md..."
-$GlobalMdSource = Join-Path $SourcePath "CLAUDE.global.md"
+$ClaudeMdSource = Join-Path $SourcePath "CLAUDE.md"
 $ClaudeMdDest = Join-Path $ClaudeHome "CLAUDE.md"
 
-if (Test-Path $GlobalMdSource) {
+if (Test-Path $ClaudeMdSource) {
     if (Test-Path $ClaudeMdDest) {
         $BackupPath = "$ClaudeMdDest.backup.$(Get-Date -Format 'yyyyMMdd_HHmmss')"
         Copy-Item -Path $ClaudeMdDest -Destination $BackupPath -Force
         Write-Warn "Existing CLAUDE.md backed up: $BackupPath"
     }
-    Copy-Item -Path $GlobalMdSource -Destination $ClaudeMdDest -Force
-    Write-Success "CLAUDE.md copied"
+    Copy-Item -Path $ClaudeMdSource -Destination $ClaudeMdDest -Force
+    Write-Success "CLAUDE.md copied (Maestro workflow)"
 } else {
-    Write-Host "    CLAUDE.global.md not found (skipping)" -ForegroundColor DarkGray
+    Write-Host "    CLAUDE.md not found (skipping)" -ForegroundColor DarkGray
 }
 
 # 4. Merge configuration files

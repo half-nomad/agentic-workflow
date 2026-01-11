@@ -12,9 +12,9 @@ Switching to Semi-Auto mode - Balanced automation with strategic checkpoints.
 | Feature | Status |
 |---------|--------|
 | Ralph Loop | DISABLED |
-| Auto-continuation | Within phases only |
+| Auto-continuation | Within tasks only |
 | TODO enforcement | Active |
-| User confirmation | At phase transitions |
+| User confirmation | At plan approval |
 
 ## Activation Steps
 
@@ -32,57 +32,36 @@ Switching to Semi-Auto mode - Balanced automation with strategic checkpoints.
    [SEMI-AUTO MODE ACTIVATED]
 
    - Ralph Loop: DISABLED
-   - Phase automation: ENABLED
+   - Task automation: ENABLED
    - Checkpoint confirmations: ENABLED
 
-   I will work autonomously within each phase but pause for confirmation
-   at major decision points and phase transitions.
+   I will work autonomously within approved plans but pause for
+   confirmation at major decision points.
 
    Use /ulw for full automation or /manual for full control.
    ```
 
-## Behavior in Semi-Auto Mode
+## Maestro in Semi-Auto Mode
 
-### Autonomous Actions (No confirmation needed)
+When using `/maestro` in semi-auto mode:
+- ANALYZE: Autonomous
+- PATTERN: Autonomous with explanation
+- AGENTS: Autonomous with explanation
+- APPROVE: **Required** (checkpoint)
+- EXECUTE: Autonomous after approval
+
+## Autonomous Actions (No confirmation)
 - Exploration and research
 - Reading files and understanding code
 - Creating TODO lists
 - Small, reversible changes
 - Running tests
 
-### Checkpoint Pauses (Confirmation required)
-- Before starting implementation phase
+## Checkpoint Pauses (Confirmation required)
+- Before starting execution (plan approval)
 - After completing major features
 - Before file deletions
 - When encountering unexpected issues
-- At phase transitions (Explore -> Plan -> Execute -> Verify)
-
-## Phase Structure
-
-```
-[PHASE 1: EXPLORE] - Autonomous
-    |
-    v
-[CHECKPOINT: Present findings, confirm plan]
-    |
-    v
-[PHASE 2: PLAN] - Autonomous
-    |
-    v
-[CHECKPOINT: Present plan, get approval]
-    |
-    v
-[PHASE 3: EXECUTE] - Autonomous within scope
-    |
-    v
-[CHECKPOINT: Show results, confirm next steps]
-    |
-    v
-[PHASE 4: VERIFY] - Autonomous
-    |
-    v
-[COMPLETE: Final summary]
-```
 
 ## When to Use
 

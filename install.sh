@@ -131,21 +131,21 @@ if [ -d "$SOURCE_PATH/skills" ]; then
     print_success "skills: copy complete"
 fi
 
-# CLAUDE.global.md -> CLAUDE.md
+# CLAUDE.md
 echo "  Setting up CLAUDE.md..."
-GLOBAL_MD_SOURCE="$SOURCE_PATH/CLAUDE.global.md"
+CLAUDE_MD_SOURCE="$SOURCE_PATH/CLAUDE.md"
 CLAUDE_MD_DEST="$CLAUDE_HOME/CLAUDE.md"
 
-if [ -f "$GLOBAL_MD_SOURCE" ]; then
+if [ -f "$CLAUDE_MD_SOURCE" ]; then
     if [ -f "$CLAUDE_MD_DEST" ]; then
         BACKUP_PATH="$CLAUDE_MD_DEST.backup.$(date +%Y%m%d_%H%M%S)"
         cp "$CLAUDE_MD_DEST" "$BACKUP_PATH"
         print_warn "Existing CLAUDE.md backed up: $BACKUP_PATH"
     fi
-    cp "$GLOBAL_MD_SOURCE" "$CLAUDE_MD_DEST"
-    print_success "CLAUDE.md copied"
+    cp "$CLAUDE_MD_SOURCE" "$CLAUDE_MD_DEST"
+    print_success "CLAUDE.md copied (Maestro workflow)"
 else
-    print_dim "CLAUDE.global.md not found (skipping)"
+    print_dim "CLAUDE.md not found (skipping)"
 fi
 
 # 4. Merge configuration files

@@ -2,7 +2,7 @@
 description: "Alias for /ultrawork - Full autonomous mode"
 ---
 
-# /ulw - Full Autonomous Mode
+# /ulw - Ultrawork Alias
 
 [ULTRAWORK MODE ACTIVATED]
 
@@ -10,10 +10,15 @@ $ARGUMENTS
 
 ---
 
-Execute with Sisyphus Phase System:
-1. EXPLORE - Parallel discovery with @codebase-explorer and @librarian
-2. PLAN - Create TODO list with TodoWrite
-3. EXECUTE - Complete all tasks, delegate to specialists
-4. VERIFY - Ensure success criteria met
+## Maestro Orchestration (Full Autonomy)
 
+Execute with full autonomy using Maestro workflow:
+
+1. **ANALYZE** - Assess task complexity
+2. **PATTERN** - Select execution pattern (Chaining/Parallelization/Routing/Orchestrator-Workers)
+3. **AGENTS** - Identify required agents and tools
+4. **EXECUTE** - Run without approval checkpoint (ultrawork privilege)
+5. **VERIFY** - Ensure success criteria met
+
+### Ralph Loop: ACTIVE
 Continue until `<promise>DONE</promise>`.

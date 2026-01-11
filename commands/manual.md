@@ -37,15 +37,15 @@ Switching to Manual mode - Full user control, no automation.
 
    I will wait for your direction on each step.
    Use /ulw or /semi-auto to change modes.
+   Use /maestro for orchestrated planning.
    ```
 
-## Behavior in Manual Mode
+## Maestro in Manual Mode
 
-- Wait for explicit user approval before major actions
-- Provide recommendations but don't auto-execute
-- Ask clarifying questions when uncertain
-- No automatic task continuation
-- Present options for user to choose
+When using `/maestro` in manual mode:
+- Plan presented for approval
+- Each execution step requires confirmation
+- Full visibility and control
 
 ## When to Use
 

@@ -40,7 +40,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "echo '[SEARCH MODE] Use @codebase-explorer agent for comprehensive codebase search'"
+            "command": "echo '[SEARCH MODE] Use built-in Explore agent for codebase search'"
           }
         ]
       },

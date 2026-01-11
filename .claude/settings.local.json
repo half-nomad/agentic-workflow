@@ -1,13 +1,15 @@
 {
+  "permissions": {
+    "allow": [
+      "mcp__grep-app__searchGitHub",
+      "Bash(test:*)",
+      "Read(//c/Users/mokka/My_note/30.Expertise/35.Documents/**)"
+    ]
+  },
   "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
     "grep_app",
     "context7",
     "grep-app"
-  ],
-  "permissions": {
-    "allow": [
-      "mcp__grep-app__searchGitHub"
-    ]
-  }
+  ]
 }

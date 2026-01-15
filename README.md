@@ -64,14 +64,30 @@ chmod +x install.sh
 
 ### Agents (에이전트)
 
-| 에이전트 | 모델 | 용도 |
-|---------|------|------|
-| `@architect` | Opus | 전략적 자문, 아키텍처 결정 |
-| `@frontend-engineer` | Opus | UI/UX, 컴포넌트, 스타일링 |
-| `@librarian` | Sonnet | 문서 리서치, API 레퍼런스 |
-| `@document-writer` | Sonnet | README, 가이드 문서 작성 |
+#### 에이전트 우선순위
 
-빌트인 에이전트: `Explore` (코드베이스 검색), `Plan` (계획 수립)
+```
+1️⃣ Project Agents   → 프로젝트 agents/ 폴더 우선
+2️⃣ Global Agents    → 전역 에이전트
+3️⃣ Dynamic Roles    → 동적 역할 생성
+```
+
+#### 전역 에이전트
+
+| 에이전트 | 모델 | Tools | 용도 |
+|---------|------|-------|------|
+| 🔵 `@architect` | Opus | all | 전략적 자문, 아키텍처 결정 |
+| 🟢 `@frontend-engineer` | Opus | all | UI/UX, 컴포넌트, 스타일링 |
+| 🟡 `@librarian` | Sonnet | limited | 문서 리서치, API 레퍼런스 |
+| 🟣 `@document-writer` | Sonnet | all | README, 가이드 문서 작성 |
+
+#### 동적 역할
+
+전문 에이전트가 없는 도메인(Backend, DevOps, Security 등)은 **동적 역할**로 생성됩니다.
+
+#### 빌트인 에이전트
+
+`Explore` (코드베이스 검색), `Plan` (계획 수립), `general-purpose` (동적 역할)
 
 ### Commands (슬래시 커맨드)
 
@@ -178,4 +194,4 @@ MIT
 
 ---
 
-*Maestro Workflow v1.0 - 2026-01-11*
+*Maestro Workflow v1.1 - 2026-01-15*

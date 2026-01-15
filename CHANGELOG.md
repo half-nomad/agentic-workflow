@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.0] - 2026-01-15
+
+### Added
+- **Agent Priority System**: Project Agents > Global Agents > Dynamic Roles
+- **Dynamic Role Template**: Create specialist roles on-demand for domains without pre-defined agents
+- **Delegation Rules (MANDATORY)**: Enforce Task tool usage when agents identified in plan
+- Color indicators for global agents (🔵🟢🟡🟣)
+
+### Changed
+- **CLAUDE.md simplified**: 193 → 67 lines (65% reduction), detailed rules moved to `rules/maestro-workflow.md`
+- **Agent tools expanded**: `@architect`, `@frontend-engineer`, `@document-writer` now use `tools: *` (all tools)
+- **@librarian**: Kept limited tools (research-only, no file modification)
+- `rules/maestro-workflow.md`: v1.1 with delegation rules, agent priority, anti-patterns
+- `docs/maestro-summary.md`: v1.1 with updated agent system documentation
+
+### Fixed
+- Context accumulation issue: Added mandatory delegation to distribute context across sub-agents
+
+---
+
 ## [1.0.1] - 2026-01-11
 
 ### Added

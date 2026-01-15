@@ -1,7 +1,7 @@
 ---
 name: document-writer
 description: "Technical documentation specialist for README, API docs, and guides. Use for creating or updating documentation files. Avoid for code implementation or inline code comments."
-model: opus
+model: sonnet
 tools: Read, Write, Edit, Grep, Glob
 ---
 

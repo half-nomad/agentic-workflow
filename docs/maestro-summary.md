@@ -106,7 +106,7 @@ Anthropic이 제안한 5가지 핵심 패턴:
 | `@architect` | Opus | 전략적 자문, 아키텍처 결정 |
 | `@frontend-engineer` | Opus | UI/UX, 컴포넌트, MCP 도구 |
 | `@librarian` | Sonnet | 문서 리서치, API 레퍼런스 |
-| `@document-writer` | Opus | README, 가이드 문서 작성 |
+| `@document-writer` | Sonnet | README, 가이드 문서 작성 |
 
 #### 빌트인 에이전트
 

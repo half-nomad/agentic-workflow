@@ -59,7 +59,7 @@ Complex, multi-domain?         → Orchestrator-Workers
 | `@architect` | opus | Strategic advisor | Stuck 2+ times, major decisions |
 | `@frontend-engineer` | opus | UI/UX specialist | Visual changes, CSS, components |
 | `@librarian` | sonnet | Documentation research | Library docs, API references |
-| `@document-writer` | opus | Documentation | README, guides, docs |
+| `@document-writer` | sonnet | Documentation | README, guides, docs |
 
 ### Built-in Agents
 

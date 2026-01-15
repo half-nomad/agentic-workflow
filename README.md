@@ -69,7 +69,7 @@ chmod +x install.sh
 | `@architect` | Opus | 전략적 자문, 아키텍처 결정 |
 | `@frontend-engineer` | Opus | UI/UX, 컴포넌트, 스타일링 |
 | `@librarian` | Sonnet | 문서 리서치, API 레퍼런스 |
-| `@document-writer` | Opus | README, 가이드 문서 작성 |
+| `@document-writer` | Sonnet | README, 가이드 문서 작성 |
 
 빌트인 에이전트: `Explore` (코드베이스 검색), `Plan` (계획 수립)
 

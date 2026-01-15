@@ -2,7 +2,7 @@
 name: architect
 description: "Strategic technical advisor for architecture decisions, code review, and debugging strategy. Use when stuck 2+ times, making major design decisions, or need alternative approaches. Avoid for first attempts or simple implementations."
 model: opus
-tools: Read, Grep, Glob, WebSearch
+tools: *
 ---
 
 # Architect - Strategic Technical Advisor

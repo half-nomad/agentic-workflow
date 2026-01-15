@@ -172,10 +172,10 @@ Orchestrator
    - Mark items complete immediately when done
    - Never batch completions
 
-2. **Delegate Appropriately**
-   - Use Task tool for parallel agent work
-   - Use specialist agents for domain expertise
-   - Use built-in agents for standard operations
+2. **Delegate via Task Tool (MANDATORY)**
+   - See "Delegation Rules" section below
+   - MUST use Task tool when agents identified in plan
+   - MUST NOT execute agent's work directly
 
 3. **Handle Failures**
    ```
@@ -236,6 +236,106 @@ Only then output:
 
 ---
 
+## Delegation Rules (MANDATORY)
+
+Delegation is **NOT optional**. When the plan identifies an agent, you MUST delegate via Task tool.
+
+### Agent Priority
+
+```
+1️⃣ Project Agents   → Check project's agents/ folder first
+2️⃣ Global Agents    → Use pre-defined global agents
+3️⃣ Dynamic Roles    → Create on-demand for other domains
+```
+
+When project has a specialist agent for the domain, **prefer it over global agents**.
+
+### Global Agents (Always Available)
+
+| Agent | Domain | Model | Tools | Trigger |
+|-------|--------|-------|-------|---------|
+| 🔵 `@architect` | Strategy | opus | all | Stuck 2+ times, major decisions |
+| 🟢 `@frontend-engineer` | UI/UX | opus | all | Visual changes, styling, animations |
+| 🟡 `@librarian` | Research | sonnet | limited | Library docs, API references |
+| 🟣 `@document-writer` | Docs | sonnet | all | README, guides, docs |
+
+### When to Use Dynamic Roles
+
+Use dynamic role assignment for domains without specialist agents:
+- Backend development
+- DevOps / Infrastructure
+- Security review
+- Database design
+- Other specialized domains
+
+### Dynamic Role Template
+
+When no specialist agent exists, create a dynamic role:
+
+```
+Task tool call:
+- subagent_type: general-purpose
+- prompt: |
+    ## Role
+    You are a [DOMAIN] expert specializing in [SPECIFIC AREA].
+
+    ## Context
+    [Relevant background - keep brief]
+
+    ## Task
+    [Specific deliverable expected]
+
+    ## Output Format
+    [Expected structure of response]
+```
+
+**Example - Backend API work:**
+```
+- subagent_type: general-purpose
+- prompt: |
+    ## Role
+    You are a backend engineer expert in REST API design.
+
+    ## Context
+    We're adding user authentication to an Express.js app.
+
+    ## Task
+    Create auth endpoints: POST /login, POST /register, GET /me
+
+    ## Output Format
+    - Route implementations
+    - Middleware code
+    - Brief usage notes
+```
+
+### Complexity-Based Delegation
+
+| Condition | Action |
+|-----------|--------|
+| Files >= 5 | Split into sub-tasks, delegate |
+| Independent tasks >= 3 | Parallel delegation |
+| Single domain, < 3 files | Direct execution OK |
+
+### Result Integration
+
+After receiving sub-agent results:
+1. Extract key outcomes only (no full copy)
+2. Update TODO items
+3. Proceed to next step or synthesize
+
+### Delegation Anti-Patterns (VIOLATION)
+
+These are **workflow violations**:
+
+| Anti-Pattern | Correct Behavior |
+|--------------|------------------|
+| Plan identifies @agent → Execute directly | Plan identifies @agent → Task tool |
+| "It's simple" → Skip delegation | Follow delegation rules regardless |
+| Accumulate context → Do everything | Delegate to manage context |
+| Ignore dynamic role option | Create role when no specialist exists |
+
+---
+
 ## Examples
 
 ### Simple Task (No Maestro needed)
@@ -269,19 +369,38 @@ Pattern: Parallelization
 - Merge: Synthesize findings into comparison doc
 ```
 
-### Orchestrator-Workers Pattern
+### Orchestrator-Workers Pattern (with Proper Delegation)
 ```
 User: "/maestro Implement user authentication"
 
 Plan:
 Pattern: Orchestrator-Workers
 - @architect: Design auth architecture
-- Worker 1: Backend auth endpoints
+- Worker 1: Backend auth endpoints (dynamic role)
 - Worker 2: Frontend auth UI (@frontend-engineer)
 - Worker 3: Documentation (@document-writer)
-- Integration: Connect all parts, test flow
+
+Execution (CORRECT):
+1. Task tool → @architect
+   "Design auth architecture for Express + React app"
+
+2. Task tool → general-purpose (dynamic: backend engineer)
+   "Implement auth endpoints based on architect's design"
+
+3. Task tool → @frontend-engineer (parallel with #2)
+   "Build login/register UI components"
+
+4. Task tool → @document-writer (parallel with #2, #3)
+   "Create auth documentation"
+
+5. Main agent: Integrate and test
+
+Execution (WRONG - VIOLATION):
+❌ Plan says @architect → Main agent designs directly
+❌ Plan says @frontend-engineer → Main agent writes CSS
+❌ Skipping Task tool "because it's faster"
 ```
 
 ---
 
-*Maestro Workflow Rules v1.0*
+*Maestro Workflow Rules v1.1*

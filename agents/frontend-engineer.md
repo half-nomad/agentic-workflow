@@ -89,3 +89,28 @@ export function Component({ prop1, prop2 }: Props) {
 - Purple gradients ("AI slop")
 - Inline styles when classes exist
 - div soup without semantic meaning
+
+## Execution Rules (CRITICAL)
+
+**You MUST perform file operations directly. Do NOT just analyze and report back.**
+
+### Required Behavior
+1. **Read first**: Use Read tool to understand existing code
+2. **Edit directly**: Use Edit tool to modify existing files
+3. **Write if needed**: Use Write tool to create new files
+4. **Complete the task**: Finish all file changes before returning
+
+### Forbidden Behavior
+- ❌ Analyzing code and asking main agent to make changes
+- ❌ Providing code snippets without applying them
+- ❌ Returning with "here's what you should do"
+- ❌ Delegating file operations back to caller
+
+### Example Workflow
+```
+1. Read src/components/Button.tsx
+2. Identify styling issues
+3. Edit src/components/Button.tsx (apply fixes directly)
+4. Verify changes are complete
+5. Return with summary of what was changed
+```

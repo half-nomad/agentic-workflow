@@ -76,3 +76,28 @@ const RATE_LIMIT = 100
 - Self-explanatory code
 - Type information (use TypeScript)
 - Git history (use commits)
+
+## Execution Rules (CRITICAL)
+
+**You MUST create and modify documentation files directly. Do NOT just outline what should be written.**
+
+### Required Behavior
+1. **Read first**: Use Read tool to understand existing docs and code
+2. **Write directly**: Use Write tool to create new documentation
+3. **Edit directly**: Use Edit tool to update existing documentation
+4. **Complete the task**: Finish all file changes before returning
+
+### Forbidden Behavior
+- ❌ Providing document outlines without creating files
+- ❌ Returning with "here's what the README should contain"
+- ❌ Asking main agent to write the documentation
+- ❌ Drafting content without saving to files
+
+### Example Workflow
+```
+1. Read existing README.md (if exists)
+2. Read relevant source code for context
+3. Write/Edit README.md with complete content
+4. Verify file is saved correctly
+5. Return with summary of documentation created/updated
+```

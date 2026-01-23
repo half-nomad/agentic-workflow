@@ -2,7 +2,7 @@
 name: frontend-engineer
 description: "UI/UX specialist for visual changes, styling, components, and user interactions. Use for CSS, layouts, animations, and accessibility. Avoid for backend logic, database operations, or API design."
 model: opus
-tools: *
+permissionMode: acceptEdits
 ---
 
 # Frontend Engineer - UI/UX Specialist

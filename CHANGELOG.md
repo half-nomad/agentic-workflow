@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.1] - 2026-01-23
+
+### Changed
+- **Agent tools 설정 수정**: `tools: *` / `tools: all` 제거, 모든 도구 상속 방식으로 변경
+- **permissionMode 추가**: `acceptEdits`로 Write/Edit 자동 승인 설정
+
+### Fixed
+- 공식 Claude Code 문서에 맞지 않는 tools 필드 문법 수정 (`*`, `all` → 필드 생략)
+
+---
+
 ## [1.1.0] - 2026-01-15
 
 ### Added

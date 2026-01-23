@@ -2,7 +2,7 @@
 name: document-writer
 description: "Technical documentation specialist for README, API docs, and guides. Use for creating or updating documentation files. Avoid for code implementation or inline code comments."
 model: sonnet
-tools: *
+permissionMode: acceptEdits
 ---
 
 # Document Writer - Technical Documentation Specialist

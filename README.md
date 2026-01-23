@@ -76,10 +76,10 @@ chmod +x install.sh
 
 | 에이전트 | 모델 | Tools | 용도 |
 |---------|------|-------|------|
-| 🔵 `@architect` | Opus | all | 전략적 자문, 아키텍처 결정 |
-| 🟢 `@frontend-engineer` | Opus | all | UI/UX, 컴포넌트, 스타일링 |
+| 🔵 `@architect` | Opus | inherited | 전략적 자문, 아키텍처 결정 |
+| 🟢 `@frontend-engineer` | Opus | inherited | UI/UX, 컴포넌트, 스타일링 |
 | 🟡 `@librarian` | Sonnet | limited | 문서 리서치, API 레퍼런스 |
-| 🟣 `@document-writer` | Sonnet | all | README, 가이드 문서 작성 |
+| 🟣 `@document-writer` | Sonnet | inherited | README, 가이드 문서 작성 |
 
 #### 동적 역할
 
@@ -194,4 +194,4 @@ MIT
 
 ---
 
-*Maestro Workflow v1.1 - 2026-01-15*
+*Maestro Workflow v1.1.1 - 2026-01-23*

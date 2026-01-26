@@ -4,3 +4,9 @@ node_modules/
 
 # Runtime state (created during execution)
 .agentic/
+
+# Local settings (user-specific)
+.claude/settings.local.json
+
+# Logs directory
+logs/

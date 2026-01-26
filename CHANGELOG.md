@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.0] - 2026-01-26
+
+### Added
+- **Orchestrator Role Definition (CRITICAL)**: Explicit allowed/forbidden actions for orchestrator
+- **Tool Permissions Table**: Clear matrix of which tools orchestrator vs sub-agents can use
+- **Self-Check Checklist**: Mental interrupt before using forbidden tools
+
+### Changed
+- **commands/maestro.md**: Simplified from 63 → 23 lines, removes duplication with rules
+- **Delegation loophole removed**: "Single domain, < 3 files → Direct execution OK" changed to require delegation
+- **Handle Failures**: Now specifies delegation attempts, not direct execution
+- **Result Integration**: Clarified that modifications must be delegated, not done directly
+- **Chaining Pattern example**: Updated to show proper delegation
+
+### Fixed
+- Main agent tendency to directly execute code/document CRUD instead of delegating
+- Information duplication between `commands/maestro.md` and `rules/maestro-workflow.md`
+
+---
+
 ## [1.1.1] - 2026-01-23
 
 ### Changed

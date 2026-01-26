@@ -14,6 +14,39 @@ Detailed rules for the Maestro orchestration system.
 
 ---
 
+## Orchestrator Role (CRITICAL)
+
+In `/maestro` or `/ultrawork` mode, the main agent becomes a **pure orchestrator**.
+
+### Orchestrator ALLOWED Actions
+- **Read** files for context (Read, Glob, Grep)
+- **Analyze** and plan
+- **Delegate** tasks via Task tool
+- **Track** progress (TodoWrite/TaskCreate)
+- **Synthesize** sub-agent results
+- **Report** to user
+- **Verify** via read-only commands (`npm test`, `git status`, `ls`)
+
+### Orchestrator FORBIDDEN Actions
+
+**The orchestrator MUST NOT directly use these tools:**
+| Tool | Alternative |
+|------|-------------|
+| `Write` | Delegate to appropriate agent |
+| `Edit` | Delegate to appropriate agent |
+| `Bash` (file creation/modification) | Delegate to appropriate agent |
+
+**Exception**: Bash for read-only verification (`git status`, `npm test`, `ls`) is allowed.
+
+### Enforcement
+
+When tempted to use a forbidden tool, STOP and ask:
+> "Which agent should handle this?"
+
+Then delegate via Task tool.
+
+---
+
 ## Workflow Phases
 
 ### Phase 1: ANALYZE
@@ -122,6 +155,24 @@ Orchestrator
 - **Research**: WebSearch, WebFetch, MCP tools
 - **Track**: TodoWrite
 
+### Tool Permissions by Role
+
+| Tool | Orchestrator | Sub-Agents |
+|------|:------------:|:----------:|
+| Read | ✅ | ✅ |
+| Glob | ✅ | ✅ |
+| Grep | ✅ | ✅ |
+| Write | ❌ | ✅ |
+| Edit | ❌ | ✅ |
+| Bash (read-only) | ✅ | ✅ |
+| Bash (modify) | ❌ | ✅ |
+| Task | ✅ | ❌ |
+| TodoWrite | ✅ | ✅ |
+| WebSearch | ✅ | ✅ |
+| WebFetch | ✅ | ✅ |
+
+**Orchestrator principle**: Observe, delegate, verify. Never mutate directly.
+
 ---
 
 ### Phase 4: APPROVE
@@ -179,12 +230,14 @@ Orchestrator
 
 3. **Handle Failures**
    ```
-   Attempt 1: Direct approach
-   Attempt 2: Adjusted approach
-   Attempt 3: Alternative method
-   Attempt 4: Consult @architect
-   Attempt 5+: Report blocker
+   Attempt 1: Delegate with clear instructions
+   Attempt 2: Delegate with refined instructions
+   Attempt 3: Delegate to different agent or dynamic role
+   Attempt 4: Consult @architect for strategy
+   Attempt 5+: Report blocker to user
    ```
+
+   **NOTE**: "Attempt" means a delegation attempt, NOT direct execution.
 
 4. **Verify Each Step**
    - Confirm output before proceeding
@@ -314,14 +367,20 @@ Task tool call:
 |-----------|--------|
 | Files >= 5 | Split into sub-tasks, delegate |
 | Independent tasks >= 3 | Parallel delegation |
-| Single domain, < 3 files | Direct execution OK |
+| Single domain, < 3 files | Delegate to single agent (streamlined) |
+
+**NOTE**: Even simple tasks require delegation in Maestro/Ultrawork mode.
 
 ### Result Integration
 
 After receiving sub-agent results:
-1. Extract key outcomes only (no full copy)
-2. Update TODO items
-3. Proceed to next step or synthesize
+1. **Read and understand** the changes made (use Read tool)
+2. **Verify** results meet requirements (use Bash for tests if needed)
+3. **Update** TODO items to reflect completion
+4. **Summarize** outcomes for user or next step
+5. **Proceed** to next delegation or report completion
+
+**IMPORTANT**: If results need modification, delegate the fix - do NOT edit directly.
 
 ### Delegation Anti-Patterns (VIOLATION)
 
@@ -333,6 +392,17 @@ These are **workflow violations**:
 | "It's simple" → Skip delegation | Follow delegation rules regardless |
 | Accumulate context → Do everything | Delegate to manage context |
 | Ignore dynamic role option | Create role when no specialist exists |
+
+### Self-Check Before Any Tool Use
+
+Before using Write, Edit, or Bash (non-read-only):
+
+1. Am I in Maestro/Ultrawork mode?
+2. If YES → I **MUST** delegate this action
+3. Have I identified which agent handles this domain?
+4. Have I crafted clear instructions for the sub-agent?
+
+If any check fails, **STOP and correct course**.
 
 ---
 
@@ -350,11 +420,13 @@ User: "/maestro Add input validation to the login form"
 
 Plan:
 Pattern: Chaining
-1. Read current form implementation
-2. Add validation schema
-3. Integrate validation into form
-4. Add error display
-5. Test validation
+Agent: @frontend-engineer (single domain)
+
+Execution:
+1. Orchestrator: Read current form (gather context)
+2. Task tool → @frontend-engineer:
+   "Add validation schema, integrate into form, add error display"
+3. Orchestrator: Run tests to verify (`npm test`)
 ```
 
 ### Parallelization Pattern
@@ -403,4 +475,4 @@ Execution (WRONG - VIOLATION):
 
 ---
 
-*Maestro Workflow Rules v1.1*
+*Maestro Workflow Rules v1.2*

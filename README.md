@@ -9,6 +9,7 @@ agentic-workflow는 Claude Code CLI에 최적화된 **Maestro** 오케스트레�
 ## 주요 특징
 
 - **Maestro 오케스트레이션**: `/maestro` 명령으로 패턴 기반 계획 수립
+- **순수 오케스트레이터 역할**: 메인 에이전트는 위임만, 직접 파일 수정 금지
 - **Anthropic 4+1 패턴**: Chaining, Parallelization, Routing, Orchestrator-Workers, Evaluator
 - **4개 전문 에이전트**: 영역별 최적화 (architect, frontend, librarian, document-writer)
 - **2가지 작업 모드**: Maestro (계획 기반), Ultrawork (완전 자동)
@@ -59,6 +60,18 @@ chmod +x install.sh
 | **Parallelization** | 독립 병렬 작업 | 3개 API 동시 검색 |
 | **Routing** | 조건부 분기 | 에러 타입별 핸들러 |
 | **Orchestrator-Workers** | 복잡한 다중 도메인 | 전체 기능 구현 |
+
+### 오케스트레이터 역할 (v1.2)
+
+Maestro/Ultrawork 모드에서 메인 에이전트는 **순수 오케스트레이터**로 동작합니다.
+
+| 허용 | 금지 |
+|------|------|
+| Read, Glob, Grep (컨텍스트 수집) | Write, Edit (파일 수정) |
+| Task tool (위임) | Bash (파일 생성/수정) |
+| Bash (읽기 전용: `git status`, `npm test`) | 직접 코드 작성 |
+
+**원칙**: 관찰, 위임, 검증. 직접 수정하지 않음.
 
 ## 구성 요소
 
@@ -194,4 +207,4 @@ MIT
 
 ---
 
-*Maestro Workflow v1.1.1 - 2026-01-23*
+*Maestro Workflow v1.2.0 - 2026-01-26*

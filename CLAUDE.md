@@ -12,6 +12,7 @@
 |---------|------|----------|
 | `/maestro [task]` | Maestro | Plan with approval |
 | `/ultrawork`, `/ulw` | Ultrawork | Full autonomy + Ralph Loop |
+| `/swarm [task]`, `swarm:` | Swarm | 병렬 에이전트 실행 |
 | (none) | Default | Normal interaction |
 
 ### Workflow
@@ -28,6 +29,7 @@ ANALYZE → PATTERN → AGENTS → APPROVE → EXECUTE
 | **Parallelization** | Independent concurrent tasks |
 | **Routing** | Conditional branching |
 | **Orchestrator-Workers** | Multi-domain complexity |
+| **Swarm** | N개 에이전트 병렬 실행 |
 | **Evaluator** | Quality verification |
 
 ### Agents
@@ -64,4 +66,12 @@ See `rules/` directory:
 
 ---
 
-*Maestro Workflow v1.0*
+## State Persistence
+
+Sessions resume via `.agentic/boulder.json`:
+- "계속" / "continue": Resume previous plan
+- "새로 시작" / "new": Clear state, fresh start
+
+---
+
+*Maestro Workflow v1.3*

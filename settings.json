@@ -18,6 +18,24 @@
   "hooks": {
     "UserPromptSubmit": [
       {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"hooks/boulder-manager.ps1\" -Action load"
+          }
+        ]
+      },
+      {
+        "matcher": "swarm:|parallel:|병렬:",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"hooks/keyword-detector.ps1\" -Keyword swarm"
+          }
+        ]
+      },
+      {
         "matcher": "ultrawork|ulw|finish everything|complete all",
         "hooks": [
           {
@@ -87,6 +105,10 @@
       {
         "matcher": "",
         "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"hooks/boulder-manager.ps1\" -Action save"
+          },
           {
             "type": "command",
             "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"hooks/ralph-loop.ps1\""

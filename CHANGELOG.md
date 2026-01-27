@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.3.0] - 2026-01-27
+
+### Added
+- **Swarm Mode**: `/swarm` 또는 `swarm:` 키워드로 병렬 에이전트 실행
+- **boulder.json**: 세션 간 계획 상태 유지 메커니즘
+- `hooks/boulder-manager.ps1/sh`: 상태 로드/저장 훅
+
+### Changed
+- `hooks/keyword-detector.ps1/sh`: swarm 키워드 감지 추가
+- `settings.json`: 새 훅 등록
+- **Patterns**: 4+1 → 5+1 (Swarm 추가)
+
+---
+
 ## [1.2.0] - 2026-01-26
 
 ### Added

@@ -131,6 +131,17 @@ Orchestrator
 - Dynamic task distribution
 - Good for: Full features, large refactors
 
+#### Swarm
+```
+    ┌→ Agent A ─┐
+    │→ Agent B ─┤→ Collect → Synthesize
+    └→ Agent C ─┘
+```
+- N개 에이전트 동시 실행
+- 독립적 작업 병렬 처리
+- 결과 수집 및 통합
+- Good for: 다중 소스 리서치, 병렬 분석
+
 ---
 
 ### Phase 3: AGENTS
@@ -475,4 +486,21 @@ Execution (WRONG - VIOLATION):
 
 ---
 
-*Maestro Workflow Rules v1.2*
+## State Persistence (boulder.json)
+
+세션 간 계획 상태 유지 메커니즘.
+
+### 파일 위치
+`.agentic/boulder.json`
+
+### 동작
+- **세션 시작**: boulder.json 로드, 이전 계획 컨텍스트 주입
+- **세션 종료**: 현재 상태 boulder.json에 저장
+
+### 사용자 명령
+- "계속" / "continue": 이전 계획 재개
+- "새로 시작" / "new": boulder.json 초기화
+
+---
+
+*Maestro Workflow Rules v1.3*

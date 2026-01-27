@@ -9,11 +9,13 @@ agentic-workflow는 Claude Code CLI에 최적화된 **Maestro** 오케스트레�
 ## 주요 특징
 
 - **Maestro 오케스트레이션**: `/maestro` 명령으로 패턴 기반 계획 수립
+- **Swarm 모드**: `/swarm` 또는 `swarm:` 키워드로 병렬 에이전트 실행
 - **순수 오케스트레이터 역할**: 메인 에이전트는 위임만, 직접 파일 수정 금지
-- **Anthropic 4+1 패턴**: Chaining, Parallelization, Routing, Orchestrator-Workers, Evaluator
+- **Anthropic 5+1 패턴**: Chaining, Parallelization, Routing, Orchestrator-Workers, Swarm, Evaluator
 - **4개 전문 에이전트**: 영역별 최적화 (architect, frontend, librarian, document-writer)
-- **2가지 작업 모드**: Maestro (계획 기반), Ultrawork (완전 자동)
+- **3가지 작업 모드**: Maestro (계획 기반), Swarm (병렬 실행), Ultrawork (완전 자동)
 - **Ralph Loop**: 완료 시그널까지 자동 반복 실행
+- **State Persistence**: boulder.json으로 세션 간 계획 상태 유지
 
 ## 설치 방법
 
@@ -60,6 +62,7 @@ chmod +x install.sh
 | **Parallelization** | 독립 병렬 작업 | 3개 API 동시 검색 |
 | **Routing** | 조건부 분기 | 에러 타입별 핸들러 |
 | **Orchestrator-Workers** | 복잡한 다중 도메인 | 전체 기능 구현 |
+| **Swarm** | N개 에이전트 병렬 실행 | 다중 소스 리서치, 병렬 분석 |
 
 ### 오케스트레이터 역할 (v1.2)
 
@@ -129,7 +132,18 @@ Maestro/Ultrawork 모드에서 메인 에이전트는 **순수 오케스트레�
 |------|--------|------|
 | **Default** | (명령 없음) | 일반 Claude 상호작용 |
 | **Maestro** | `/maestro` | 계획 수립 후 승인 필요 |
+| **Swarm** | `/swarm`, `swarm:` | 병렬 에이전트 실행 |
 | **Ultrawork** | `/ultrawork` | 완전 자동화 + Ralph Loop |
+
+### State Persistence (상태 유지)
+
+세션 간 계획 상태는 `.agentic/boulder.json`에 자동 저장됩니다.
+
+**사용 방법**:
+- **계속하기**: "계속" 또는 "continue" 입력 시 이전 계획 재개
+- **새로 시작**: "새로 시작" 또는 "new" 입력 시 상태 초기화
+
+boulder.json은 세션 시작 시 자동 로드되고, 종료 시 자동 저장됩니다.
 
 ## 사용 예시
 
@@ -207,4 +221,4 @@ MIT
 
 ---
 
-*Maestro Workflow v1.2.0 - 2026-01-26*
+*Maestro Workflow v1.3.0 - 2026-01-27*

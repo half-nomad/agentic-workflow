@@ -79,7 +79,7 @@ print_success "Source path saved: $SOURCE_FILE_PATH"
 
 # 2. Create directories
 print_step "Creating directories..."
-DIRECTORIES=("$CLAUDE_HOME" "$CLAUDE_HOME/agents" "$CLAUDE_HOME/rules" "$CLAUDE_HOME/hooks" "$CLAUDE_HOME/commands" "$CLAUDE_HOME/skills")
+DIRECTORIES=("$CLAUDE_HOME" "$CLAUDE_HOME/agents" "$CLAUDE_HOME/rules" "$CLAUDE_HOME/hooks" "$CLAUDE_HOME/skills")
 for dir in "${DIRECTORIES[@]}"; do
     if [ ! -d "$dir" ]; then
         mkdir -p "$dir"
@@ -120,10 +120,6 @@ print_success "rules: $count files copied"
 echo "  Copying hooks/..."
 count=$(copy_directory_contents "$SOURCE_PATH/hooks" "$CLAUDE_HOME/hooks")
 print_success "hooks: $count files copied"
-
-echo "  Copying commands/..."
-count=$(copy_directory_contents "$SOURCE_PATH/commands" "$CLAUDE_HOME/commands")
-print_success "commands: $count files copied"
 
 echo "  Copying skills/..."
 if [ -d "$SOURCE_PATH/skills" ]; then
@@ -259,8 +255,7 @@ echo "Installed components:"
 echo "  - agents/     : AI agent prompts"
 echo "  - rules/      : Coding rules"
 echo "  - hooks/      : Claude Code hook scripts"
-echo "  - commands/   : Slash commands"
-echo "  - skills/     : Skill definitions"
+echo "  - skills/     : Slash commands & skills"
 echo "  - settings.json : Claude Code settings"
 echo "  - ~/.mcp.json   : MCP server settings"
 echo ""

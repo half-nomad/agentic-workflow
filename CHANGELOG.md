@@ -2,6 +2,31 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.4.0] - 2026-02-03
+
+### Changed
+- **commands → skills 마이그레이션**: Claude Code v2.1.3 skills 시스템으로 전환
+- **Skills 구조**: `skills/{name}/SKILL.md` 형식으로 변경
+- `/ralph-start` + `/ralph-cancel` → `/ralph start|cancel`로 통합
+
+### Removed
+- `commands/` 폴더 전체 (skills로 대체)
+- `/frontend`, `/librarian`, `/oracle` commands (에이전트 직접 호출로 대체)
+- `ulw.md` + `ultrawork.md` 중복 제거
+
+### Added
+- `skills/maestro/SKILL.md`
+- `skills/ultrawork/SKILL.md`
+- `skills/ulw/SKILL.md` (alias)
+- `skills/swarm/SKILL.md`
+- `skills/ralph/SKILL.md` (start/cancel 통합)
+- `skills/session-summary/SKILL.md`
+
+### Fixed
+- 설치 스크립트 업데이트 (commands → skills)
+
+---
+
 ## [1.3.0] - 2026-01-27
 
 ### Added

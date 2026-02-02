@@ -8,11 +8,12 @@
 
 ### Activation
 
-| Command | Mode | Behavior |
-|---------|------|----------|
+| Skill | Mode | Behavior |
+|-------|------|----------|
 | `/maestro [task]` | Maestro | Plan with approval |
 | `/ultrawork`, `/ulw` | Ultrawork | Full autonomy + Ralph Loop |
-| `/swarm [task]`, `swarm:` | Swarm | 병렬 에이전트 실행 |
+| `/swarm [task]` | Swarm | 병렬 에이전트 실행 |
+| `/ralph start\|cancel` | Ralph | Autonomous loop control |
 | (none) | Default | Normal interaction |
 
 ### Workflow
@@ -74,4 +75,4 @@ Sessions resume via `.agentic/boulder.json`:
 
 ---
 
-*Maestro Workflow v1.3*
+*Maestro Workflow v1.4*

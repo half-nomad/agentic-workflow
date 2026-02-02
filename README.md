@@ -9,7 +9,7 @@ agentic-workflow는 Claude Code CLI에 최적화된 **Maestro** 오케스트레�
 ## 주요 특징
 
 - **Maestro 오케스트레이션**: `/maestro` 명령으로 패턴 기반 계획 수립
-- **Swarm 모드**: `/swarm` 또는 `swarm:` 키워드로 병렬 에이전트 실행
+- **Swarm 모드**: `/swarm` 스킬로 병렬 에이전트 실행
 - **순수 오케스트레이터 역할**: 메인 에이전트는 위임만, 직접 파일 수정 금지
 - **Anthropic 5+1 패턴**: Chaining, Parallelization, Routing, Orchestrator-Workers, Swarm, Evaluator
 - **4개 전문 에이전트**: 영역별 최적화 (architect, frontend, librarian, document-writer)
@@ -105,26 +105,17 @@ Maestro/Ultrawork 모드에서 메인 에이전트는 **순수 오케스트레�
 
 `Explore` (코드베이스 검색), `Plan` (계획 수립), `general-purpose` (동적 역할)
 
-### Commands (슬래시 커맨드)
+### Skills (슬래시 커맨드)
 
-#### 핵심 커맨드
-| 커맨드 | 설명 |
-|--------|------|
+| Skill | 설명 |
+|-------|------|
 | `/maestro` | 오케스트레이터 모드 활성화 |
-| `/ultrawork`, `/ulw` | 완전 자동화 모드 |
+| `/ultrawork`, `/ulw` | 완전 자동화 모드 + Ralph Loop |
+| `/swarm` | 병렬 에이전트 실행 |
+| `/ralph start\|cancel` | Ralph Loop 제어 |
+| `/session-summary` | 세션 기능 사용 요약 |
 
-#### Ralph Loop 제어
-| 커맨드 | 설명 |
-|--------|------|
-| `/ralph-start` | Ralph Loop 시작 |
-| `/ralph-cancel` | Ralph Loop 중지 |
-
-#### 에이전트 호출
-| 커맨드 | 설명 |
-|--------|------|
-| `/oracle` | @architect 자문 |
-| `/frontend` | @frontend-engineer 호출 |
-| `/librarian` | @librarian 리서치 |
+에이전트는 `@architect`, `@frontend-engineer`, `@librarian`, `@document-writer`로 직접 호출합니다.
 
 ### Operating Modes (작업 모드)
 
@@ -132,7 +123,7 @@ Maestro/Ultrawork 모드에서 메인 에이전트는 **순수 오케스트레�
 |------|--------|------|
 | **Default** | (명령 없음) | 일반 Claude 상호작용 |
 | **Maestro** | `/maestro` | 계획 수립 후 승인 필요 |
-| **Swarm** | `/swarm`, `swarm:` | 병렬 에이전트 실행 |
+| **Swarm** | `/swarm` | 병렬 에이전트 실행 |
 | **Ultrawork** | `/ultrawork` | 완전 자동화 + Ralph Loop |
 
 ### State Persistence (상태 유지)
@@ -176,8 +167,8 @@ Parallelization 패턴으로 3개 프레임워크를 동시에 조사합니다.
 ```
 agentic-workflow/
 ├── agents/           # 전문 에이전트 (4개)
-├── commands/         # 슬래시 커맨드 (9개)
-├── hooks/            # 자동화 훅 (5종)
+├── skills/           # Skills (6개)
+├── hooks/            # 자동화 훅 (6종)
 ├── rules/            # 코딩 규칙
 ├── docs/             # 문서
 ├── CLAUDE.md         # Maestro 워크플로우 정의
@@ -190,7 +181,7 @@ agentic-workflow/
 ### Ralph Loop가 멈추지 않음
 
 ```bash
-/ralph-cancel
+/ralph cancel
 # 또는
 rm .agentic/ralph-loop.state.md
 ```
@@ -221,4 +212,4 @@ MIT
 
 ---
 
-*Maestro Workflow v1.3.0 - 2026-01-27*
+*Maestro Workflow v1.4.0 - 2026-02-03*

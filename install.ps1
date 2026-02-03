@@ -57,7 +57,6 @@ $Directories = @(
     (Join-Path $ClaudeHome "agents"),
     (Join-Path $ClaudeHome "rules"),
     (Join-Path $ClaudeHome "hooks"),
-    (Join-Path $ClaudeHome "commands"),
     (Join-Path $ClaudeHome "skills")
 )
 
@@ -106,11 +105,6 @@ Write-Success "rules: $count files copied"
 Write-Host "  Copying hooks/..."
 $count = Copy-DirectoryContents -Source (Join-Path $SourcePath "hooks") -Destination (Join-Path $ClaudeHome "hooks")
 Write-Success "hooks: $count files copied"
-
-# commands/
-Write-Host "  Copying commands/..."
-$count = Copy-DirectoryContents -Source (Join-Path $SourcePath "commands") -Destination (Join-Path $ClaudeHome "commands")
-Write-Success "commands: $count files copied"
 
 # skills/ (recursive copy)
 Write-Host "  Copying skills/..."
@@ -250,8 +244,7 @@ Write-Host "Installed components:" -ForegroundColor White
 Write-Host "  - agents/     : AI agent prompts"
 Write-Host "  - rules/      : Coding rules"
 Write-Host "  - hooks/      : Claude Code hook scripts"
-Write-Host "  - commands/   : Slash commands"
-Write-Host "  - skills/     : Skill definitions"
+Write-Host "  - skills/     : Slash commands & skills"
 Write-Host "  - settings.json : Claude Code settings"
 Write-Host "  - ~/.mcp.json   : MCP server settings"
 Write-Host ""

@@ -50,7 +50,7 @@ chmod +x install.sh
 
 1. **ANALYZE** - 작업 복잡도 평가 (단순 vs 복잡)
 2. **PATTERN** - 실행 패턴 선택
-3. **AGENTS** - 필요한 에이전트/도구 식별
+3. **[PLAN MODE]** - 복잡한 작업 시 Plan Mode에서 계획 수립 (v1.4)
 4. **APPROVE** - 사용자 승인 요청
 5. **EXECUTE** - 승인 후 실행
 
@@ -75,6 +75,16 @@ Maestro/Ultrawork 모드에서 메인 에이전트는 **순수 오케스트레�
 | Bash (읽기 전용: `git status`, `npm test`) | 직접 코드 작성 |
 
 **원칙**: 관찰, 위임, 검증. 직접 수정하지 않음.
+
+### Plan Mode (v1.4)
+
+복잡한 작업(3개 이상 파일 수정, 새 기능 구현) 시 Plan Mode를 활용합니다.
+
+- **자동 전환**: 파일 수정 >= 3개, 아키텍처 변경 시
+- **허용**: Explore 위임, Read, 계획 파일 작성, AskUserQuestion
+- **금지**: 코드 파일 Write/Edit, Bash 수정 명령
+
+**장점**: 대화 맥락 유지로 계획 품질 향상, 사용자 승인 프로세스 명확화
 
 ## 구성 요소
 
@@ -103,7 +113,7 @@ Maestro/Ultrawork 모드에서 메인 에이전트는 **순수 오케스트레�
 
 #### 빌트인 에이전트
 
-`Explore` (코드베이스 검색), `Plan` (계획 수립), `general-purpose` (동적 역할)
+`Explore` (코드베이스 검색), `general-purpose` (동적 역할). 계획 수립은 Plan Mode에서 직접 수행.
 
 ### Skills (슬래시 커맨드)
 
@@ -168,7 +178,6 @@ Parallelization 패턴으로 3개 프레임워크를 동시에 조사합니다.
 agentic-workflow/
 ├── agents/           # 전문 에이전트 (4개)
 ├── skills/           # Skills (6개)
-├── hooks/            # 자동화 훅 (6종)
 ├── rules/            # 코딩 규칙
 ├── docs/             # 문서
 ├── CLAUDE.md         # Maestro 워크플로우 정의
@@ -212,4 +221,4 @@ MIT
 
 ---
 
-*Maestro Workflow v1.4.0 - 2026-02-03*
+*Maestro Workflow v1.5.0 - 2026-02-03*

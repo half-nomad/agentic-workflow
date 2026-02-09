@@ -52,6 +52,7 @@ Anthropic이 제안한 5가지 핵심 패턴:
 | **Parallelization** | A ∥ B ∥ C → Merge | 독립적 병렬 작업 |
 | **Routing** | Input → Handler(조건) | 조건부 분기 |
 | **Orchestrator-Workers** | 오케스트레이터 → 워커들 | 복잡한 다중 도메인 |
+| **Swarm** | Agent A ∥ Agent B ∥ Agent C → Collect → Synthesize | N개 독립 에이전트 병렬 실행 |
 | **Evaluator** | Execute → Evaluate → Iterate | 품질 검증 필요 |
 
 ---
@@ -68,6 +69,7 @@ Anthropic이 제안한 5가지 핵심 패턴:
 독립적 병렬 작업?           → Parallelization
 조건부 분기?                → Routing
 복잡한 다중 도메인?         → Orchestrator-Workers
+N개 에이전트 병렬 실행?     → Swarm
 ```
 
 ### 4.2 5단계 워크플로우
@@ -75,7 +77,7 @@ Anthropic이 제안한 5가지 핵심 패턴:
 ```
 1. ANALYZE    → 작업 복잡도 평가 (단순 vs 복잡)
 2. PATTERN    → 실행 패턴 선택
-3. AGENTS     → 필요한 에이전트/도구 식별
+3. PLAN MODE  → 계획 수립 (직접 핸들링, 탐색은 위임)
 4. APPROVE    → 사용자 승인 요청
 5. EXECUTE    → 승인 후 실행
 ```
@@ -87,12 +89,13 @@ Anthropic이 제안한 5가지 핵심 패턴:
 | **Default** | (명령 없음) | 일반 Claude 상호작용 |
 | **Maestro** | `/maestro` | 계획 수립 후 승인 필요 |
 | **Ultrawork** | `/ultrawork`, `/ulw` | 완전 자동화 + Ralph Loop |
+| **Swarm** | `/swarm [task]`, `swarm:` | 병렬 에이전트 실행 |
 
 ### 4.4 Ralph Loop 자동 완료 시스템
 
-`/ralph-start`로 활성화되는 자율 반복 시스템:
+`/ralph start`로 활성화되는 자율 반복 시스템:
 
-1. Stop 이벤트에서 `<promise>DONE</promise>` 모니터링
+1. `/ralph` skill이 `<promise>DONE</promise>` 모니터링
 2. 미감지 시: 계속 프롬프트 트리거
 3. 감지 시: 루프 성공 종료
 4. 최대 50회 반복 후 강제 종료
@@ -142,6 +145,20 @@ Anthropic이 제안한 5가지 핵심 패턴:
 | Files >= 5 | 분할하여 위임 |
 | 독립 작업 >= 3개 | 병렬 위임 |
 | 전문 에이전트 없음 | 동적 역할 생성 |
+
+### 4.7 State Persistence (boulder.json)
+
+세션 간 계획 상태를 유지하는 메커니즘:
+
+**파일 위치**: `.agentic/boulder.json`
+
+**동작**:
+- 세션 시작: boulder.json 로드, 이전 계획 컨텍스트 주입
+- 세션 종료: 현재 상태 boulder.json에 저장
+
+**사용자 명령**:
+- "계속" / "continue": 이전 계획 재개
+- "새로 시작" / "new": boulder.json 초기화
 
 ---
 
@@ -229,6 +246,23 @@ Anthropic이 제안한 5가지 핵심 패턴:
 
 ### 현재 버전
 
+**v1.4 - 2026-01-28**
+
+- Plan Mode Integration 추가
+- Planning을 에이전트 위임에서 직접 수행으로 변경
+- EnterPlanMode/ExitPlanMode 도구 활용
+
+**v1.3 - 2026-01-28**
+
+- Swarm 모드 추가 (`/swarm`, `swarm:`)
+- State Persistence (boulder.json) 추가
+- 병렬 에이전트 실행 패턴 지원
+
+**v1.2 - 2026-01-20**
+
+- Orchestrator 위임 규칙 강화 (Execution Rules)
+- 에이전트 직접 파일 수정 권한 명확화
+
 **v1.1 - 2026-01-15**
 
 - 에이전트 우선순위 추가 (Project > Global > Dynamic)
@@ -267,4 +301,4 @@ legacy/sisyphus-v1
 
 ---
 
-*Maestro Workflow Summary v1.1 - 2026-01-15*
+*Maestro Workflow Summary v1.4 - 2026-01-28*

@@ -1,3 +1,4 @@
+
 # Boulder Manager Hook
 # Manages session state persistence via .agentic/boulder.json
 

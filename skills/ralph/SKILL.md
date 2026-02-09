@@ -87,6 +87,6 @@ Switching to Manual mode.
 ## Notes
 
 - State file: `.agentic/ralph-loop.state.md`
-- Stop hook monitors this file
+- `/ralph` skill manages loop state directly
 - Without `<promise>DONE</promise>`, loop prompts continuation
 - Consult `@architect` if stuck after 2+ attempts

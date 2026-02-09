@@ -47,6 +47,15 @@ Then delegate via Task tool.
 
 ---
 
+## Quick Reference
+
+### Workflow
+```
+ANALYZE → PATTERN → [PLAN MODE] → APPROVE → EXECUTE
+```
+
+---
+
 ## Workflow Phases
 
 ### Phase 1: ANALYZE
@@ -144,6 +153,48 @@ Orchestrator
 
 ---
 
+## Plan Mode Integration
+
+복잡한 작업(3개 이상 파일 수정, 새 기능 구현) 시 Plan Mode 활용.
+
+### 자동 전환 조건
+- 파일 수정 >= 3개
+- 새로운 기능 구현
+- 아키텍처 변경
+- 사용자가 `/maestro` 또는 `/ultrawork`로 요청
+
+### 워크플로우
+
+```
+1. EnterPlanMode 도구 호출
+2. Plan Mode에서:
+   - Task → Explore (탐색은 위임)
+   - Orchestrator가 직접 계획 수립
+   - 계획 파일 작성
+3. ExitPlanMode (사용자 승인)
+4. 승인 후 → Maestro 실행 모드로 전환
+   - Task 위임으로 구현
+   - Bash(read-only)로 검증
+```
+
+### Plan Mode에서 허용되는 작업
+- Task → Explore (탐색 위임)
+- Read (컨텍스트 파악, 최소한)
+- 계획 파일 Write/Edit (유일한 예외)
+- AskUserQuestion (요구사항 확인)
+
+### Plan Mode에서 금지되는 작업
+- 코드 파일 Write/Edit
+- Bash (수정 명령)
+- 구현 작업
+
+### 장점
+- 대화 맥락 유지로 계획 품질 향상
+- 사용자 승인 프로세스 명확화
+- 탐색은 여전히 위임하여 컨텍스트 절약
+
+---
+
 ### Phase 3: AGENTS
 
 **Objective**: Identify required agents and tools
@@ -153,11 +204,13 @@ Orchestrator
 | Need | Agent | Tools |
 |------|-------|-------|
 | Codebase search | Built-in `Explore` | Glob, Grep, Read |
-| Planning | Built-in `Plan` | Read, Grep, TodoWrite |
+| Planning | **Plan Mode** (직접 핸들링) | EnterPlanMode, ExitPlanMode |
 | Strategic advice | `@architect` | All analysis tools |
 | UI/UX work | `@frontend-engineer` | + MCP browser tools |
 | External docs | `@librarian` | WebSearch, WebFetch |
 | Documentation | `@document-writer` | Read, Write, Edit |
+
+> **Note**: Planning은 더 이상 에이전트에 위임하지 않음. Orchestrator가 Plan Mode에서 직접 수행.
 
 **Tool Categories**:
 - **Search**: Glob, Grep, Read
@@ -503,4 +556,4 @@ Execution (WRONG - VIOLATION):
 
 ---
 
-*Maestro Workflow Rules v1.3*
+*Maestro Workflow Rules v1.4*

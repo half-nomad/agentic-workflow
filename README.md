@@ -120,7 +120,7 @@ Maestro/Ultrawork 모드에서 메인 에이전트는 **순수 오케스트레�
 | Skill | 설명 |
 |-------|------|
 | `/maestro` | 오케스트레이터 모드 활성화 |
-| `/ultrawork`, `/ulw` | 완전 자동화 모드 + Ralph Loop |
+| `/ultrawork` | 완전 자동화 모드 + Ralph Loop |
 | `/swarm` | 병렬 에이전트 실행 |
 | `/ralph start\|cancel` | Ralph Loop 제어 |
 | `/session-summary` | 세션 기능 사용 요약 |

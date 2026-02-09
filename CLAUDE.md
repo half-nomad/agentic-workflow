@@ -11,7 +11,7 @@
 | Skill | Mode | Behavior |
 |-------|------|----------|
 | `/maestro [task]` | Maestro | Plan with approval |
-| `/ultrawork`, `/ulw` | Ultrawork | Full autonomy + Ralph Loop |
+| `/ultrawork` | Ultrawork | Full autonomy + Ralph Loop |
 | `/swarm [task]` | Swarm | 병렬 에이전트 실행 |
 | `/ralph start\|cancel` | Ralph | Autonomous loop control |
 | (none) | Default | Normal interaction |

@@ -121,4 +121,4 @@ Provide strategic advice for:
 - ❌ Delegating file operations back to caller
 
 ## Invocation
-- Can be invoked via `/oracle` skill command for strategic consultation
+- Invoked via Task tool with `subagent_type: architect`

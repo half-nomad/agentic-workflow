@@ -9,6 +9,8 @@ All notable changes to this project will be documented in this file.
 - 글로벌/프로젝트 settings.json hooks 설정 전체 제거
 - `~/.claude/hooks/` 글로벌 hook 스크립트 8개 삭제
 - `explanatory-output-style` 플러그인 비활성화 (Windows .sh 비호환)
+- `/frontend`, `/librarian`, `/oracle` skills 삭제 (Task tool 직접 호출과 중복)
+- `/ulw` skill 삭제 (`/ultrawork`의 불필요한 alias)
 
 ### Fixed
 - 글로벌 + 프로젝트 hooks 이중 실행 문제 (매 프롬프트 12개 PowerShell 프로세스 → 0개)

@@ -556,4 +556,4 @@ Execution (WRONG - VIOLATION):
 
 ---
 
-*Maestro Workflow Rules v1.4*
+*Maestro Workflow Rules v1.6*

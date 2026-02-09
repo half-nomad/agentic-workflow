@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.6.0] - 2026-02-09
+
+### Removed
+- `hooks/` 폴더 전체 삭제 (skill 시스템으로 대체)
+- 글로벌/프로젝트 settings.json hooks 설정 전체 제거
+- `~/.claude/hooks/` 글로벌 hook 스크립트 8개 삭제
+- `explanatory-output-style` 플러그인 비활성화 (Windows .sh 비호환)
+
+### Fixed
+- 글로벌 + 프로젝트 hooks 이중 실행 문제 (매 프롬프트 12개 PowerShell 프로세스 → 0개)
+
+---
+
 ## [1.5.0] - 2026-02-03
 
 ### Changed

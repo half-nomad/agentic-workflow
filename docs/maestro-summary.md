@@ -246,6 +246,18 @@ N개 에이전트 병렬 실행?     → Swarm
 
 ### 현재 버전
 
+**v1.6 - 2026-02-09**
+
+- Hooks 전체 제거 (skill 시스템으로 대체)
+- 글로벌/프로젝트 이중 hook 실행 문제 해결
+- explanatory-output-style 플러그인 비활성화
+
+**v1.5 - 2026-02-03**
+
+- commands → skills 마이그레이션
+- Skills 구조 변경 (`skills/{name}/SKILL.md`)
+- `/ralph start|cancel` 통합
+
 **v1.4 - 2026-01-28**
 
 - Plan Mode Integration 추가
@@ -301,4 +313,4 @@ legacy/sisyphus-v1
 
 ---
 
-*Maestro Workflow Summary v1.4 - 2026-01-28*
+*Maestro Workflow Summary v1.6 - 2026-02-09*

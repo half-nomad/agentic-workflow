@@ -75,6 +75,4 @@ Sessions resume via `.agentic/boulder.json`:
 
 ---
 
----
-
-*Maestro Workflow v1.4*
+*Maestro Workflow v1.6*

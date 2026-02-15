@@ -1,7 +1,6 @@
 ---
 name: session-summary
 description: "Summarize Claude Code features used in current session"
-invocation: user
 ---
 
 # Session Feature Summary

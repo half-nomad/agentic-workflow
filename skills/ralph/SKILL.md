@@ -1,7 +1,6 @@
 ---
 name: ralph
 description: "Ralph Loop control - autonomous continuation until task completion. Use '/ralph start' or '/ralph cancel'"
-invocation: user
 allowed-tools: Write, Read, TodoWrite
 ---
 

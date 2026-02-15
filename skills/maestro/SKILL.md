@@ -1,7 +1,6 @@
 ---
 name: maestro
 description: "Activate Maestro orchestrator mode for complex multi-step tasks"
-invocation: user
 ---
 
 # Maestro Orchestrator Mode

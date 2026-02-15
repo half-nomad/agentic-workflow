@@ -1,7 +1,6 @@
 ---
 name: ultrawork
 description: "Full autonomous mode with Ralph Loop. Aliases: /ulw"
-invocation: user
 ---
 
 # Ultrawork - Full Autonomous Mode

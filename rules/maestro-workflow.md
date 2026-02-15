@@ -367,6 +367,56 @@ Delegation is **NOT optional**. When the plan identifies an agent, you MUST dele
 
 When project has a specialist agent for the domain, **prefer it over global agents**.
 
+### Skill Handling (CRITICAL)
+
+Skills are classified into two types. **The type determines how Maestro interacts with them.**
+
+#### Task Skills (`context: fork` in frontmatter)
+
+Contain structured workflows (step-by-step execution plans). The skill specifies which agent runs it.
+
+```yaml
+# Example: skills/guide-content-seeder/SKILL.md
+context: fork
+agent: content-writer    # ← Skill decides the agent
+```
+
+**Maestro delegation pattern for Task skills:**
+1. Read the SKILL.md file (Read tool — allowed for orchestrator)
+2. Pass SKILL.md content as part of the Task prompt to the designated agent
+3. The agent receives both its expertise (agent.md) AND the workflow (SKILL.md)
+
+```
+Task(
+  subagent_type: "content-writer",
+  prompt: "[SKILL.md content] + [specific arguments/context]"
+)
+```
+
+**VIOLATION**: Calling a project agent for a structured task WITHOUT including its Task skill workflow. The agent has expertise but lacks the detailed execution steps.
+
+#### Reference Skills (`user-invocable: false` or no `context` field)
+
+Contain rules, conventions, or guidelines. Listed in the agent's `skills:` field and **auto-loaded into agent context at startup**.
+
+```yaml
+# Example: agents/content-writer.md
+skills: validation-protocol    # ← Agent loads this as reference
+```
+
+**No action needed from Maestro** — reference skills are injected automatically when the agent is spawned via Task tool.
+
+#### Decision Guide
+
+```
+Maestro needs to delegate a structured task?
+├─ Project has a Task skill for it?
+│   ├─ Yes → Read SKILL.md, pass in Task prompt to designated agent
+│   └─ No  → Delegate to agent with clear instructions (dynamic role if needed)
+└─ Agent needs domain rules/conventions?
+    └─ Already handled via Reference skills in agent's skills: field
+```
+
 ### Global Agents (Always Available)
 
 | Agent | Domain | Model | Tools | Trigger |
@@ -456,6 +506,8 @@ These are **workflow violations**:
 | "It's simple" → Skip delegation | Follow delegation rules regardless |
 | Accumulate context → Do everything | Delegate to manage context |
 | Ignore dynamic role option | Create role when no specialist exists |
+| Call agent without Task skill for structured work | Read SKILL.md → include in Task prompt |
+| Put Task skills in agent's `skills:` field | Task skills use `context: fork` + `agent:` in SKILL.md |
 
 ### Self-Check Before Any Tool Use
 
@@ -556,4 +608,4 @@ Execution (WRONG - VIOLATION):
 
 ---
 
-*Maestro Workflow Rules v1.6*
+*Maestro Workflow Rules v1.7*

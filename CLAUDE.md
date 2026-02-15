@@ -14,6 +14,8 @@
 | `/ultrawork` | Ultrawork | Full autonomy + Ralph Loop |
 | `/swarm [task]` | Swarm | 병렬 에이전트 실행 |
 | `/ralph start\|cancel` | Ralph | Autonomous loop control |
+| `/note-new [file\|topic]` | — | Obsidian 새 노트 생성 / 파일 Inbox 복사 |
+| `/note-update [keyword]` | — | Obsidian 볼트 관련 문서 검색 + 업데이트 |
 | (none) | Default | Normal interaction |
 
 ### Workflow
@@ -75,4 +77,4 @@ Sessions resume via `.agentic/boulder.json`:
 
 ---
 
-*Maestro Workflow v1.6*
+*Maestro Workflow v1.7*

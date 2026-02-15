@@ -1,7 +1,6 @@
 ---
 name: swarm
 description: "Parallel execution mode. Launch multiple agents simultaneously for independent tasks."
-invocation: user
 ---
 
 # Swarm - Parallel Execution Mode

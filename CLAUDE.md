@@ -21,7 +21,7 @@
 ### Workflow
 
 ```
-ANALYZE → PATTERN → AGENTS → APPROVE → EXECUTE
+ANALYZE → PATTERN → AGENTS → APPROVE → EXECUTE → [VERIFY]
 ```
 
 ### Patterns
@@ -33,7 +33,7 @@ ANALYZE → PATTERN → AGENTS → APPROVE → EXECUTE
 | **Routing** | Conditional branching |
 | **Orchestrator-Workers** | Multi-domain complexity |
 | **Swarm** | N개 에이전트 병렬 실행 |
-| **Evaluator** | Quality verification |
+| **Evaluator** | Quality verification (verify-* skills 연동) |
 
 ### Agents
 
@@ -77,4 +77,4 @@ Sessions resume via `.agentic/boulder.json`:
 
 ---
 
-*Maestro Workflow v1.7*
+*Maestro Workflow v1.8*

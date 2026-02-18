@@ -11,7 +11,7 @@ agentic-workflow는 Claude Code CLI에 최적화된 **Maestro** 오케스트레�
 - **Maestro 오케스트레이션**: `/maestro` 명령으로 패턴 기반 계획 수립
 - **Swarm 모드**: `/swarm` 스킬로 병렬 에이전트 실행
 - **순수 오케스트레이터 역할**: 메인 에이전트는 위임만, 직접 파일 수정 금지
-- **Anthropic 5+1 패턴**: Chaining, Parallelization, Routing, Orchestrator-Workers, Swarm, Evaluator
+- **Anthropic 5+1 패턴**: Chaining, Parallelization, Routing, Orchestrator-Workers, Swarm, Evaluator (verify-* 스킬 연동)
 - **4개 전문 에이전트**: 영역별 최적화 (architect, frontend, librarian, document-writer)
 - **3가지 작업 모드**: Maestro (계획 기반), Swarm (병렬 실행), Ultrawork (완전 자동)
 - **Ralph Loop**: 완료 시그널까지 자동 반복 실행
@@ -53,6 +53,7 @@ chmod +x install.sh
 3. **[PLAN MODE]** - 복잡한 작업 시 Plan Mode에서 계획 수립 (v1.4)
 4. **APPROVE** - 사용자 승인 요청
 5. **EXECUTE** - 승인 후 실행
+6. **[VERIFY]** - 조건부: verify-* 스킬 존재 시 자동 검증 (v1.8)
 
 ### 패턴 선택 가이드
 
@@ -63,6 +64,7 @@ chmod +x install.sh
 | **Routing** | 조건부 분기 | 에러 타입별 핸들러 |
 | **Orchestrator-Workers** | 복잡한 다중 도메인 | 전체 기능 구현 |
 | **Swarm** | N개 에이전트 병렬 실행 | 다중 소스 리서치, 병렬 분석 |
+| **Evaluator** | 실행 결과 품질 검증 | verify-* 스킬 연동, PR 전 검증 |
 
 ### 오케스트레이터 역할 (v1.2)
 
@@ -123,6 +125,8 @@ Maestro/Ultrawork 모드에서 메인 에이전트는 **순수 오케스트레�
 | `/ultrawork` | 완전 자동화 모드 + Ralph Loop |
 | `/swarm` | 병렬 에이전트 실행 |
 | `/ralph start\|cancel` | Ralph Loop 제어 |
+| `/note-new [file\|topic]` | Obsidian 새 노트 생성 / 파일 Inbox 복사 |
+| `/note-update [keyword]` | Obsidian 볼트 관련 문서 검색 + 업데이트 |
 | `/session-summary` | 세션 기능 사용 요약 |
 
 에이전트는 `@architect`, `@frontend-engineer`, `@librarian`, `@document-writer`로 직접 호출합니다.
@@ -159,7 +163,7 @@ Claude가 Orchestrator-Workers 패턴을 선택하고, 필요한 에이전트와
 ### 예시 2: 전체 자동화
 
 ```bash
-ulw API 라우트 작성하고 테스트까지 완료해줘
+/ultrawork API 라우트 작성하고 테스트까지 완료해줘
 ```
 
 Ultrawork 모드에서 Ralph Loop가 활성화되어 `<promise>DONE</promise>`까지 자동 실행됩니다.
@@ -177,7 +181,7 @@ Parallelization 패턴으로 3개 프레임워크를 동시에 조사합니다.
 ```
 agentic-workflow/
 ├── agents/           # 전문 에이전트 (4개)
-├── skills/           # Skills (6개)
+├── skills/           # Skills (7개)
 ├── rules/            # 코딩 규칙
 ├── docs/             # 문서
 ├── CLAUDE.md         # Maestro 워크플로우 정의
@@ -221,4 +225,4 @@ MIT
 
 ---
 
-*Maestro Workflow v1.6.0 - 2026-02-09*
+*Maestro Workflow v1.8.0 - 2026-02-18*

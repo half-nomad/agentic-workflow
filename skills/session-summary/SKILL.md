@@ -53,3 +53,19 @@ Analyze the current conversation and identify Claude Code features used.
 3. Describe purpose for used features
 4. Note why unused features weren't needed
 5. Present in markdown table format
+6. Save session context to `.agentic/boulder.json`:
+
+```json
+{
+  "version": "1.8",
+  "timestamp": "<ISO timestamp>",
+  "task": "<main task worked on>",
+  "pattern": "<pattern used, if Maestro/Ultrawork>",
+  "status": "completed|in_progress|blocked",
+  "summary": "<concise summary of session accomplishments>",
+  "pending": ["<remaining items if any>"],
+  "files_changed": ["<list of modified files>"]
+}
+```
+
+This enables the next session to resume context via `/maestro` or `/ultrawork`.

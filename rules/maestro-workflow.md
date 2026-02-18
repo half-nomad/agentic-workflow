@@ -51,7 +51,7 @@ Then delegate via Task tool.
 
 ### Workflow
 ```
-ANALYZE → PATTERN → [PLAN MODE] → APPROVE → EXECUTE
+ANALYZE → PATTERN → [PLAN MODE] → APPROVE → EXECUTE → [VERIFY]
 ```
 
 ---
@@ -146,52 +146,64 @@ Orchestrator
     │→ Agent B ─┤→ Collect → Synthesize
     └→ Agent C ─┘
 ```
-- N개 에이전트 동시 실행
-- 독립적 작업 병렬 처리
-- 결과 수집 및 통합
-- Good for: 다중 소스 리서치, 병렬 분석
+- N concurrent agents
+- Independent parallel processing
+- Collect and synthesize results
+- Good for: Multi-source research, parallel analysis
+
+#### Evaluator
+```
+Execute → Verify → [Fix → Re-verify] → Done
+```
+- Quality verification loop on execution results
+- Auto-integrates with `verify-*` skills when registered in project
+- On verification failure, delegate fix to agent then re-verify
+- Good for: Pre-PR quality assurance, rule compliance, regression prevention
+
+**Evaluator is not a standalone pattern — it operates as the VERIFY phase**, combined with other patterns.
+Example: Orchestrator-Workers + Evaluator = implement then verify
 
 ---
 
 ## Plan Mode Integration
 
-복잡한 작업(3개 이상 파일 수정, 새 기능 구현) 시 Plan Mode 활용.
+Use Plan Mode for complex tasks (3+ file modifications, new feature implementation).
 
-### 자동 전환 조건
-- 파일 수정 >= 3개
-- 새로운 기능 구현
-- 아키텍처 변경
-- 사용자가 `/maestro` 또는 `/ultrawork`로 요청
+### Auto-transition Conditions
+- File modifications >= 3
+- New feature implementation
+- Architecture changes
+- User invoked `/maestro` or `/ultrawork`
 
-### 워크플로우
+### Workflow
 
 ```
-1. EnterPlanMode 도구 호출
-2. Plan Mode에서:
-   - Task → Explore (탐색은 위임)
-   - Orchestrator가 직접 계획 수립
-   - 계획 파일 작성
-3. ExitPlanMode (사용자 승인)
-4. 승인 후 → Maestro 실행 모드로 전환
-   - Task 위임으로 구현
-   - Bash(read-only)로 검증
+1. Call EnterPlanMode tool
+2. In Plan Mode:
+   - Task → Explore (delegate exploration)
+   - Orchestrator plans directly
+   - Write plan file
+3. ExitPlanMode (user approval)
+4. After approval → Switch to Maestro execution mode
+   - Implement via Task delegation
+   - Verify via Bash (read-only)
 ```
 
-### Plan Mode에서 허용되는 작업
-- Task → Explore (탐색 위임)
-- Read (컨텍스트 파악, 최소한)
-- 계획 파일 Write/Edit (유일한 예외)
-- AskUserQuestion (요구사항 확인)
+### Allowed in Plan Mode
+- Task → Explore (delegate exploration)
+- Read (gather context, minimal)
+- Plan file Write/Edit (only exception)
+- AskUserQuestion (clarify requirements)
 
-### Plan Mode에서 금지되는 작업
-- 코드 파일 Write/Edit
-- Bash (수정 명령)
-- 구현 작업
+### Forbidden in Plan Mode
+- Code file Write/Edit
+- Bash (modification commands)
+- Implementation work
 
-### 장점
-- 대화 맥락 유지로 계획 품질 향상
-- 사용자 승인 프로세스 명확화
-- 탐색은 여전히 위임하여 컨텍스트 절약
+### Benefits
+- Better plan quality by maintaining conversation context
+- Clear user approval process
+- Exploration still delegated to save context
 
 ---
 
@@ -204,13 +216,13 @@ Orchestrator
 | Need | Agent | Tools |
 |------|-------|-------|
 | Codebase search | Built-in `Explore` | Glob, Grep, Read |
-| Planning | **Plan Mode** (직접 핸들링) | EnterPlanMode, ExitPlanMode |
+| Planning | **Plan Mode** (direct handling) | EnterPlanMode, ExitPlanMode |
 | Strategic advice | `@architect` | All analysis tools |
 | UI/UX work | `@frontend-engineer` | + MCP browser tools |
 | External docs | `@librarian` | WebSearch, WebFetch |
 | Documentation | `@document-writer` | Read, Write, Edit |
 
-> **Note**: Planning은 더 이상 에이전트에 위임하지 않음. Orchestrator가 Plan Mode에서 직접 수행.
+> **Note**: Planning is no longer delegated to agents. Orchestrator handles it directly in Plan Mode.
 
 **Tool Categories**:
 - **Search**: Glob, Grep, Read
@@ -270,7 +282,7 @@ Orchestrator
 ```
 
 **Skip Conditions** (Ultrawork mode):
-- Mode is ultrawork/ulw
+- Mode is ultrawork
 - Ralph Loop is active
 - User explicitly requested full autonomy
 
@@ -310,28 +322,86 @@ Orchestrator
 
 ---
 
+### Phase 6: VERIFY (Conditional)
+
+**Objective**: Quality verification of execution results (Evaluator pattern implementation)
+
+**This phase is conditional** — not executed for every task.
+
+#### VERIFY Trigger Conditions
+
+| Condition | Run VERIFY | Reason |
+|-----------|:----------:|--------|
+| 1 agent, 1-2 files | **No** | Overkill — basic checks sufficient |
+| 2+ agents, 3+ files | **Yes** | Integration verification prevents regressions |
+| Project has `verify-*` skills | **Yes** | Leverage existing rules |
+| User explicitly requests | **Yes** | Always run |
+| Ultrawork mode + complex task | **Yes** | Quality assurance needed for automation |
+
+#### VERIFY Workflow
+
+```
+EXECUTE complete
+    ↓
+Does the project have verify-* skills?
+├─ Yes → Run verify-implementation (sequential skill execution)
+│        ├─ PASS → Done
+│        └─ FAIL → Delegate fix to agent → Re-verify
+└─ No  → Was this a complex task?
+         ├─ Yes → Suggest to user:
+         │        "You can create verification skills with /manage-skills"
+         └─ No  → Basic checks only (git diff, run tests)
+```
+
+#### Basic Verification (no verify-* skills)
+
+Orchestrator performs directly (within read-only permissions):
+
+1. `git diff --name-only` — review changed files
+2. Run tests (if project has test suite)
+3. Build check (if build system exists)
+4. Check against Success Criteria
+
+#### verify-* Skill Integration (skills exist)
+
+Leverage existing global skills:
+
+| Skill | Role | When to Run |
+|-------|------|-------------|
+| `/manage-skills verify` | Detect verify-* skill drift based on changed files | After code changes, for rule maintenance |
+| `/verify-implementation` | Sequential execution of registered verify-* skills + integrated report | After EXECUTE, before PR |
+
+**Orchestrator suggests these skills to the user rather than executing directly.**
+Exception: In Ultrawork mode, verification logic can run automatically.
+
+#### Domain-Specific Verification
+
+When verification requires domain expertise (security audit, accessibility, etc.):
+- Delegate to `@architect` for strategic review
+- Or create dynamic role (e.g., security auditor)
+
+---
+
 ## Integration with Modes
 
-### Manual Mode
-- ANALYZE: Present findings, ask for guidance
-- PATTERN: Suggest, let user choose
-- AGENTS: List options, user confirms
-- APPROVE: Always required
-- EXECUTE: User approves each action
+### Default Mode (no activation command)
+- No orchestration — direct Claude interaction
 
-### Semi-Auto Mode
+### Maestro Mode (`/maestro`)
 - ANALYZE: Autonomous
 - PATTERN: Autonomous with explanation
 - AGENTS: Autonomous with explanation
-- APPROVE: Required (checkpoint)
-- EXECUTE: Autonomous
+- APPROVE: Required (user checkpoint)
+- EXECUTE: Autonomous via delegation
+- VERIFY: Suggest if conditions met
 
-### Ultrawork Mode
+### Ultrawork Mode (`/ultrawork`)
 - ANALYZE: Autonomous
 - PATTERN: Autonomous
 - AGENTS: Autonomous
 - APPROVE: Skipped
-- EXECUTE: Autonomous
+- EXECUTE: Autonomous via delegation
+- VERIFY: Auto-run if verify-* skills exist
 - Ralph Loop: Active
 
 ---
@@ -593,19 +663,19 @@ Execution (WRONG - VIOLATION):
 
 ## State Persistence (boulder.json)
 
-세션 간 계획 상태 유지 메커니즘.
+Session-to-session plan state persistence mechanism.
 
-### 파일 위치
+### File Location
 `.agentic/boulder.json`
 
-### 동작
-- **세션 시작**: boulder.json 로드, 이전 계획 컨텍스트 주입
-- **세션 종료**: 현재 상태 boulder.json에 저장
+### Behavior
+- **Session start**: Load boulder.json, inject previous plan context
+- **Session end**: Save current state to boulder.json
 
-### 사용자 명령
-- "계속" / "continue": 이전 계획 재개
-- "새로 시작" / "new": boulder.json 초기화
+### User Commands
+- "continue": Resume previous plan
+- "new": Clear boulder.json, fresh start
 
 ---
 
-*Maestro Workflow Rules v1.7*
+*Maestro Workflow Rules v1.8*

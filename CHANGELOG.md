@@ -2,6 +2,49 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.8.0] - 2026-02-18
+
+### Added
+- **Evaluator 패턴 구현**: `verify-*` 스킬 연동으로 실행 결과 품질 검증
+- **Phase 6: VERIFY (Conditional)**: 워크플로우에 조건부 검증 단계 추가
+  - 에이전트 2개+, 파일 3개+ 시 자동 제안
+  - `verify-*` 스킬 존재 시 자동 실행
+  - Ultrawork 모드에서 자동 검증
+- **verify-* 스킬 통합 가이드**: `manage-skills`, `verify-implementation` 스킬과의 연동 규칙
+
+### Changed
+- Workflow: `ANALYZE → PATTERN → AGENTS → APPROVE → EXECUTE → [VERIFY]`
+- Integration with Modes: VERIFY behavior specified per mode (Default/Maestro/Ultrawork)
+- Evaluator pattern: from declaration-only to concrete implementation
+- `maestro-workflow.md`: Semi-Auto Mode removed (non-existent mode), replaced with actual mode definitions
+- `maestro-workflow.md`: All Korean text converted to English prompts
+- `boulder.json` restored via skill prompts (replaces deleted hooks mechanism)
+  - `maestro/SKILL.md`: Read boulder.json on start, write on completion
+  - `ultrawork/SKILL.md`: Same read/write behavior
+  - `session-summary/SKILL.md`: Also writes boulder.json for non-orchestrated sessions
+
+### Fixed
+- `ultrawork/SKILL.md`: Removed deprecated `/ulw` alias reference
+- `README.md`: Changed `/ulw` example to `/ultrawork`
+- `README.md`: Added `/note-new`, `/note-update` missing from v1.7
+
+---
+
+## [1.7.0] - 2026-02-15
+
+### Added
+- `/note-new` 스킬: Obsidian 새 노트 생성 + 파일 Inbox 복사 + 템플릿 지원
+- `/note-update` 스킬: Obsidian 볼트 관련 문서 검색 + 업데이트
+- `argument-hint` 프론트매터 필드 활용 (note-new, note-update)
+
+### Changed
+- `/mynote` → `/note-new`로 대체 (기능 확장)
+
+### Fixed
+- 5개 기존 스킬에서 비공식 `invocation: user` 프론트매터 제거
+
+---
+
 ## [1.6.0] - 2026-02-09
 
 ### Removed

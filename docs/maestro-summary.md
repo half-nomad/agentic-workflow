@@ -72,7 +72,7 @@ Anthropic이 제안한 5가지 핵심 패턴:
 N개 에이전트 병렬 실행?     → Swarm
 ```
 
-### 4.2 5단계 워크플로우
+### 4.2 6단계 워크플로우
 
 ```
 1. ANALYZE    → 작업 복잡도 평가 (단순 vs 복잡)
@@ -80,6 +80,7 @@ N개 에이전트 병렬 실행?     → Swarm
 3. PLAN MODE  → 계획 수립 (직접 핸들링, 탐색은 위임)
 4. APPROVE    → 사용자 승인 요청
 5. EXECUTE    → 승인 후 실행
+6. [VERIFY]   → 조건부: verify-* 스킬 존재 시 자동 검증
 ```
 
 ### 4.3 작업 모드
@@ -88,14 +89,14 @@ N개 에이전트 병렬 실행?     → Swarm
 |------|--------|------|
 | **Default** | (명령 없음) | 일반 Claude 상호작용 |
 | **Maestro** | `/maestro` | 계획 수립 후 승인 필요 |
-| **Ultrawork** | `/ultrawork`, `/ulw` | 완전 자동화 + Ralph Loop |
+| **Ultrawork** | `/ultrawork` | 완전 자동화 + Ralph Loop |
 | **Swarm** | `/swarm [task]`, `swarm:` | 병렬 에이전트 실행 |
 
 ### 4.4 Ralph Loop 자동 완료 시스템
 
 `/ralph start`로 활성화되는 자율 반복 시스템:
 
-1. `/ralph` skill이 `<promise>DONE</promise>` 모니터링
+1. `<promise>DONE</promise>` 완료 시그널 모니터링
 2. 미감지 시: 계속 프롬프트 트리거
 3. 감지 시: 루프 성공 종료
 4. 최대 50회 반복 후 강제 종료
@@ -146,15 +147,30 @@ N개 에이전트 병렬 실행?     → Swarm
 | 독립 작업 >= 3개 | 병렬 위임 |
 | 전문 에이전트 없음 | 동적 역할 생성 |
 
-### 4.7 State Persistence (boulder.json)
+### 4.7 VERIFY 단계 (Evaluator 패턴)
+
+실행 결과에 대한 조건부 품질 검증 단계 (v1.8):
+
+| 조건 | VERIFY 실행 | 이유 |
+|------|:-----------:|------|
+| 에이전트 1개, 파일 1-2개 | 아니오 | 기본 검증으로 충분 |
+| 에이전트 2개+, 파일 3개+ | 예 | 통합 검증으로 회귀 방지 |
+| 프로젝트에 `verify-*` 스킬 존재 | 예 | 기존 규칙 활용 |
+| Ultrawork + 복잡한 작업 | 예 | 자동화 시 품질 보증 |
+
+**연동 스킬**:
+- `/manage-skills verify` — verify-* 스킬 생성/관리
+- `/verify-implementation` — 등록된 verify-* 스킬 순차 실행
+
+### 4.8 State Persistence (boulder.json)
 
 세션 간 계획 상태를 유지하는 메커니즘:
 
 **파일 위치**: `.agentic/boulder.json`
 
-**동작**:
-- 세션 시작: boulder.json 로드, 이전 계획 컨텍스트 주입
-- 세션 종료: 현재 상태 boulder.json에 저장
+**동작** (v1.8 — 스킬 프롬프트 방식):
+- 세션 시작: `/maestro` 또는 `/ultrawork` 활성화 시 boulder.json 자동 읽기
+- 세션 종료: `<promise>DONE</promise>` 또는 `/session-summary` 실행 시 boulder.json 저장
 
 **사용자 명령**:
 - "계속" / "continue": 이전 계획 재개
@@ -230,7 +246,7 @@ N개 에이전트 병렬 실행?     → Swarm
 
 ### 6.3 패턴 확장
 
-- **Evaluator 패턴 강화**: 자동 품질 검증 루프
+- ~~**Evaluator 패턴 강화**~~: v1.8에서 VERIFY 단계로 구현 완료
 - **Hybrid 패턴**: 여러 패턴 조합 지원
 - **Custom 패턴**: 사용자 정의 워크플로우 패턴
 
@@ -246,11 +262,24 @@ N개 에이전트 병렬 실행?     → Swarm
 
 ### 현재 버전
 
+**v1.8 - 2026-02-18**
+
+- Evaluator 패턴 구현 → VERIFY 조건부 단계 추가
+- `verify-*` 스킬(manage-skills, verify-implementation) 연동
+- boulder.json 세션 복원을 스킬 프롬프트 방식으로 복구
+- deprecated 정리: /ulw alias, Semi-Auto Mode 제거, 규칙 파일 영문 전환
+
+**v1.7 - 2026-02-15**
+
+- `/note-new` 스킬 추가 (Obsidian 노트 생성 + 파일 Inbox 복사)
+- `/note-update` 스킬 추가 (볼트 문서 검색 + 업데이트)
+- 비공식 frontmatter 필드 정리
+
 **v1.6 - 2026-02-09**
 
 - Hooks 전체 제거 (skill 시스템으로 대체)
 - 글로벌/프로젝트 이중 hook 실행 문제 해결
-- explanatory-output-style 플러그인 비활성화
+- `/frontend`, `/librarian`, `/oracle`, `/ulw` 스킬 삭제
 
 **v1.5 - 2026-02-03**
 
@@ -313,4 +342,4 @@ legacy/sisyphus-v1
 
 ---
 
-*Maestro Workflow Summary v1.6 - 2026-02-09*
+*Maestro Workflow Summary v1.8 - 2026-02-18*

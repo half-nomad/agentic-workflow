@@ -13,7 +13,7 @@ $ARGUMENTS
 
 ## Session Resume
 
-If `.agentic/boulder.json` exists, read it silently. If user says "continue", resume from previous context. Otherwise start fresh with the new task.
+MEMORY.md is auto-loaded into the system prompt. Check the `## Next Session` section for previous context. If user says "continue", resume from that context. Otherwise start fresh with the new task.
 
 ## Maestro Orchestration (Full Autonomy)
 
@@ -40,24 +40,22 @@ Execute with full autonomy using Maestro workflow:
 
 ## On Completion
 
-When outputting `<promise>DONE</promise>`, save session context to `.agentic/boulder.json`:
-```json
-{
-  "version": "1.8",
-  "timestamp": "<ISO timestamp>",
-  "task": "<original task>",
-  "pattern": "<pattern used>",
-  "status": "completed|in_progress|blocked",
-  "summary": "<what was accomplished>",
-  "pending": ["<remaining items if any>"],
-  "files_changed": ["<list of modified files>"]
-}
+When outputting `<promise>DONE</promise>`, update the `## Next Session` section in MEMORY.md:
+
+```markdown
+## Next Session
+- **Task**: <what was worked on>
+- **Status**: completed|in_progress|blocked
+- **Summary**: <what was accomplished>
+- **Pending**: <remaining items, if any>
 ```
+
+If status is `completed` with no pending items, clear the `## Next Session` section.
 
 ## Orchestrator Rules
 
 Even in ultrawork mode, orchestrator delegation rules apply:
-- **DO**: Read, analyze, delegate via Task tool, write `.agentic/boulder.json`
+- **DO**: Read, analyze, delegate via Task tool, update MEMORY.md
 - **DON'T**: Direct file modifications (delegate instead)
 
 Continue until `<promise>DONE</promise>`.

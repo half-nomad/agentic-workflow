@@ -15,7 +15,7 @@ agentic-workflow는 Claude Code CLI에 최적화된 **Maestro** 오케스트레�
 - **4개 전문 에이전트**: 영역별 최적화 (architect, frontend, librarian, document-writer)
 - **3가지 작업 모드**: Maestro (계획 기반), Swarm (병렬 실행), Ultrawork (완전 자동)
 - **Ralph Loop**: 완료 시그널까지 자동 반복 실행
-- **State Persistence**: boulder.json으로 세션 간 계획 상태 유지
+- **State Persistence**: MEMORY.md로 세션 간 계획 상태 유지
 
 ## 설치 방법
 
@@ -142,13 +142,11 @@ Maestro/Ultrawork 모드에서 메인 에이전트는 **순수 오케스트레�
 
 ### State Persistence (상태 유지)
 
-세션 간 계획 상태는 `.agentic/boulder.json`에 자동 저장됩니다.
+세션 간 컨텍스트는 MEMORY.md의 `## Next Session` 섹션에 저장됩니다. MEMORY.md는 시스템 프롬프트에 자동 로드되므로 별도의 Read가 필요 없습니다.
 
 **사용 방법**:
-- **계속하기**: "계속" 또는 "continue" 입력 시 이전 계획 재개
-- **새로 시작**: "새로 시작" 또는 "new" 입력 시 상태 초기화
-
-boulder.json은 세션 시작 시 자동 로드되고, 종료 시 자동 저장됩니다.
+- **계속하기**: "계속" 또는 "continue" 입력 시 이전 컨텍스트에서 재개
+- **새로 시작**: "새로 시작" 또는 "new" 입력 시 `## Next Session` 초기화
 
 ## 사용 예시
 

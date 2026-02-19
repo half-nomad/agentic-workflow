@@ -661,20 +661,20 @@ Execution (WRONG - VIOLATION):
 
 ---
 
-## State Persistence (boulder.json)
+## State Persistence (MEMORY.md)
 
-Session-to-session plan state persistence mechanism.
+Session-to-session context persistence via MEMORY.md `## Next Session` section.
 
-### File Location
-`.agentic/boulder.json`
+### Mechanism
+MEMORY.md is auto-loaded into the system prompt — no explicit Read needed.
 
 ### Behavior
-- **Session start**: Load boulder.json, inject previous plan context
-- **Session end**: Save current state to boulder.json
+- **Session start**: `## Next Session` section is already in context
+- **Session end**: Update `## Next Session` in MEMORY.md
 
 ### User Commands
-- "continue": Resume previous plan
-- "new": Clear boulder.json, fresh start
+- "continue": Resume from `## Next Session` context
+- "new": Clear `## Next Session`, fresh start
 
 ---
 

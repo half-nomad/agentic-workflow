@@ -71,9 +71,9 @@ See `rules/` directory:
 
 ## State Persistence
 
-Sessions resume via `.agentic/boulder.json`:
-- "계속" / "continue": Resume previous plan
-- "새로 시작" / "new": Clear state, fresh start
+Sessions resume via MEMORY.md `## Next Session` section (auto-loaded into system prompt):
+- "계속" / "continue": Resume from Next Session context
+- "새로 시작" / "new": Clear `## Next Session`, fresh start
 
 ---
 

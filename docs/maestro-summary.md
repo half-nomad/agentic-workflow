@@ -162,19 +162,19 @@ N개 에이전트 병렬 실행?     → Swarm
 - `/manage-skills verify` — verify-* 스킬 생성/관리
 - `/verify-implementation` — 등록된 verify-* 스킬 순차 실행
 
-### 4.8 State Persistence (boulder.json)
+### 4.8 State Persistence (MEMORY.md)
 
-세션 간 계획 상태를 유지하는 메커니즘:
+세션 간 컨텍스트를 유지하는 메커니즘:
 
-**파일 위치**: `.agentic/boulder.json`
+**저장 위치**: MEMORY.md `## Next Session` 섹션
 
-**동작** (v1.8 — 스킬 프롬프트 방식):
-- 세션 시작: `/maestro` 또는 `/ultrawork` 활성화 시 boulder.json 자동 읽기
-- 세션 종료: `<promise>DONE</promise>` 또는 `/session-summary` 실행 시 boulder.json 저장
+**동작** (v1.9 — MEMORY.md 방식):
+- 세션 시작: MEMORY.md가 시스템 프롬프트에 자동 로드 (별도 Read 불필요)
+- 세션 종료: `<promise>DONE</promise>` 또는 `/session-summary` 실행 시 `## Next Session` 업데이트
 
 **사용자 명령**:
-- "계속" / "continue": 이전 계획 재개
-- "새로 시작" / "new": boulder.json 초기화
+- "계속" / "continue": 이전 컨텍스트에서 재개
+- "새로 시작" / "new": `## Next Session` 초기화
 
 ---
 

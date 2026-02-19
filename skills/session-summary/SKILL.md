@@ -53,19 +53,14 @@ Analyze the current conversation and identify Claude Code features used.
 3. Describe purpose for used features
 4. Note why unused features weren't needed
 5. Present in markdown table format
-6. Save session context to `.agentic/boulder.json`:
+6. Update the `## Next Session` section in MEMORY.md:
 
-```json
-{
-  "version": "1.8",
-  "timestamp": "<ISO timestamp>",
-  "task": "<main task worked on>",
-  "pattern": "<pattern used, if Maestro/Ultrawork>",
-  "status": "completed|in_progress|blocked",
-  "summary": "<concise summary of session accomplishments>",
-  "pending": ["<remaining items if any>"],
-  "files_changed": ["<list of modified files>"]
-}
+```markdown
+## Next Session
+- **Task**: <main task worked on>
+- **Status**: completed|in_progress|blocked
+- **Summary**: <concise summary of session accomplishments>
+- **Pending**: <remaining items, if any>
 ```
 
-This enables the next session to resume context via `/maestro` or `/ultrawork`.
+This enables the next session to resume context automatically (MEMORY.md is auto-loaded).

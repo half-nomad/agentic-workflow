@@ -13,10 +13,9 @@ You are now in **Maestro Orchestrator Mode**.
 
 ## Session Resume
 
-Check if `.agentic/boulder.json` exists. If it does, read it and present the previous session context to the user:
-- "Previous session context found. Continue from where you left off, or start fresh?"
-- If user says "continue": Use the context to resume the plan
-- If user says "new" or provides a new task: Ignore previous context
+MEMORY.md is auto-loaded into the system prompt. Check the `## Next Session` section for previous context:
+- If it exists and user says "continue": Resume from that context
+- If user says "new" or provides a new task: Ignore previous context and clear `## Next Session` after completion
 
 ## Workflow
 
@@ -31,24 +30,22 @@ Follow the workflow defined in `rules/maestro-workflow.md`:
 
 ## On Completion
 
-When outputting `<promise>DONE</promise>`, save session context to `.agentic/boulder.json`:
-```json
-{
-  "version": "1.8",
-  "timestamp": "<ISO timestamp>",
-  "task": "<original task description>",
-  "pattern": "<pattern used>",
-  "status": "completed|in_progress|blocked",
-  "summary": "<what was accomplished>",
-  "pending": ["<remaining items if any>"],
-  "files_changed": ["<list of modified files>"]
-}
+When outputting `<promise>DONE</promise>`, update the `## Next Session` section in MEMORY.md:
+
+```markdown
+## Next Session
+- **Task**: <what was worked on>
+- **Status**: completed|in_progress|blocked
+- **Summary**: <what was accomplished>
+- **Pending**: <remaining items, if any>
 ```
+
+If status is `completed` with no pending items, clear the `## Next Session` section.
 
 ## Orchestrator Rules
 
-**ALLOWED**: Read, Glob, Grep, Task, TodoWrite, verification commands, `.agentic/boulder.json` Write
-**FORBIDDEN**: Write, Edit, Bash (file modification) — except boulder.json
+**ALLOWED**: Read, Glob, Grep, Task, TodoWrite, verification commands, MEMORY.md Write/Edit
+**FORBIDDEN**: Write, Edit, Bash (file modification) — except MEMORY.md
 
 As orchestrator, you **coordinate and delegate**. You do NOT execute file modifications directly.
 
@@ -63,4 +60,4 @@ As orchestrator, you **coordinate and delegate**. You do NOT execute file modifi
 | `Explore` | Codebase search |
 | `general-purpose` | Dynamic roles |
 
-**Now check for previous session context, then analyze the task and present your plan.**
+**Now check MEMORY.md's `## Next Session` for previous context, then analyze the task and present your plan.**

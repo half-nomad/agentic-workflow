@@ -12,7 +12,6 @@
       "Bash(powershell:*)",
       "Bash(pwsh:*)",
       "Read(**/*)",
-      "Write(.agentic/*)",
       "Edit(.agentic/*)"
     ],
     "ask": [

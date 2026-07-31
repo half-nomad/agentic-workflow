@@ -81,6 +81,13 @@ All notable changes to this project will be documented in this file.
 - **jq 부재 경로** — `settings.json` 과 `~/.mcp.json` 을 병합 없이 단순 덮어쓰던 분기도 동일하게 백업 후 진행 + 경고 문구 명확화.
 - **`set -e` 하에서 `((VAR++))` 가 값 0일 때 exit 1** 을 반환해 스크립트가 조용히 중단되던 문제를 도입 직후 실사격에서 발견·수정(`VAR=$((VAR+1))`). 수정 후 전 디렉터리 동기화 완주 + 백업 6건 생성 확인.
 
+### Removed — 공개 범위를 maestro 하네스로 축소
+- **`skills/{codex-image,session-summary,multi-worktree-safety}/` 제거** — 오픈소스 편입 기준 4개(개인 커스터마이징 / 특정 스택·로케일 종속 / 보안·유출 노출 / 로컬 민감정보) 중 하나 이상에 걸린다. 공개 레포는 **maestro · secure-coding · memory-management** 3개 하네스 스킬만 배포한다. 세 스킬은 개인 저장소로 이관돼 사라지지 않는다 (같은 배치에서 버전 관리 밖에 있던 스킬 18개도 함께 편입). 죽은 참조 6곳(`README.md` 표 3행 + 디렉터리 트리 1곳, `docs/maestro-summary.md` 세션 종료 1곳, `CLAUDE.md`·`AGENTS.md` 의 Codex 호출 예시) 동시 정리. `CHANGELOG` 기존 항목은 판단 기록이라 남긴다.
+
+### Fixed — `verify-*` / `manage-skills` 를 배포물처럼 서술하던 문서 10곳
+- **선택 의존성으로 문구 교정** — `rules/maestro-workflow.md` 와 `skills/maestro/WORKFLOW.md` Phase 6 은 처음부터 *"프로젝트에 있으면 위임, 없으면 `git diff` 리뷰"* 로 올바르게 쓰여 있었는데 `README.md`(7곳)·`docs/maestro-summary.md`(3곳)만 이 레포가 제공하는 것처럼 읽혔다. **스킬을 배포하는 게 아니라 문구를 고친다** — `verify-compliance-kisa` 는 KISA 규제(로케일 종속), `verify-infrastructure` 는 호스트 하드닝(스택 종속)이라 배포 기준에 맞지 않는다.
+- **`settings.json` 의 `Write(.agentic/*)` → `Edit(.agentic/*)`** — 파일 권한 체크는 `Edit` 룰만 매칭하므로 기존 항목은 무효였다. 오케스트레이터가 `.agentic/maestro-mode.state` 를 쓰는 경로다.
+
 ## [4.5.0] - 2026-07-29
 
 > 사용자 지시: *"기능을 상실시키는 게 아니라 군더더기·중언부언·긴 표현을 간결화하라"* → 이후 *"무조건 줄이라는 게 아니라 불필요한 게 있다면 줄이라는 것, 더 좋은 방향이면 추가도 검토"*. 3배치 중 2개 적용 · 1개 기각, 기각 근거는 순증으로 기록. **상주 −153 tok / 지연 −763 tok.**

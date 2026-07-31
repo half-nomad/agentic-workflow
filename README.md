@@ -20,7 +20,7 @@ agentic-workflow는 Claude Code CLI에 최적화된 **Maestro** 오케스트레�
 - **Dynamic Workflows 하이브리드 (v4.1, research-preview)**: ≥5 독립·사전명세·자기검증 항목의 대규모 병렬 EXECUTE 를 Workflow 툴로 위임 가능 (never auto-fire — Phase 4 승인 필수, 완료 후 5c/5d Hard 의무)
 - **Skill 1차 시민화**: PATTERN 단계에서 사용 가능한 skill을 자동 매칭, 사용자 approval로 확정
 - **선택적 Codex 통합**: `codex:codex-rescue` 미설치 환경에선 무음 fallback (architect 단독 흐름)
-- **도구 기반 검증 (Phase 6)**: `verify-implementation` skill 로 success criteria sign-off (테스트 실행은 5b/5c 에서 이미 완료, Phase 6 는 최종 sanity 만)
+- **도구 기반 검증 (Phase 6)**: success criteria sign-off — 프로젝트에 `verify-*` 스킬이 있으면 활용, 없으면 `git diff` 리뷰 + 체크리스트 (테스트 실행은 5b/5c 에서 이미 완료)
 - **순수 오케스트레이터 역할**: 메인은 위임만, 직접 파일 수정은 hooks로 차단
 - **Context Embedding**: 서브에이전트에 스키마/패턴/제약 직접 주입 (5b output contract 요구사항 포함)
 - **4+1 패턴**: Chaining, Parallelization, Routing, Orchestrator-Workers, Evaluator
@@ -63,7 +63,7 @@ chmod +x install.sh
 3. **[PLAN MODE]** - built-in Plan agent (clean context) 가 plan 작성 + Architect mandatory/on/skip 마킹 → orchestrator 가 Architect 호출
 4. **APPROVE** - Codex#1 adversarial review (자동, complex task) + 사용자 승인
 5. **EXECUTE** - 5a 구현 → 5b worker self-test → 5c full suite + Anomaly Comparator → 5d Reviewer·Codex#2 병렬 분업 (fix-loop max 3)
-6. **[VERIFY]** - `verify-implementation` skill 로 success criteria sign-off
+6. **[VERIFY]** - success criteria sign-off (프로젝트에 `verify-*` 스킬이 있으면 활용)
 
 ### 패턴 선택 가이드
 
@@ -73,7 +73,7 @@ chmod +x install.sh
 | **Parallelization** | 독립 병렬 작업 (이전 `/swarm` 흡수) | 3개 API 동시 검색, 다중 소스 리서치 |
 | **Routing** | 조건부 분기 | 에러 타입별 핸들러 |
 | **Orchestrator-Workers** | 복잡한 다중 도메인 | 전체 기능 구현 |
-| **Evaluator** | 실행 결과 품질 검증 | verify-* 스킬 연동, PR 전 검증 |
+| **Evaluator** | 실행 결과 품질 검증 | 프로젝트가 `verify-*` 스킬을 제공하면 연동, PR 전 검증 |
 
 ### 자연어 Modifier (Phase 1 ANALYZE에서 자동 감지)
 
@@ -101,13 +101,13 @@ Maestro 모드의 EXECUTE 단계는 다음 4 sub-step 으로 구성:
    ├─ Codex#2: test axis (complex auto — Codex 부재 시 @architect 분담)
    └─ fix-loop (max 3, 초과 시 @architect escalation)
   ↓
-[verify-implementation final sanity sign-off]
+[final sanity sign-off — verify-* 스킬 있으면 그것으로]
 ```
 
 - **오케스트레이터**: 관찰, 위임, 5c 풀 스위트 실행, 5d 병렬 호출·통합. 직접 파일 수정은 hooks가 차단
 - **워커 서브에이전트**: 위임받은 작업을 직접 실행 (파일 수정 가능) + required axes 실행 후 5b output contract 보고
 - **리뷰어 (5d)**: 프로젝트 `*-reviewer.md` R1 매칭 우선, 없으면 `@architect` fallback. Codex#2 는 리뷰어가 아닌 **orchestrator 가 병렬로 직접 invoke** (v4.0 분업)
-- **Phase 6 VERIFY**: `verify-implementation` skill 이 success criteria sign-off (테스트 실행은 5b/5c 에서 이미 완료)
+- **Phase 6 VERIFY**: success criteria sign-off — `verify-*` 스킬이 있으면 그것으로 (테스트 실행은 5b/5c 에서 이미 완료)
 
 ## 구성 요소
 
@@ -143,9 +143,8 @@ Maestro 모드의 EXECUTE 단계는 다음 4 sub-step 으로 구성:
 | Skill | 설명 |
 |-------|------|
 | `/maestro [task]` | 단일 오케스트레이터 진입점. 자연어 modifier로 autonomy / parallel / goal / codex 자동 분기 |
-| `/multi-worktree-safety` | 다중 worktree 동시 작업 시 충돌 방지 룰 (트리거 기반 on-demand) |
-| `/session-summary` | 세션 기능 사용 요약 |
-| `/codex-image` | Codex 내장 `image_gen` 으로 이미지 생성 — companion CLI 직접 호출 (`--write --cwd`), OpenAI API 키 불필요 |
+
+> `verify-*` · `manage-skills` 는 이 레포가 배포하지 않습니다 — 프로젝트에 있으면 Phase 6 에서 활용하고, 없으면 `git diff` 리뷰로 대체합니다 (선택 의존성).
 
 에이전트는 `@architect`, `@frontend-engineer`, `@librarian`, `@document-writer`로 직접 호출합니다.
 자율 반복은 Claude Code 내장 `/goal`을 사용 (별도 ralph loop 불필요).
@@ -174,7 +173,7 @@ Obsidian 노트 스킬은 별도 플러그인 [`my-note-skills`](https://github.
 /maestro 사용자 인증 기능 구현
 ```
 
-→ @architect 설계 → APPROVE → 구현 에이전트 위임 → @architect 리뷰 → verify-* 검증
+→ @architect 설계 → APPROVE → 구현 에이전트 위임 → @architect 리뷰 → 검증
 
 ### 예시 2: 자율 모드 (이전 `/ultrawork` 대체)
 
@@ -206,7 +205,7 @@ Obsidian 노트 스킬은 별도 플러그인 [`my-note-skills`](https://github.
 ```
 agentic-workflow/
 ├── agents/           # 전문 에이전트 (architect, frontend, librarian, document-writer)
-├── skills/           # Skills (maestro, multi-worktree-safety, session-summary)
+├── skills/           # Skills (maestro, secure-coding, memory-management)
 ├── rules/            # 워크플로우 규칙 + 코딩 규칙 (secure-coding 포함)
 ├── hooks/            # Hook 스크립트 (maestro-guard, verify-prompt) — .ps1 + .sh 크로스 플랫폼
 ├── docs/             # 설계 문서 (v4.0 과최적화 진단, Dynamic Workflows 하이브리드 feasibility 등)
@@ -239,7 +238,7 @@ agentic-workflow/
 | Project agents | 글로벌 4개만 인지 | **`.claude/agents/*.md` 자동 발견** (session-once cache, surface-only) |
 | Codex 자동 trigger | 2개 (사용자 발화 / stuck 5+) | **1개** (Plan adversarial). 나머지는 user-explicit / review-internal / stuck 5+ escalation |
 | Plan template | Verification 행 없음 | **5a~5d + Phase 6 명시 5행** |
-| Phase 6 VERIFY | 테스트 실행 포함 가능 | narrow: `verify-implementation` skill 로 **최종 sanity sign-off 만** |
+| Phase 6 VERIFY | 테스트 실행 포함 가능 | narrow: **최종 sanity sign-off 만** (`verify-*` 있으면 위임) |
 
 호환성: v3.0 에 작성된 plan / agent / skill 은 그대로 동작. v3.1 는 추가 가시화 + 누락 방어 layer.
 

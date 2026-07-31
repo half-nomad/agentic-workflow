@@ -34,7 +34,7 @@
 > Obsidian 노트 스킬은 별도 플러그인 [`my-note-skills`](https://github.com/half-nomad/my-note-skills).
 
 > **Codex 직접 호출** (mode 무관) — 오케스트레이터가 Codex 를 부를 땐 `codex:codex-rescue` 경유가 아니라 companion 직접 호출이 정본. 호출당 ~31k tok 절감 + 실패해도 job ID 로 회수 (서브에이전트는 실패 시 침묵이 규약이고 자기 잡도 못 꺼낸다).
-> 프롬프트는 **stdin 또는 `--prompt-file` 로만** — 단일 인자 `task "..."` 는 재토크나이즈로 인용부호·개행이 소실된다. 명령·경로 → `memory/reference_codex_direct_call.md`. **스킬이 호출 경로를 명시하면 그쪽이 우선** (`codex-image` 는 `--write` 기본값 때문에 서브에이전트 경유가 필수).
+> 프롬프트는 **stdin 또는 `--prompt-file` 로만** — 단일 인자 `task "..."` 는 재토크나이즈로 인용부호·개행이 소실된다. 명령·경로 → `memory/reference_codex_direct_call.md`. **스킬이 호출 경로를 명시하면 그쪽이 우선** (예: 서브에이전트의 `--write` 기본값에 의존하는 스킬은 직접 호출로 바꾸면 조용히 실패한다).
 
 ---
 

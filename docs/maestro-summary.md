@@ -158,10 +158,6 @@ N개 에이전트 병렬 실행?     → Swarm
 | 프로젝트에 `verify-*` 스킬 존재 | 예 | 기존 규칙 활용 |
 | Ultrawork + 복잡한 작업 | 예 | 자동화 시 품질 보증 |
 
-**연동 스킬**:
-- `/manage-skills verify` — verify-* 스킬 생성/관리
-- `/verify-implementation` — 등록된 verify-* 스킬 순차 실행
-
 ### 4.8 State Persistence (MEMORY.md)
 
 세션 간 컨텍스트를 유지하는 메커니즘:
@@ -170,7 +166,7 @@ N개 에이전트 병렬 실행?     → Swarm
 
 **동작** (v1.9 — MEMORY.md 방식):
 - 세션 시작: MEMORY.md가 시스템 프롬프트에 자동 로드 (별도 Read 불필요)
-- 세션 종료: `— 작업 완료 —` 또는 `/session-summary` 실행 시 `## Next Session` 업데이트
+- 세션 종료: `— 작업 완료 —` 시 `## Next Session` 업데이트
 
 **사용자 명령**:
 - "계속" / "continue": 이전 컨텍스트에서 재개
@@ -265,7 +261,7 @@ N개 에이전트 병렬 실행?     → Swarm
 **v1.8 - 2026-02-18**
 
 - Evaluator 패턴 구현 → VERIFY 조건부 단계 추가
-- `verify-*` 스킬(manage-skills, verify-implementation) 연동
+- 프로젝트가 `verify-*` 스킬을 제공하면 Phase 6 에서 자동 연동 (선택 의존성)
 - boulder.json 세션 복원을 스킬 프롬프트 방식으로 복구
 - deprecated 정리: /ulw alias, Semi-Auto Mode 제거, 규칙 파일 영문 전환
 

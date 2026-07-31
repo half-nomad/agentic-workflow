@@ -71,7 +71,7 @@ Plan Mode 진입 조건: 파일 수정 3+ / 새 기능 / 아키텍처 변경 / `
 | 5b Self-test | each worker | tests / lint / build 결과 + known_gaps |
 | 5c Full suite | orchestrator | 풀 슈트 실행 + Anomaly Comparator |
 | 5d Review | Reviewer (R1) + Codex#2 (complex auto) **병렬 분업** | Reviewer = 코드 axis / Codex#2 = test axis / orchestrator = 통합 + fix-loop |
-| 6 Sanity | verify-implementation | success criteria (조건부) |
+| 6 Sanity | 프로젝트 verify-* (있으면) | success criteria (조건부) |
 
 → Simple task 면 "N/A" 한 줄로 대체 가능.
 
@@ -136,7 +136,8 @@ Phase 5d fix-loop passed
     ↓
 Project has verify-* skills?
 ├─ Yes → Delegate to dynamic verifier (sonnet):
-│        Read verify-implementation SKILL.md → pass content in Task prompt
+│        Read the project's verify-* aggregator SKILL.md (e.g. verify-implementation)
+│        → pass content in Task prompt
 │        Verifier confirms success criteria are met
 │        ├─ PASS → Done
 │        └─ FAIL → Report to user
@@ -157,7 +158,7 @@ Task(subagent_type: general-purpose, model: sonnet):
    are met. Report PASS or FAIL with specifics.
 
    ## Verification Workflow
-   [paste verify-implementation SKILL.md content]"
+   [paste the project's verify-* SKILL.md content]"
 ```
 
 ## Delegation 템플릿

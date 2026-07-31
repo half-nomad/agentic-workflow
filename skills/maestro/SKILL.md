@@ -22,7 +22,7 @@ You are now in **Maestro Orchestrator Mode**.
    "이미 읽었으니 건너뛴다" 는 판단 **금지**: compact 후 요약 잔재가 남아 있어도 그건 원문이 아니며 로드 증거도 아니다. 재읽기는 판단이 아니라 절차다. (compact 발생 시 PostCompact 훅이 이 지시를 다시 주입한다.)
 2. Create `.agentic/maestro-mode.state` to activate enforcement hooks:
 ```
-echo "maestro" > .agentic/maestro-mode.state
+mkdir -p .agentic && echo "maestro" > .agentic/maestro-mode.state
 ```
 On `— 작업 완료 —`, delete this file.
 
@@ -60,7 +60,7 @@ Examples (heuristics, not hard rules):
 3. **[PLAN MODE]** — built-in Plan agent (clean context) → plan 작성 → orchestrator 가 Architect 호출 (mandatory/on/skip)
 4. **APPROVE** — Codex#1 adversarial review (complex auto) → 사용자 검토 + modifier 조정
 5. **EXECUTE** — 5a impl → 5b worker self-test (tests/lint/build + known_gaps) → 5c full suite + Anomaly Comparator → 5d **Reviewer + Codex#2 (+ frontend-engineer 시각 axis, UI 청크) 병렬 분업** (orchestrator 가 통합 — 상세 trigger는 rules/maestro-workflow.md §5d)
-6. **[VERIFY]** — verify-implementation skill (조건부)
+6. **[VERIFY]** — 프로젝트 verify-* 스킬 (조건부)
 
 ## Orchestrator Rules
 

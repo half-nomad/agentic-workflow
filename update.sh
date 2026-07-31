@@ -54,6 +54,146 @@ backup_if_differs() {
     BACKED_UP=$((BACKED_UP + 1))   # not ((x++)): under `set -e` that returns 1 when x is 0
 }
 
+# --- CLAUDE.md managed block (mirrors install.sh) ----------------------------
+# The global CLAUDE.md is shared: this repo owns one section, the user owns the
+# rest. Only the text between the markers is rewritten. HTML comments are
+# stripped before CLAUDE.md reaches Claude's context, so markers cost no tokens.
+CLAUDE_MD_BEGIN='<!-- BEGIN agentic-workflow -->'
+CLAUDE_MD_END='<!-- END agentic-workflow -->'
+CLAUDE_MD_NOTE='<!-- Managed by agentic-workflow. Edits INSIDE this block are overwritten on update. Put your own instructions outside it, or in ~/.claude/rules/personal.md -->'
+
+# Exactly one BEGIN, exactly one END, BEGIN first. Any other topology (duplicate,
+# nested, reversed, one-sided) is ambiguous — we must not guess which span is ours.
+claude_md_markers_ok() {
+    local f="$1" nb ne bl el
+    [[ -f "$f" ]] || return 1
+    nb=$(grep -cxF "$CLAUDE_MD_BEGIN" "$f" || true)
+    ne=$(grep -cxF "$CLAUDE_MD_END" "$f" || true)
+    [[ "$nb" == "1" && "$ne" == "1" ]] || return 1
+    bl=$(grep -nxF "$CLAUDE_MD_BEGIN" "$f" | cut -d: -f1)
+    el=$(grep -nxF "$CLAUDE_MD_END" "$f" | cut -d: -f1)
+    [[ "$bl" -lt "$el" ]]
+}
+
+merge_claude_md() {
+    local src="$1" dest="$2" tmp
+    [[ -r "$src" ]] || { warn "CLAUDE.md source unreadable — skipped."; return 1; }
+    tmp="$(mktemp)" || return 1
+
+    # Markers present but malformed -> fail closed rather than delete a guessed span.
+    if [[ -f "$dest" ]] \
+       && { grep -qxF "$CLAUDE_MD_BEGIN" "$dest" || grep -qxF "$CLAUDE_MD_END" "$dest"; } \
+       && ! claude_md_markers_ok "$dest"; then
+        rm -f "$tmp"
+        warn "CLAUDE.md markers are malformed (duplicated, reversed, or one-sided)."
+        warn "Left untouched. Fix the BEGIN/END pair by hand, then re-run."
+        return 1
+    fi
+
+    if claude_md_markers_ok "$dest"; then
+        awk -v b="$CLAUDE_MD_BEGIN" -v e="$CLAUDE_MD_END" -v n="$CLAUDE_MD_NOTE" -v f="$src" '
+            $0 == b { print b; print n; while ((getline line < f) > 0) print line; close(f); inblock=1; next }
+            $0 == e { print e; inblock=0; next }
+            inblock { next }
+            { print }
+        ' "$dest" > "$tmp"
+    elif [[ -f "$dest" ]] && grep -q '^\*Maestro Workflow v' "$dest"; then
+        # Migration from a pre-marker install. Those installs overwrote the whole
+        # file, so a file carrying our footer but no markers IS our old content.
+        # Appending here would ship the workflow twice — duplicated, conflicting
+        # instructions are worse than a clean replace. The pre-write backup holds
+        # anything the user had added by hand.
+        warn "CLAUDE.md looked like a pre-marker install — replaced with a managed block."
+        warn "Any hand-written additions are in the backup listed at the end of this run."
+        { echo "$CLAUDE_MD_BEGIN"; echo "$CLAUDE_MD_NOTE"; cat "$src"; echo "$CLAUDE_MD_END"; } > "$tmp"
+    else
+        { [[ -f "$dest" ]] && { cat "$dest"; echo ""; }
+          echo "$CLAUDE_MD_BEGIN"
+          echo "$CLAUDE_MD_NOTE"
+          cat "$src"
+          echo "$CLAUDE_MD_END"
+        } > "$tmp"
+    fi
+
+    # Write THROUGH the destination instead of `mv`-ing over it. The docs suggest
+    # symlinking CLAUDE.md (e.g. to a dotfiles repo), and `mv` would silently
+    # replace that symlink with a regular file — leaving the real target stale.
+    # Redirecting also keeps the existing mode/owner/xattrs. The pre-write backup
+    # covers the atomicity we give up.
+    cat "$tmp" > "$dest"
+    rm -f "$tmp"
+}
+
+# --- deployment manifest -----------------------------------------------------
+# Records every file this repo deployed, with its hash at deploy time. Without it
+# we cannot tell "the user edited this file" from "the repo changed it", so
+# uninstall would delete user edits and update could never retire a file the repo
+# dropped. Written after a successful sync; the previous copy drives pruning.
+MANIFEST="$CLAUDE_DIR/.agentic-workflow-manifest"
+declare -a DEPLOYED=()
+declare -a RETIRED=()   # files we deleted this run — their hook registrations must go too
+
+file_hash() {
+    if command -v shasum >/dev/null 2>&1; then shasum -a256 "$1" 2>/dev/null | cut -d' ' -f1
+    elif command -v sha256sum >/dev/null 2>&1; then sha256sum "$1" 2>/dev/null | cut -d' ' -f1
+    fi
+}
+
+# Files present in the old manifest but no longer shipped: retire them, but only
+# if they still carry the hash we deployed (i.e. the user never touched them).
+prune_removed() {
+    [[ -f "$MANIFEST" ]] || return 0
+    local rel old_hash cur target pruned=0 kept=0
+    while IFS='  ' read -r old_hash rel; do
+        [[ -n "$rel" ]] || continue
+        printf '%s\n' "${DEPLOYED[@]}" | grep -qxF "$rel" && continue   # still shipped
+        target="$CLAUDE_DIR/$rel"
+        [[ -e "$target" ]] || continue
+        cur=$(file_hash "$target")
+        if [[ -n "$cur" && "$cur" == "$old_hash" ]]; then
+            backup_if_differs "$target" ""
+            rm -f "$target"
+            RETIRED+=("$rel")
+            pruned=$((pruned + 1))
+        else
+            kept=$((kept + 1))
+            warn "kept $rel — no longer shipped, but modified since install."
+        fi
+    done < "$MANIFEST"
+    (( pruned > 0 )) && success "retired $pruned file(s) the repo no longer ships"
+    (( kept > 0 )) && warn "$kept modified file(s) left in place — delete by hand if unwanted"
+    return 0
+}
+
+# A retired hook file leaves its settings.json registration behind. The hook then
+# fails silently on every matching tool call, which is indistinguishable from
+# "no hook" — so the registration has to go with the file.
+unregister_retired_hooks() {
+    (( ${#RETIRED[@]} > 0 )) || return 0
+    command -v jq >/dev/null 2>&1 || return 0
+    local dest="$CLAUDE_DIR/settings.json"
+    [[ -f "$dest" ]] || return 0
+
+    local names=() r tmp
+    for r in "${RETIRED[@]}"; do
+        [[ "$r" == hooks/* ]] && names+=("$(basename "$r")")
+    done
+    (( ${#names[@]} > 0 )) || return 0
+
+    tmp=$(mktemp) || return 0
+    if jq --argjson names "$(printf '%s\n' "${names[@]}" | jq -R . | jq -s .)" '
+          .hooks = ((.hooks // {}) | with_entries(
+            .value |= (map(.hooks = ((.hooks // [])
+                          | map(select((.command // "") as $c
+                                       | ($names | any(. as $n | $c | contains($n))) | not))))
+                       | map(select((.hooks // []) | length > 0)))
+          ))' "$dest" > "$tmp"; then
+        cat "$tmp" > "$dest"
+        success "unregistered hooks for ${#names[@]} retired file(s)"
+    fi
+    rm -f "$tmp"
+}
+
 echo ""
 info "Syncing directories..."
 
@@ -71,6 +211,7 @@ for dir in "${DIRECTORIES[@]}"; do
             mkdir -p "$(dirname "$dest_file")"
             backup_if_differs "$dest_file" "$file"
             cp -f "$file" "$dest_file"
+            DEPLOYED+=("$dir/$relative_path")
             ((SYNC_COUNT++)); ((file_count++))
             [[ "$VERBOSE" == true ]] && echo -e "  ${GRAY}-> $dir/$relative_path${NC}"
         done < <(find "$src_dir" -type f -print0)
@@ -81,13 +222,16 @@ for dir in "${DIRECTORIES[@]}"; do
     fi
 done
 
-# CLAUDE.global.md -> CLAUDE.md
-global_md="$SOURCE_PATH/CLAUDE.global.md"
+# CLAUDE.md — managed block only (the user owns everything outside the markers).
+# Replaces the old CLAUDE.global.md branch, which could never work as intended:
+# a personal-content file cannot live in a public repo.
+src_md="$SOURCE_PATH/CLAUDE.md"
 dest_md="$CLAUDE_DIR/CLAUDE.md"
-if [[ -f "$global_md" ]]; then
-    cp -f "$global_md" "$dest_md"
-    ((SYNC_COUNT++))
-    success "CLAUDE.md updated"
+if [[ -f "$src_md" ]]; then
+    backup_if_differs "$dest_md" "$src_md"
+    merge_claude_md "$src_md" "$dest_md"
+    SYNC_COUNT=$((SYNC_COUNT + 1))
+    success "CLAUDE.md section synced (content outside markers preserved)"
 fi
 
 echo ""
@@ -99,7 +243,19 @@ if command -v jq &> /dev/null; then
     if [[ -f "$src_settings" ]]; then
         if [[ -f "$dest_settings" ]]; then
             # Per-event array merge for hooks (jq `*` REPLACES arrays — a naive
-            # merge silently drops global-only hooks). Mirrors install.sh.
+            # merge silently drops user-only hooks). Mirrors install.sh.
+            #
+            # Identity is the (matcher, command) PAIR, and filtering happens at the
+            # handler level — not the entry level.
+            #   - Keying on matcher alone unregistered every user hook that shared a
+            #     matcher with a repo hook (one PreToolUse[Bash] hook would drop all
+            #     the user's PreToolUse[Bash] guards).
+            #   - Keying on command alone was also wrong: it dropped the same command
+            #     registered under a different matcher, and dropped a whole entry —
+            #     losing its other handlers — when just one handler was re-shipped.
+            # Handlers without `command` (http / mcp_tool / prompt / agent) fall back
+            # to their full JSON as identity, and a missing `hooks` array is treated
+            # as empty instead of crashing jq.
             jq -s '
               .[0] as $old | .[1] as $new |
               $old * $new |
@@ -107,9 +263,15 @@ if command -v jq &> /dev/null; then
                 ($old.hooks // {}) as $oh | ($new.hooks // {}) as $nh |
                 ((($oh | keys) + ($nh | keys)) | unique) as $events |
                 [ $events[] as $e |
-                  ((($nh[$e] // []) | map(.matcher)) as $nm |
-                   {key: $e,
-                    value: ((($oh[$e] // []) | map(select(.matcher as $m | ($nm | index($m)) == null))) + ($nh[$e] // []))})
+                  ([ ($nh[$e] // [])[] | .matcher as $m | (.hooks // [])[] | {m: $m, id: (.command // tojson)} ]) as $nid |
+                  {key: $e,
+                   value: ((($oh[$e] // [])
+                            | map(.matcher as $m
+                                  | .hooks = ((.hooks // [])
+                                              | map(select({m: $m, id: (.command // tojson)} as $k
+                                                           | ($nid | any(. == $k)) | not))))
+                            | map(select((.hooks // []) | length > 0)))
+                           + ($nh[$e] // []))}
                 ] | from_entries
               ) |
               .permissions.allow = ((($old.permissions.allow // []) + ($new.permissions.allow // []) | unique) - ["Bash(npm:*)", "Bash(npx:*)", "Bash(pnpm:*)", "Bash(yarn:*)"]) |
@@ -149,6 +311,15 @@ else
         warn ".mcp.json not found — skipping"
     fi
 fi
+
+# Retire files the repo dropped, then record what this run deployed.
+echo ""
+prune_removed
+unregister_retired_hooks
+: > "$MANIFEST"
+for rel in "${DEPLOYED[@]}"; do
+    printf '%s  %s\n' "$(file_hash "$CLAUDE_DIR/$rel")" "$rel" >> "$MANIFEST"
+done
 
 echo ""
 echo -e "${GREEN}========================================${NC}"

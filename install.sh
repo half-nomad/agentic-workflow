@@ -77,6 +77,29 @@ SOURCE_FILE_PATH="$CLAUDE_HOME/.agentic-workflow-source"
 echo -n "$SOURCE_PATH" > "$SOURCE_FILE_PATH"
 print_success "Source path saved: $SOURCE_FILE_PATH"
 
+# Deployment manifest: what we shipped and its hash at deploy time. Uninstall uses
+# it to delete only untouched files, and update uses it to retire files the repo
+# has since dropped. Without it neither can tell a user edit from a repo change.
+MANIFEST="$CLAUDE_HOME/.agentic-workflow-manifest"
+
+file_hash() {
+    if command -v shasum >/dev/null 2>&1; then shasum -a256 "$1" 2>/dev/null | cut -d' ' -f1
+    elif command -v sha256sum >/dev/null 2>&1; then sha256sum "$1" 2>/dev/null | cut -d' ' -f1
+    fi
+}
+
+write_manifest() {
+    : > "$MANIFEST"
+    local d f rel
+    for d in agents rules hooks commands skills; do
+        [ -d "$SOURCE_PATH/$d" ] || continue
+        while IFS= read -r -d '' f; do
+            rel="$d/${f#$SOURCE_PATH/$d/}"
+            [ -f "$CLAUDE_HOME/$rel" ] && printf '%s  %s\n' "$(file_hash "$CLAUDE_HOME/$rel")" "$rel" >> "$MANIFEST"
+        done < <(find "$SOURCE_PATH/$d" -type f -print0)
+    done
+}
+
 # 2. Create directories
 print_step "Creating directories..."
 DIRECTORIES=("$CLAUDE_HOME" "$CLAUDE_HOME/agents" "$CLAUDE_HOME/rules" "$CLAUDE_HOME/hooks" "$CLAUDE_HOME/skills")
@@ -99,6 +122,77 @@ backup_if_exists() {
     local rel="${target#$CLAUDE_HOME/}"
     mkdir -p "$BACKUP_ROOT/$(dirname "$rel")"
     cp -a "$target" "$BACKUP_ROOT/$rel"
+}
+
+# --- CLAUDE.md managed block -------------------------------------------------
+# The global CLAUDE.md is shared: this repo owns one section, the user owns the
+# rest. Replacing the whole file would delete the user's own instructions, so we
+# only rewrite the text between these markers. HTML comments are stripped before
+# CLAUDE.md is injected into Claude's context, so the markers cost no tokens.
+CLAUDE_MD_BEGIN='<!-- BEGIN agentic-workflow -->'
+CLAUDE_MD_END='<!-- END agentic-workflow -->'
+CLAUDE_MD_NOTE='<!-- Managed by agentic-workflow. Edits INSIDE this block are overwritten on update. Put your own instructions outside it, or in ~/.claude/rules/personal.md -->'
+
+# Exactly one BEGIN, exactly one END, BEGIN first. Any other topology (duplicate,
+# nested, reversed, one-sided) is ambiguous — we must not guess which span is ours.
+claude_md_markers_ok() {
+    local f="$1" nb ne bl el
+    [ -f "$f" ] || return 1
+    nb=$(grep -cxF "$CLAUDE_MD_BEGIN" "$f" || true)
+    ne=$(grep -cxF "$CLAUDE_MD_END" "$f" || true)
+    [ "$nb" = "1" ] && [ "$ne" = "1" ] || return 1
+    bl=$(grep -nxF "$CLAUDE_MD_BEGIN" "$f" | cut -d: -f1)
+    el=$(grep -nxF "$CLAUDE_MD_END" "$f" | cut -d: -f1)
+    [ "$bl" -lt "$el" ]
+}
+
+merge_claude_md() {
+    local src="$1" dest="$2" tmp
+    [ -r "$src" ] || { print_warn "CLAUDE.md source unreadable — skipped."; return 1; }
+    tmp="$(mktemp)" || return 1
+
+    # Markers present but malformed -> fail closed rather than delete a guessed span.
+    if [ -f "$dest" ] \
+       && { grep -qxF "$CLAUDE_MD_BEGIN" "$dest" || grep -qxF "$CLAUDE_MD_END" "$dest"; } \
+       && ! claude_md_markers_ok "$dest"; then
+        rm -f "$tmp"
+        print_warn "CLAUDE.md markers are malformed (duplicated, reversed, or one-sided) — left untouched."
+        return 1
+    fi
+
+    if claude_md_markers_ok "$dest"; then
+        # Both markers present -> replace only what is between them.
+        awk -v b="$CLAUDE_MD_BEGIN" -v e="$CLAUDE_MD_END" -v n="$CLAUDE_MD_NOTE" -v f="$src" '
+            $0 == b { print b; print n; while ((getline line < f) > 0) print line; close(f); inblock=1; next }
+            $0 == e { print e; inblock=0; next }
+            inblock { next }
+            { print }
+        ' "$dest" > "$tmp"
+    elif [ -f "$dest" ] && grep -q '^\*Maestro Workflow v' "$dest"; then
+        # Migration from a pre-marker install. Those installs overwrote the whole
+        # file, so a file carrying our footer but no markers IS our old content.
+        # Appending would ship the workflow twice — duplicated, conflicting
+        # instructions are worse than a clean replace. The pre-write backup holds
+        # anything the user had added by hand.
+        print_warn "CLAUDE.md looked like a pre-marker install — replaced with a managed block (see backup)."
+        { echo "$CLAUDE_MD_BEGIN"; echo "$CLAUDE_MD_NOTE"; cat "$src"; echo "$CLAUDE_MD_END"; } > "$tmp"
+    else
+        # No usable markers -> keep the existing file verbatim and append the block.
+        { [ -f "$dest" ] && { cat "$dest"; echo ""; }
+          echo "$CLAUDE_MD_BEGIN"
+          echo "$CLAUDE_MD_NOTE"
+          cat "$src"
+          echo "$CLAUDE_MD_END"
+        } > "$tmp"
+    fi
+
+    # Write THROUGH the destination instead of `mv`-ing over it. The docs suggest
+    # symlinking CLAUDE.md (e.g. to a dotfiles repo), and `mv` would silently
+    # replace that symlink with a regular file — leaving the real target stale.
+    # Redirecting also keeps the existing mode/owner/xattrs. The pre-write backup
+    # covers the atomicity we give up.
+    cat "$tmp" > "$dest"
+    rm -f "$tmp"
 }
 
 # 3. File copy function
@@ -150,13 +244,15 @@ CLAUDE_MD_SOURCE="$SOURCE_PATH/CLAUDE.md"
 CLAUDE_MD_DEST="$CLAUDE_HOME/CLAUDE.md"
 
 if [ -f "$CLAUDE_MD_SOURCE" ]; then
+    # Marker-delimited section, NOT whole-file overwrite. Anything you wrote
+    # outside the markers survives install/update; only the block between them
+    # is replaced. HTML comments are stripped before CLAUDE.md reaches Claude's
+    # context, so the markers cost zero tokens.
     if [ -f "$CLAUDE_MD_DEST" ]; then
-        BACKUP_PATH="$CLAUDE_MD_DEST.backup.$(date +%Y%m%d_%H%M%S)"
-        cp "$CLAUDE_MD_DEST" "$BACKUP_PATH"
-        print_warn "Existing CLAUDE.md backed up: $BACKUP_PATH"
+        backup_if_exists "$CLAUDE_MD_DEST"
     fi
-    cp "$CLAUDE_MD_SOURCE" "$CLAUDE_MD_DEST"
-    print_success "CLAUDE.md copied (Maestro workflow)"
+    merge_claude_md "$CLAUDE_MD_SOURCE" "$CLAUDE_MD_DEST"
+    print_success "CLAUDE.md section synced (content outside markers preserved)"
 else
     print_dim "CLAUDE.md not found (skipping)"
 fi
@@ -189,9 +285,15 @@ if command -v jq &> /dev/null; then
                 ($old.hooks // {}) as $oh | ($new.hooks // {}) as $nh |
                 ((($oh | keys) + ($nh | keys)) | unique) as $events |
                 [ $events[] as $e |
-                  ((($nh[$e] // []) | map(.matcher)) as $nm |
-                   {key: $e,
-                    value: ((($oh[$e] // []) | map(select(.matcher as $m | ($nm | index($m)) == null))) + ($nh[$e] // []))})
+                  ([ ($nh[$e] // [])[] | .matcher as $m | (.hooks // [])[] | {m: $m, id: (.command // tojson)} ]) as $nid |
+                  {key: $e,
+                   value: ((($oh[$e] // [])
+                            | map(.matcher as $m
+                                  | .hooks = ((.hooks // [])
+                                              | map(select({m: $m, id: (.command // tojson)} as $k
+                                                           | ($nid | any(. == $k)) | not))))
+                            | map(select((.hooks // []) | length > 0)))
+                           + ($nh[$e] // []))}
                 ] | from_entries
               ) |
               .permissions.allow = ((($old.permissions.allow // []) + ($new.permissions.allow // []) | unique) - ["Bash(npm:*)", "Bash(npx:*)", "Bash(pnpm:*)", "Bash(yarn:*)"]) |
@@ -270,6 +372,9 @@ if [ -f "$MCP_SOURCE" ]; then
     echo -e "${GRAY}  pip install uv${NC}"
     echo ""
 fi
+
+# Record what was deployed, so uninstall can tell our files from the user's edits.
+write_manifest
 
 # 6. Completion message
 echo -e "${GREEN}========================================${NC}"

@@ -69,6 +69,21 @@ foreach ($Dir in $Directories) {
     }
 }
 
+# Timestamped backup root for any pre-existing file we are about to overwrite.
+# Installing must never destroy a file the user already had under the same name.
+$BackupRoot = Join-Path $ClaudeHome ("backups/install-" + (Get-Date -Format "yyyyMMdd-HHmmss"))
+$script:BackedUp = 0
+
+function Backup-IfExists {
+    param([string]$Target)
+    if (-not (Test-Path $Target -PathType Leaf)) { return }
+    $rel = $Target.Substring($ClaudeHome.Length).TrimStart('\', '/')
+    $dst = Join-Path $BackupRoot $rel
+    New-Item -ItemType Directory -Path (Split-Path $dst -Parent) -Force | Out-Null
+    Copy-Item -Path $Target -Destination $dst -Force
+    $script:BackedUp++
+}
+
 # 3. File copy function
 function Copy-DirectoryContents {
     param(
@@ -80,12 +95,132 @@ function Copy-DirectoryContents {
         $Items = Get-ChildItem -Path $Source -File
         foreach ($Item in $Items) {
             $DestFile = Join-Path $Destination $Item.Name
+            Backup-IfExists -Target $DestFile
             Copy-Item -Path $Item.FullName -Destination $DestFile -Force
             Write-Host "    Copied: $($Item.Name)" -ForegroundColor DarkGray
         }
         return $Items.Count
     }
     return 0
+}
+
+# --- CLAUDE.md managed block + hook merge (mirrors install.sh / update.ps1) ---
+$ClaudeMdBegin = '<!-- BEGIN agentic-workflow -->'
+$ClaudeMdEnd   = '<!-- END agentic-workflow -->'
+$ClaudeMdNote  = '<!-- Managed by agentic-workflow. Edits INSIDE this block are overwritten on update. Put your own instructions outside it, or in ~/.claude/rules/personal.md -->'
+
+# Identity of a registered hook is the (matcher, command) PAIR, compared at the
+# handler level. Keying on matcher alone silently unregisters the user's own
+# hooks that happen to share a matcher. Handlers without `command`
+# (http / mcp_tool / prompt / agent) fall back to their full JSON.
+function Get-HookId {
+    param($Handler, [string]$Matcher)
+    $id = $null
+    if ($Handler -and $Handler.PSObject.Properties.Name -contains 'command' -and $Handler.command) {
+        $id = [string]$Handler.command
+    } else {
+        $id = ($Handler | ConvertTo-Json -Compress -Depth 10)
+    }
+    return ($Matcher + [char]1 + $id)
+}
+
+function Merge-Hooks {
+    param($OldHooks, $NewHooks)
+
+    $events = @()
+    if ($OldHooks) { $events += $OldHooks.PSObject.Properties.Name }
+    if ($NewHooks) { $events += $NewHooks.PSObject.Properties.Name }
+    $events = @($events | Select-Object -Unique)
+
+    $merged = [ordered]@{}
+    foreach ($e in $events) {
+        $oldArr = @()
+        if ($OldHooks -and ($OldHooks.PSObject.Properties.Name -contains $e)) { $oldArr = @($OldHooks.$e) }
+        $newArr = @()
+        if ($NewHooks -and ($NewHooks.PSObject.Properties.Name -contains $e)) { $newArr = @($NewHooks.$e) }
+
+        $newIds = New-Object 'System.Collections.Generic.HashSet[string]'
+        foreach ($entry in $newArr) {
+            if (-not $entry) { continue }
+            $m = [string]$entry.matcher
+            foreach ($h in @($entry.hooks)) {
+                if ($null -eq $h) { continue }
+                [void]$newIds.Add((Get-HookId -Handler $h -Matcher $m))
+            }
+        }
+
+        $kept = @()
+        foreach ($entry in $oldArr) {
+            if (-not $entry) { continue }
+            $m = [string]$entry.matcher
+            $kh = @()
+            foreach ($h in @($entry.hooks)) {
+                if ($null -eq $h) { continue }
+                if (-not $newIds.Contains((Get-HookId -Handler $h -Matcher $m))) { $kh += $h }
+            }
+            if ($kh.Count -gt 0) {
+                $entry.hooks = @($kh)
+                $kept += $entry
+            }
+        }
+        $merged[$e] = @($kept + $newArr)
+    }
+    return [PSCustomObject]$merged
+}
+
+# Exactly one BEGIN, one END, BEGIN first. Any other topology is ambiguous.
+function Test-ClaudeMdMarkers {
+    param([string]$Path)
+    if (-not (Test-Path $Path -PathType Leaf)) { return $false }
+    $lines = @(Get-Content $Path)
+    $nb = @($lines | Where-Object { $_ -ceq $ClaudeMdBegin }).Count
+    $ne = @($lines | Where-Object { $_ -ceq $ClaudeMdEnd }).Count
+    if ($nb -ne 1 -or $ne -ne 1) { return $false }
+    return ([array]::IndexOf($lines, $ClaudeMdBegin) -lt [array]::IndexOf($lines, $ClaudeMdEnd))
+}
+
+function Merge-ClaudeMd {
+    param([string]$Src, [string]$Dest)
+    if (-not (Test-Path $Src -PathType Leaf)) { Write-Warn "CLAUDE.md source unreadable - skipped."; return $false }
+    $srcLines = @(Get-Content $Src)
+
+    $hasMarker = $false
+    if (Test-Path $Dest -PathType Leaf) {
+        $dl = @(Get-Content $Dest)
+        $hasMarker = (@($dl | Where-Object { $_ -ceq $ClaudeMdBegin }).Count -gt 0) -or
+                     (@($dl | Where-Object { $_ -ceq $ClaudeMdEnd }).Count -gt 0)
+    }
+    if ($hasMarker -and -not (Test-ClaudeMdMarkers $Dest)) {
+        Write-Warn "CLAUDE.md markers are malformed (duplicated, reversed, or one-sided) - left untouched."
+        return $false
+    }
+
+    $out = @()
+    if (Test-ClaudeMdMarkers $Dest) {
+        $lines = @(Get-Content $Dest)
+        $bi = [array]::IndexOf($lines, $ClaudeMdBegin)
+        $ei = [array]::IndexOf($lines, $ClaudeMdEnd)
+        if ($bi -gt 0) { $out += $lines[0..($bi - 1)] }
+        $out += $ClaudeMdBegin, $ClaudeMdNote
+        $out += $srcLines
+        $out += $ClaudeMdEnd
+        if ($ei -lt ($lines.Count - 1)) { $out += $lines[($ei + 1)..($lines.Count - 1)] }
+    }
+    elseif ((Test-Path $Dest -PathType Leaf) -and (Select-String -Path $Dest -Pattern '^\*Maestro Workflow v' -Quiet)) {
+        Write-Warn "CLAUDE.md looked like a pre-marker install - replaced with a managed block (see backup)."
+        $out += $ClaudeMdBegin, $ClaudeMdNote
+        $out += $srcLines
+        $out += $ClaudeMdEnd
+    }
+    else {
+        if (Test-Path $Dest -PathType Leaf) { $out += @(Get-Content $Dest); $out += "" }
+        $out += $ClaudeMdBegin, $ClaudeMdNote
+        $out += $srcLines
+        $out += $ClaudeMdEnd
+    }
+
+    Set-Content -Path $Dest -Value $out -Encoding UTF8
+    return $true
 }
 
 # Copy files
@@ -111,23 +246,25 @@ Write-Host "  Copying skills/..."
 $SkillsSource = Join-Path $SourcePath "skills"
 $SkillsDest = Join-Path $ClaudeHome "skills"
 if (Test-Path $SkillsSource) {
+    foreach ($f in Get-ChildItem -Path $SkillsSource -Recurse -File) {
+        $rel = $f.FullName.Substring($SkillsSource.Length).TrimStart('\', '/')
+        Backup-IfExists -Target (Join-Path $SkillsDest $rel)
+    }
     Copy-Item -Path "$SkillsSource\*" -Destination $SkillsDest -Recurse -Force
     Write-Success "skills: copy complete"
 }
 
-# CLAUDE.md
+# CLAUDE.md - marker-delimited section, NOT whole-file overwrite. Anything the
+# user wrote outside the markers survives install/update.
 Write-Host "  Setting up CLAUDE.md..."
 $ClaudeMdSource = Join-Path $SourcePath "CLAUDE.md"
 $ClaudeMdDest = Join-Path $ClaudeHome "CLAUDE.md"
 
 if (Test-Path $ClaudeMdSource) {
-    if (Test-Path $ClaudeMdDest) {
-        $BackupPath = "$ClaudeMdDest.backup.$(Get-Date -Format 'yyyyMMdd_HHmmss')"
-        Copy-Item -Path $ClaudeMdDest -Destination $BackupPath -Force
-        Write-Warn "Existing CLAUDE.md backed up: $BackupPath"
+    Backup-IfExists -Target $ClaudeMdDest
+    if (Merge-ClaudeMd -Src $ClaudeMdSource -Dest $ClaudeMdDest) {
+        Write-Success "CLAUDE.md section synced (content outside markers preserved)"
     }
-    Copy-Item -Path $ClaudeMdSource -Destination $ClaudeMdDest -Force
-    Write-Success "CLAUDE.md copied (Maestro workflow)"
 } else {
     Write-Host "    CLAUDE.md not found (skipping)" -ForegroundColor DarkGray
 }
@@ -170,38 +307,12 @@ if (Test-Path $SettingsSource) {
             $ExistingSettings.permissions.ask = @(@($ExistingSettings.permissions.ask) + @($NewSettings.permissions.ask) | Select-Object -Unique)
         }
 
-        # Merge hooks: merge arrays per event type
+        # Merge hooks per event, keyed on the (matcher, command) pair at the
+        # handler level. The previous rule removed every existing entry sharing a
+        # matcher, which silently unregistered the user's own hooks.
         if ($NewSettings.hooks) {
-            if (-not $ExistingSettings.hooks) {
-                $ExistingSettings | Add-Member -NotePropertyName "hooks" -NotePropertyValue @{} -Force
-            }
-
-            # Iterate through each event type (UserPromptSubmit, PostToolUse, Stop, etc.)
-            foreach ($EventType in $NewSettings.hooks.PSObject.Properties) {
-                $EventName = $EventType.Name
-                $NewHooksArray = @($EventType.Value)
-
-                if ($ExistingSettings.hooks.PSObject.Properties[$EventName]) {
-                    # If event exists, remove ALL existing entries with same matcher, then add new
-                    $ExistingHooksArray = [System.Collections.ArrayList]@($ExistingSettings.hooks.$EventName)
-
-                    foreach ($NewHook in $NewHooksArray) {
-                        $newMatcher = $NewHook.matcher
-                        # Remove all duplicates with same matcher (reverse iterate to avoid index shift)
-                        for ($i = $ExistingHooksArray.Count - 1; $i -ge 0; $i--) {
-                            if ($ExistingHooksArray[$i].matcher -eq $newMatcher) {
-                                $ExistingHooksArray.RemoveAt($i)
-                            }
-                        }
-                        $ExistingHooksArray.Add($NewHook) | Out-Null
-                    }
-
-                    $ExistingSettings.hooks.$EventName = @($ExistingHooksArray)
-                } else {
-                    # If event doesn't exist, add new
-                    $ExistingSettings.hooks | Add-Member -NotePropertyName $EventName -NotePropertyValue $NewHooksArray -Force
-                }
-            }
+            $MergedHooks = Merge-Hooks -OldHooks $ExistingSettings.hooks -NewHooks $NewSettings.hooks
+            $ExistingSettings | Add-Member -NotePropertyName "hooks" -NotePropertyValue $MergedHooks -Force
         }
 
         $ExistingSettings | ConvertTo-Json -Depth 10 | Out-File -FilePath $SettingsDest -Encoding UTF8

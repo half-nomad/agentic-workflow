@@ -8,6 +8,10 @@ node_modules/
 # Local settings (user-specific)
 .claude/settings.local.json
 
+# User-owned rule file — belongs in ~/.claude/rules/, never in this repo.
+# Guard against accidentally authoring it here and committing personal content.
+rules/personal.md
+
 # Logs directory
 logs/
 

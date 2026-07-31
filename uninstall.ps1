@@ -69,16 +69,46 @@ Remove-InstalledFiles -FolderName "hooks" -SourceSubDir "hooks"
 Remove-InstalledFiles -FolderName "commands" -SourceSubDir "commands"
 Remove-InstalledFiles -FolderName "skills" -SourceSubDir "skills"
 
-# CLAUDE.md handling
+# CLAUDE.md - remove only our managed block, never the user's own content.
 $ClaudeMd = Join-Path $ClaudeDir "CLAUDE.md"
-$ClaudeMdBackups = Get-ChildItem -Path $ClaudeDir -Filter "CLAUDE.md.backup.*" 2>$null | Sort-Object LastWriteTime -Descending | Select-Object -First 1
-if ($ClaudeMdBackups) {
-    Copy-Item $ClaudeMdBackups.FullName $ClaudeMd -Force
-    Remove-Item $ClaudeMdBackups.FullName -Force
-    Write-Success "CLAUDE.md restored from backup."
-} elseif (Test-Path $ClaudeMd) {
-    Remove-Item $ClaudeMd -Force
-    Write-Success "CLAUDE.md removed."
+$MdBegin = '<!-- BEGIN agentic-workflow -->'
+$MdEnd   = '<!-- END agentic-workflow -->'
+
+$HasPair = $false
+if (Test-Path $ClaudeMd -PathType Leaf) {
+    $lines = @(Get-Content $ClaudeMd)
+    $nb = @($lines | Where-Object { $_ -ceq $MdBegin }).Count
+    $ne = @($lines | Where-Object { $_ -ceq $MdEnd }).Count
+    $HasPair = ($nb -eq 1 -and $ne -eq 1 -and
+                ([array]::IndexOf($lines, $MdBegin) -lt [array]::IndexOf($lines, $MdEnd)))
+}
+
+if ($HasPair) {
+    $lines = @(Get-Content $ClaudeMd)
+    $bi = [array]::IndexOf($lines, $MdBegin)
+    $ei = [array]::IndexOf($lines, $MdEnd)
+    $kept = @()
+    if ($bi -gt 0) { $kept += $lines[0..($bi - 1)] }
+    if ($ei -lt ($lines.Count - 1)) { $kept += $lines[($ei + 1)..($lines.Count - 1)] }
+
+    if (@($kept | Where-Object { $_ -match '\S' }).Count -gt 0) {
+        Set-Content -Path $ClaudeMd -Value $kept -Encoding UTF8
+        Write-Success "CLAUDE.md: managed block removed (your own content kept)."
+    } else {
+        Remove-Item $ClaudeMd -Force
+        Write-Success "CLAUDE.md removed (contained only the managed block)."
+    }
+} else {
+    # Pre-marker installs overwrote the whole file and left a timestamped backup.
+    $ClaudeMdBackups = Get-ChildItem -Path $ClaudeDir -Filter "CLAUDE.md.backup.*" -ErrorAction SilentlyContinue |
+                       Sort-Object LastWriteTime -Descending | Select-Object -First 1
+    if ($ClaudeMdBackups) {
+        Copy-Item $ClaudeMdBackups.FullName $ClaudeMd -Force
+        Remove-Item $ClaudeMdBackups.FullName -Force
+        Write-Success "CLAUDE.md restored from backup (pre-marker install)."
+    } elseif (Test-Path $ClaudeMd) {
+        Write-Warn "CLAUDE.md has no agentic-workflow markers - left untouched."
+    }
 }
 
 # Remove source path file

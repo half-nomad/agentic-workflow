@@ -49,6 +49,10 @@
 | `rules/memory-management.md` | 정본 1곳 원칙 (WHAT/WHY/HOW) + drift 경보 | `memory-management` 스킬 (cross-check 명령 · 중복 분류 · 인덱스 임계점) |
 | `rules/global.md` | 모델 기본 판단으로 안 나오는 것만 — Simplicity / Surgical Changes / 커밋 스타일 | — |
 | `rules/typescript.md` | 취향이 갈리는 컨벤션만 (path-conditional: `**/*.ts`, `**/*.tsx`) | — |
+| `rules/personal.md` | **사용자 소유 — 이 레포가 배포하지 않는다.** 개인 훅·환경 특이사항 등 나에게만 해당하는 것 | — |
+
+> **개인 설정은 `~/.claude/rules/personal.md` 에.** 설치·갱신은 레포가 소유한 파일만 덮어쓰고 그 외에는 손대지 않으므로, 이 파일은 재설치해도 유지된다. 전 프로젝트에 로드되니 **행동을 바꾸는 것만 짧게** 적는다 (조회성 정보는 memory 나 스킬로).
+> 전역 `CLAUDE.md` 에 직접 쓸 때는 이 레포가 관리하는 블록 **바깥에** 쓴다 (파일 안의 BEGIN/END 주석 마커 참고) — 블록 안은 갱신 시 교체된다.
 
 > **룰을 늘리기 전에**: 그게 모델이 이미 아는 것인지 먼저 따진다. 일반 코딩 상식을 다시 적으면 시스템 프롬프트와 상충 지시가 되어 오히려 품질이 떨어진다. 주기적으로 `/doctor` 로 CLAUDE.md·스킬 크기를 점검한다.
 

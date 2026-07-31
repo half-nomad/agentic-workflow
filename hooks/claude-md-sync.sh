@@ -33,6 +33,15 @@ FILE=$(json_get "$INPUT" ".tool_input.file_path")
 [ "$(basename "$FILE")" = "CLAUDE.md" ] || exit 0
 [ -f "$FILE" ] || exit 0
 
+# The deployed ~/.claude/CLAUDE.md is a symlink into the source repo, so an edit
+# through it reports the LINK path — and the sibling lookup below would then aim
+# at a nonexistent ~/.claude/AGENTS.md, silently never regenerating the repo's.
+# Assign only on success: an empty FILE would make dirname yield "." and clobber
+# the current project's AGENTS.md.
+if command -v realpath >/dev/null 2>&1; then
+    _resolved=$(realpath "$FILE" 2>/dev/null) && [ -n "$_resolved" ] && FILE="$_resolved"
+fi
+
 HEADER="<!-- AUTO-SYNCED from CLAUDE.md — edit CLAUDE.md, not this file. (hooks/claude-md-sync) -->"
 RULES_NOTE="<!-- Also read ~/.claude/rules/*.md (secure-coding, global, ...) and apply those rules identically when working here. -->"
 
@@ -52,7 +61,16 @@ SIBLING="$(dirname "$FILE")/AGENTS.md"
 [ -f "$SIBLING" ] && sync_to "$SIBLING"
 
 # 2) 전역 CLAUDE.md → Codex 전역 지침
-if [ -f "$HOME/.claude/CLAUDE.md" ] && [ "$FILE" -ef "$HOME/.claude/CLAUDE.md" ] && [ -d "$HOME/.codex" ]; then
+# Skip when ~/.codex/AGENTS.md is the very file branch 1 just wrote — under the
+# symlink install it links to the repo's tracked AGENTS.md, and `>` writes THROUGH
+# a symlink. Since this branch emits 4 header lines where branch 1 emits 3, the
+# two would fight on every edit and churn a git-tracked file forever. `-ef`
+# compares device+inode after following links; a bare `-L` test would also accept
+# a broken or wrong-target link and skip a sync that is genuinely needed.
+# The branch stays for Windows copy installs, where ~/.codex/AGENTS.md is a real
+# file and branch 1 no-ops.
+if [ -f "$HOME/.claude/CLAUDE.md" ] && [ "$FILE" -ef "$HOME/.claude/CLAUDE.md" ] && [ -d "$HOME/.codex" ] \
+   && ! [ "$HOME/.codex/AGENTS.md" -ef "$SIBLING" ]; then
     sync_to "$HOME/.codex/AGENTS.md" "<!-- source: ~/.claude/CLAUDE.md · 상대 경로(rules/, skills/)는 ~/.claude/ 기준 -->"
 fi
 

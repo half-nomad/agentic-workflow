@@ -1,126 +1,66 @@
-<#
-.SYNOPSIS
-    agentic-workflow Uninstall Script (Windows PowerShell)
-.DESCRIPTION
-    Removes agentic-workflow related files installed in ~/.claude/.
-#>
+#Requires -Version 5.1
+# uninstall.ps1 - Agentic Workflow uninstaller (native Windows PowerShell)
+#
+# Removes ONLY the paths install.ps1 recorded in ~\.claude\.maestro-manifest.txt.
+# If the manifest is missing this script refuses to run rather than guessing by
+# filename: your own agents, rules, hooks and skills sit in the very same
+# directories, and guessing is how you delete someone's skills.
 
-param([switch]$Force)
+$ErrorActionPreference = 'Stop'
 
-$ErrorActionPreference = "Stop"
+$userHome = if ($env:USERPROFILE) { $env:USERPROFILE } else { $HOME }
+$claudeHome = Join-Path $userHome '.claude'
+$manifestPath = Join-Path $claudeHome '.maestro-manifest.txt'
 
-function Write-Info { param($Message) Write-Host "[INFO] $Message" -ForegroundColor Cyan }
-function Write-Success { param($Message) Write-Host "[OK] $Message" -ForegroundColor Green }
-function Write-Warn { param($Message) Write-Host "[WARN] $Message" -ForegroundColor Yellow }
+Write-Host ''
+Write-Host 'agentic-workflow uninstaller (Windows)'
+Write-Host ''
 
-$ClaudeDir = Join-Path $env:USERPROFILE ".claude"
-$SourceFile = Join-Path $ClaudeDir ".agentic-workflow-source"
-
-Write-Host ""
-Write-Host "========================================" -ForegroundColor Magenta
-Write-Host "  agentic-workflow Uninstaller" -ForegroundColor Magenta
-Write-Host "========================================" -ForegroundColor Magenta
-Write-Host ""
-
-Write-Info "Checking installation status..."
-
-if (-not (Test-Path $SourceFile)) {
-    Write-Warn "agentic-workflow is not installed."
-    exit 0
+if (-not (Test-Path -LiteralPath $manifestPath -PathType Leaf)) {
+    Write-Host 'ERROR: no install manifest found at' -ForegroundColor Red
+    Write-Host ('    ' + $manifestPath)
+    Write-Host ''
+    Write-Host '  That file is the only record of what this installer deployed. Without it'
+    Write-Host '  the script would have to guess by filename, and the same directories hold'
+    Write-Host '  your own agents, rules, hooks and skills - so it refuses.'
+    Write-Host ''
+    Write-Host '  If you installed on this machine, re-run install.ps1 to regenerate the'
+    Write-Host '  manifest, then run uninstall.ps1 again. Otherwise remove the files by hand.'
+    Write-Host ''
+    exit 1
 }
 
-$SourcePath = (Get-Content $SourceFile -Raw).Trim()
-Write-Info "Installed source path: $SourcePath"
-
-if (-not $Force) {
-    $confirm = Read-Host "Remove agentic-workflow? (y/N)"
-    if ($confirm -ne "y" -and $confirm -ne "Y") {
-        Write-Info "Removal cancelled."
-        exit 0
+$removed = 0
+$missing = 0
+foreach ($line in (Get-Content -LiteralPath $manifestPath)) {
+    $rel = $line.Trim()
+    if (-not $rel) { continue }
+    $target = Join-Path $userHome $rel
+    if (Test-Path -LiteralPath $target) {
+        Remove-Item -LiteralPath $target -Recurse -Force
+        Write-Host ('  removed ' + $rel)
+        $removed++
+    }
+    else {
+        $missing++
     }
 }
 
-# File removal function
-function Remove-InstalledFiles {
-    param([string]$FolderName, [string]$SourceSubDir)
-
-    $targetDir = Join-Path $ClaudeDir $FolderName
-    $sourceDir = Join-Path $SourcePath $SourceSubDir
-
-    if (-not (Test-Path $targetDir) -or -not (Test-Path $sourceDir)) { return }
-
-    $removedCount = 0
-    Get-ChildItem -Path $sourceDir -File -Recurse | ForEach-Object {
-        $relativePath = $_.FullName.Substring($sourceDir.Length).TrimStart('\', '/')
-        $targetFile = Join-Path $targetDir $relativePath
-        if (Test-Path $targetFile) {
-            Remove-Item $targetFile -Force
-            $removedCount++
-        }
-    }
-
-    if ($removedCount -gt 0) { Write-Success "$removedCount files removed from $FolderName" }
+Remove-Item -LiteralPath $manifestPath -Force
+Write-Host ''
+Write-Host ($removed.ToString() + ' path(s) removed. Your own files were untouched.')
+if ($missing -gt 0) {
+    Write-Host ($missing.ToString() + ' manifest entr(y/ies) were already gone.')
 }
 
-Write-Info "Removing installed files..."
-Remove-InstalledFiles -FolderName "agents" -SourceSubDir "agents"
-Remove-InstalledFiles -FolderName "rules" -SourceSubDir "rules"
-Remove-InstalledFiles -FolderName "hooks" -SourceSubDir "hooks"
-Remove-InstalledFiles -FolderName "commands" -SourceSubDir "commands"
-Remove-InstalledFiles -FolderName "skills" -SourceSubDir "skills"
-
-# CLAUDE.md - remove only our managed block, never the user's own content.
-$ClaudeMd = Join-Path $ClaudeDir "CLAUDE.md"
-$MdBegin = '<!-- BEGIN agentic-workflow -->'
-$MdEnd   = '<!-- END agentic-workflow -->'
-
-$HasPair = $false
-if (Test-Path $ClaudeMd -PathType Leaf) {
-    $lines = @(Get-Content $ClaudeMd)
-    $nb = @($lines | Where-Object { $_ -ceq $MdBegin }).Count
-    $ne = @($lines | Where-Object { $_ -ceq $MdEnd }).Count
-    $HasPair = ($nb -eq 1 -and $ne -eq 1 -and
-                ([array]::IndexOf($lines, $MdBegin) -lt [array]::IndexOf($lines, $MdEnd)))
-}
-
-if ($HasPair) {
-    $lines = @(Get-Content $ClaudeMd)
-    $bi = [array]::IndexOf($lines, $MdBegin)
-    $ei = [array]::IndexOf($lines, $MdEnd)
-    $kept = @()
-    if ($bi -gt 0) { $kept += $lines[0..($bi - 1)] }
-    if ($ei -lt ($lines.Count - 1)) { $kept += $lines[($ei + 1)..($lines.Count - 1)] }
-
-    if (@($kept | Where-Object { $_ -match '\S' }).Count -gt 0) {
-        Set-Content -Path $ClaudeMd -Value $kept -Encoding UTF8
-        Write-Success "CLAUDE.md: managed block removed (your own content kept)."
-    } else {
-        Remove-Item $ClaudeMd -Force
-        Write-Success "CLAUDE.md removed (contained only the managed block)."
-    }
-} else {
-    # Pre-marker installs overwrote the whole file and left a timestamped backup.
-    $ClaudeMdBackups = Get-ChildItem -Path $ClaudeDir -Filter "CLAUDE.md.backup.*" -ErrorAction SilentlyContinue |
-                       Sort-Object LastWriteTime -Descending | Select-Object -First 1
-    if ($ClaudeMdBackups) {
-        Copy-Item $ClaudeMdBackups.FullName $ClaudeMd -Force
-        Remove-Item $ClaudeMdBackups.FullName -Force
-        Write-Success "CLAUDE.md restored from backup (pre-marker install)."
-    } elseif (Test-Path $ClaudeMd) {
-        Write-Warn "CLAUDE.md has no agentic-workflow markers - left untouched."
-    }
-}
-
-# Remove source path file
-if (Test-Path $SourceFile) {
-    Remove-Item $SourceFile -Force
-    Write-Success ".agentic-workflow-source file removed."
-}
-
-Write-Host ""
-Write-Host "========================================" -ForegroundColor Green
-Write-Host "  Uninstall Complete!" -ForegroundColor Green
-Write-Host "========================================" -ForegroundColor Green
-Write-Host ""
-Write-Host "To reinstall, run install.ps1." -ForegroundColor Gray
-Write-Host ""
+Write-Host ''
+Write-Host 'Left in place, on purpose:'
+Write-Host '  ~\.claude\.maestro-backup-*   files install displaced, if any. Review, then'
+Write-Host '                                delete them yourself.'
+Write-Host '  ~\.claude\settings.json       never written by any script here. Remove this'
+Write-Host '                                repo''s hook entries by hand - see the uninstall'
+Write-Host '                                snippet in the project README. Leaving them behind'
+Write-Host '                                makes every matching tool call error, because the'
+Write-Host '                                hook scripts are now gone.'
+Write-Host '  ~\.claude\rules\personal.md   user-owned; never installed, never removed.'
+Write-Host ''

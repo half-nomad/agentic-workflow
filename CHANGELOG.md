@@ -90,6 +90,15 @@ All notable changes to this project will be documented in this file.
 - **`/maestro` 활성화가 새 프로젝트에서 조용히 실패하던 문제** — `skills/maestro/SKILL.md` 의 `echo > .agentic/maestro-mode.state` 가 `.agentic/` 부재 시 실패하고, 가드는 상태 파일이 없으면 비활성이라 **강제 메커니즘 자체가 안 켜졌다**. `.agentic/` 는 gitignore 대상이라 모든 새 클론이 해당된다. `mkdir -p` 선행으로 수정.
 - **Phase 6 의 조건과 동작 불일치** — 조건은 `verify-*` 일반인데 동작은 `verify-implementation` 고정이라, 다른 `verify-*` 만 가진 프로젝트가 Yes 분기로 들어가 읽을 파일이 없고 fallback 도 못 탔다. `skills/maestro/WORKFLOW.md`·`SKILL.md` 를 조건에 맞춰 일반화 (`rules/` 는 원래 올바랐다).
 
+### Changed — 배포 방식: 복사 → 심볼릭 링크
+
+- **`install.sh` 를 심볼릭 링크 방식으로 재작성, `update.sh` / `update.ps1` 삭제** — 갱신은 POSIX 에서 `git pull` 후 `install.sh` 재실행으로 대체된다 (Windows 는 심볼릭 링크에 개발자 모드가 필요해 계속 복사하므로 `install.ps1` 재실행이 그대로 유지). 배포 스크립트 총량 1,687 → 547줄.
+- **복잡했던 원인은 "복사" 전제 자체였다** — 복사는 파생 메커니즘 여섯 개를 강제했다: 원본과의 divergence, 소유하지 않은 파일 덮어쓰기, 무엇을 설치했는지 기록 없음, 삭제가 전파되지 않음, 훅 등록 drift, `CLAUDE.md` clobbering. 링크는 배포본과 원본이 같은 파일이 되므로 이 여섯을 개별 방어하는 대신 구조적으로 해소한다.
+- **링크 단위(파일 vs 디렉터리)가 곧 안전장치** — `agents/` `rules/` `hooks/` 는 파일 단위로 링크한다: `~/.claude/rules/personal.md` 와 개인 보안 훅 4개가 같은 디렉터리에 살고 있어, 디렉터리째 링크하면 그것들이 사라진다. `skills/<name>/` 는 각 스킬 디렉터리 전체가 이 레포 소유라 디렉터리 단위로 링크한다. `uninstall.sh` 는 대상이 `-type l` 을 통과하고 링크가 이 저장소 경로로 시작할 때만 지우므로, 실제 파일이나 다른 곳을 가리키는 링크(=개인 파일)는 애초에 삭제 후보에 들지 않는다 — 조심해서 안 지우는 게 아니라 구조적으로 못 지운다.
+- **`install.sh` / `install.ps1` 에 `CLAUDE.md` 소유권 가드 신설** — `~/.claude/CLAUDE.md` 에 사용자 고유 내용이 남아 있으면 조용히 백업하는 대신 설치를 **중단**하고 `~/.claude/rules/personal.md` 로 옮기라고 안내한다.
+- **`hooks/claude-md-sync.{sh,ps1}` — `realpath` 해석 추가** — `~/.claude/CLAUDE.md` 심볼릭 링크를 통해 편집해도 이 레포의 `AGENTS.md` 가 재생성되도록, 파일 경로를 링크가 아니라 실체로 해석한다. 대입은 해석 성공 시에만 이뤄져 `realpath` 부재 환경에서 빈 경로로 덮어쓰는 대신 기존 동작으로 조용히 degrade 한다. 두 번째 분기(`~/.codex/AGENTS.md` 동기화)는 `-ef` identity 검사로 새로 가드된다 — 없으면 `~/.codex/AGENTS.md` 심볼릭 링크를 통해 쓴 내용이 이 레포가 추적하는 `AGENTS.md` 로 역류해, 두 분기가 서로 다른 헤더 줄 수를 써 넣으며 편집할 때마다 영구적으로 충돌한다.
+- **`settings.json` 은 손으로, 한 번만 등록** — 사용자 개인 키와 개인 훅이 뒤섞여 있는 파일이라, 자동 병합 로직이 한 번만 잘못돼도 보안 훅이 실제로 발동하는지를 결정하는 그 파일이 망가진다. 등록 절차·근거는 README §훅 등록 (최초 1회).
+
 ## [4.5.0] - 2026-07-29
 
 > 사용자 지시: *"기능을 상실시키는 게 아니라 군더더기·중언부언·긴 표현을 간결화하라"* → 이후 *"무조건 줄이라는 게 아니라 불필요한 게 있다면 줄이라는 것, 더 좋은 방향이면 추가도 검토"*. 3배치 중 2개 적용 · 1개 기각, 기각 근거는 순증으로 기록. **상주 −153 tok / 지연 −763 tok.**

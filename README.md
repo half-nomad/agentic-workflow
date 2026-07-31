@@ -6,7 +6,7 @@ Claude Code를 위한 Maestro 오케스트레이션 시스템. 패턴 기반 에
 
 agentic-workflow는 Claude Code CLI에 최적화된 **Maestro** 오케스트레이션 시스템입니다. Claude가 오케스트레이터 역할을 수행하여 작업을 분석하고, 적절한 패턴을 선택하고, 필요한 에이전트를 식별한 후 계획을 제출합니다.
 
-이 저장소는 Maestro의 **배포본 소스**입니다. `git clone` 후 `install.sh` / `install.ps1`을 실행하면 저장소의 `CLAUDE.md`, `rules/`, `agents/`, `skills/`, `hooks/`, `settings.json`이 사용자의 `~/.claude/`로 복사되어 시스템 전역에 적용됩니다.
+이 저장소는 Maestro의 **배포본 소스**입니다. `git clone` 후 `install.sh` / `install.ps1`을 실행하면 저장소의 `CLAUDE.md`, `agents/`, `rules/`, `hooks/`, `skills/`가 사용자의 `~/.claude/`에 심볼릭 링크(Windows는 복사)로 연결됩니다. 배포된 설정은 곧 이 저장소의 워킹트리이므로, 갱신은 대부분 `git pull` 한 번으로 끝납니다 — 예외는 `settings.json` 뿐이며, 훅 등록은 최초 1회 수동으로 합니다 (아래 §훅 등록 참조).
 
 ## 주요 특징
 
@@ -29,15 +29,7 @@ agentic-workflow는 Claude Code CLI에 최적화된 **Maestro** 오케스트레�
 
 ## 설치 방법
 
-### Windows (PowerShell)
-
-```powershell
-git clone https://github.com/half-nomad/agentic-workflow.git
-cd agentic-workflow
-.\install.ps1
-```
-
-### Linux / macOS
+### Linux / macOS / WSL
 
 ```bash
 git clone https://github.com/half-nomad/agentic-workflow.git
@@ -46,7 +38,175 @@ chmod +x install.sh
 ./install.sh
 ```
 
+### Windows (PowerShell)
+
+```powershell
+git clone https://github.com/half-nomad/agentic-workflow.git
+cd agentic-workflow
+.\install.ps1
+```
+
+Windows는 심볼릭 링크에 개발자 모드(또는 관리자 권한)가 필요해 대신 파일을 **복사**합니다. 배포한 경로는 `~\.claude\.maestro-manifest.txt`에 기록되고, 이후 `uninstall.ps1`은 이 목록만 근거로 제거합니다.
+
 설치 후 Claude Code를 재시작하세요.
+
+### 업데이트
+
+**Linux / macOS / WSL**
+
+```bash
+git -C <repo 경로> pull && <repo 경로>/install.sh
+```
+
+`git pull`만으로는 부족합니다 — 상류에 새로 추가된 파일은 아직 링크가 없고, 삭제되거나 이름이 바뀐 파일은 죽은 링크(dangling link)로 남습니다. 죽은 링크는 `rules/`에 있으면 해당 룰이 조용히 로드를 멈추고, `hooks/`에 있으면 그 링크와 매칭되는 모든 도구 호출이 에러를 냅니다. `install.sh`를 다시 실행하면 새 링크를 만들고 죽은 링크를 정리(sweep)합니다 — 이미 올바른 항목은 조용히 건너뛰므로 재실행은 언제나 안전하고 비용이 없습니다.
+
+**Windows (PowerShell)**
+
+```powershell
+git pull
+.\install.ps1
+```
+
+Windows는 복사 방식이라 `git pull`이 상류를 자동으로 추적하지 않습니다 — 두 단계 모두 매번 필요합니다.
+
+### 제거
+
+**Linux / macOS / WSL**
+
+```bash
+./uninstall.sh
+```
+
+이 저장소 안쪽을 가리키는 심볼릭 링크만 제거합니다. 실제 파일은 `-type l` 검사에서 걸러지고, 다른 곳을 가리키는 링크는 저장소 경로 접두사 매칭에서 걸러지므로 `rules/personal.md`나 개인 훅 같은 사용자 파일은 구조적으로 삭제될 수 없습니다.
+
+**Windows (PowerShell)**
+
+```powershell
+.\uninstall.ps1
+```
+
+`~\.claude\.maestro-manifest.txt`에 기록된 경로만 제거합니다. 매니페스트가 없으면 파일명으로 추측하지 않고 **실행을 거부**합니다.
+
+## 훅 등록 (최초 1회)
+
+어떤 스크립트도 `settings.json`을 쓰지 않습니다. 이 파일은 사용자의 개인 키를 담고 개인 훅과 이 저장소의 훅이 뒤섞여 있는 자리라, 병합 로직이 단 한 번만 잘못돼도 정작 보안 훅이 실제로 발동하는지를 결정하는 그 파일이 망가집니다. 한 번 붙여넣는 블록이 한 번 잘못될 수 있는 스크립트보다 안전합니다. 아래 블록을 `~/.claude/settings.json`의 `hooks`에 한 번만 등록하면 이후로는 다시 손댈 필요가 없습니다 — 훅 경로는 심볼릭 링크를 가리키고, 그 링크는 항상 저장소의 최신 파일로 해석되기 때문입니다.
+
+### Linux / macOS / WSL (Git Bash 포함)
+
+`settings.json`에 실제로 들어 있는 `hooks` 값을 그대로 옮긴 것입니다 (아래 블록과 저장소 원본이 어긋나면 버그입니다):
+
+```json
+{
+  "PreToolUse": [
+    {
+      "matcher": "Write|Edit|MultiEdit",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "sh -c 'if command -v powershell >/dev/null 2>&1; then powershell -NoProfile -ExecutionPolicy Bypass -File \"$HOME/.claude/hooks/maestro-guard.ps1\"; else bash \"$HOME/.claude/hooks/maestro-guard.sh\"; fi'"
+        }
+      ]
+    }
+  ],
+  "PostCompact": [
+    {
+      "matcher": "*",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "sh -c 'if command -v powershell >/dev/null 2>&1; then powershell -NoProfile -ExecutionPolicy Bypass -File \"$HOME/.claude/hooks/maestro-compact-reload.ps1\"; else bash \"$HOME/.claude/hooks/maestro-compact-reload.sh\"; fi'"
+        }
+      ]
+    }
+  ],
+  "PostToolUse": [
+    {
+      "matcher": "Edit|Write|MultiEdit",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "sh -c 'if command -v powershell >/dev/null 2>&1; then powershell -NoProfile -ExecutionPolicy Bypass -File \"$HOME/.claude/hooks/claude-md-sync.ps1\"; else bash \"$HOME/.claude/hooks/claude-md-sync.sh\"; fi'"
+        }
+      ]
+    },
+    {
+      "matcher": "Agent",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "sh -c 'if command -v powershell >/dev/null 2>&1; then powershell -NoProfile -ExecutionPolicy Bypass -File \"$HOME/.claude/hooks/verify-prompt.ps1\"; else bash \"$HOME/.claude/hooks/verify-prompt.sh\"; fi'"
+        }
+      ]
+    }
+  ]
+}
+```
+
+`sh -c 'if command -v powershell ... else bash ... fi'` 형태를 단순한 `bash ...` 호출로 줄이지 마세요 — `sh`와 `powershell`이 둘 다 있는 Windows 위 Git Bash 환경을 구분하는 디스패처입니다. 단순화하면 지금 정상 동작 중인 사용자 환경이 깨집니다.
+
+### Windows (네이티브 PowerShell)
+
+`sh -c`와 `$HOME`이 없는 환경이라 별도 스니펫이 필요합니다:
+
+```json
+{
+  "PreToolUse": [
+    {
+      "matcher": "Write|Edit|MultiEdit",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"%USERPROFILE%\\.claude\\hooks\\maestro-guard.ps1\""
+        }
+      ]
+    }
+  ],
+  "PostCompact": [
+    {
+      "matcher": "*",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"%USERPROFILE%\\.claude\\hooks\\maestro-compact-reload.ps1\""
+        }
+      ]
+    }
+  ],
+  "PostToolUse": [
+    {
+      "matcher": "Edit|Write|MultiEdit",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"%USERPROFILE%\\.claude\\hooks\\claude-md-sync.ps1\""
+        }
+      ]
+    },
+    {
+      "matcher": "Agent",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"%USERPROFILE%\\.claude\\hooks\\verify-prompt.ps1\""
+        }
+      ]
+    }
+  ]
+}
+```
+
+> 이 네이티브 Windows 스니펫은 실제 Windows에서 검증되지 않았습니다 — macOS의 pwsh 7에서 실행만 확인했습니다. 훅 `command`에서 `%USERPROFILE%`이 전개되지 않으면 절대 경로로 바꿔 써야 합니다.
+
+이미 `PreToolUse` / `PostToolUse` 항목이 있다면 교체하지 말고 기존 배열에 이어붙이세요.
+
+**제거 시**: `command`에 `maestro-guard` / `maestro-compact-reload` / `claude-md-sync` / `verify-prompt`가 들어간 네 항목을 지우고, 비어버린 배열은 함께 지우세요. 빈 배열을 남겨두면 스크립트가 사라진 뒤로 매칭되는 모든 도구 호출이 에러를 냅니다.
+
+## 주의사항
+
+1. **심볼릭 링크는 "통과해서" 쓰고, 절대 덮어쓰지 마세요.** `~/.claude/rules/global.md`는 저장소 안쪽을 가리키는 링크이므로, 그 파일을 편집하는 것이 곧 저장소를 편집하는 것입니다 — 이게 원래 의도입니다. 하지만 `sed -i`나, 임시 파일에 쓴 뒤 원래 이름으로 rename하며 저장하는 에디터는 **링크 자체를 일반 파일로 바꿔버립니다.** 그 순간 배포본이 저장소에서 조용히 갈라지고 이후 업데이트를 받지 못합니다. `find ~/.claude -maxdepth 2 -type f`로 링크여야 하는데 일반 파일이 된 것을 찾을 수 있고, `install.sh`를 재실행하면 다시 링크로 되돌립니다.
+2. **배포된 skill 디렉터리 안쪽에는 절대 쓰지 마세요.** `~/.claude/skills/maestro`는 저장소의 `skills/maestro` 그 자체이므로, 거기에 쓴 것은 무엇이든 git 워킹트리에 그대로 들어갑니다.
+3. **저장소를 옮기면 제거가 깨집니다.** 링크는 절대 경로를 기억하고, 제거 스크립트는 그 경로 접두사로 자신이 만든 링크인지 판별합니다. 체크아웃 위치를 옮기면 아무것도 매칭되지 않아 아무것도 지워지지 않습니다 (조용히 넘어가지 않고 명확히 알립니다). 옮기기 전에 제거하거나, 새 위치에서 `install.sh`를 다시 실행하세요.
+4. **`~/.claude/rules/personal.md`는 사용자의 것입니다.** 이 저장소는 이 파일을 배포하지도, 덮어쓰지도, 지우지도 않습니다 — `CLAUDE.md`와 똑같이 모든 프로젝트에 로드되므로, 이 머신에만 해당하거나 개인적인 지시는 여기에 적으세요. 설치 과정에서 밀려나는 파일은 전부 `~/.claude/.maestro-backup-<타임스탬프>/`로 옮겨지고 경로가 출력됩니다 — 조용히 지워지는 것은 없습니다. `~/.claude/CLAUDE.md`에 이미 사용자 고유의 지시가 들어 있다면, 설치는 그걸 덮어쓰지 않고 **중단**됩니다.
 
 ## Maestro 워크플로우
 
@@ -204,15 +364,17 @@ Obsidian 노트 스킬은 별도 플러그인 [`my-note-skills`](https://github.
 
 ```
 agentic-workflow/
-├── agents/           # 전문 에이전트 (architect, frontend, librarian, document-writer)
-├── skills/           # Skills (maestro, secure-coding, memory-management)
-├── rules/            # 워크플로우 규칙 + 코딩 규칙 (secure-coding 포함)
-├── hooks/            # Hook 스크립트 (maestro-guard, verify-prompt) — .ps1 + .sh 크로스 플랫폼
+├── agents/           # 전문 에이전트 (architect, frontend, librarian, document-writer) — 파일 단위로 ~/.claude/agents/ 에 링크
+├── skills/           # Skills (maestro, secure-coding, memory-management) — 디렉터리 단위로 ~/.claude/skills/ 에 링크
+├── rules/            # 워크플로우 규칙 + 코딩 규칙 (secure-coding 포함) — 파일 단위로 ~/.claude/rules/ 에 링크
+├── hooks/            # Hook 스크립트 (maestro-guard, verify-prompt 등) — .ps1 + .sh 크로스 플랫폼, 파일 단위로 ~/.claude/hooks/ 에 링크
 ├── docs/             # 설계 문서 (v4.0 과최적화 진단, Dynamic Workflows 하이브리드 feasibility 등)
-├── CLAUDE.md         # 진입점 — 활성화 명령, 상태 관리
-├── install.ps1       # Windows 설치 스크립트
-├── install.sh        # Linux/macOS 설치 스크립트
-├── settings.json     # Claude Code 설정 (hooks, permissions)
+├── CLAUDE.md         # 진입점 — 활성화 명령, 상태 관리. ~/.claude/CLAUDE.md 로 통째 링크
+├── install.sh        # Linux/macOS/WSL 설치·업데이트 스크립트 (심볼릭 링크 방식)
+├── install.ps1       # Windows 설치·업데이트 스크립트 (복사 + 매니페스트 기록)
+├── uninstall.sh      # Linux/macOS/WSL 제거 스크립트 (저장소 안쪽 링크만 제거)
+├── uninstall.ps1     # Windows 제거 스크립트 (매니페스트 기반)
+├── settings.json     # Claude Code 설정 (hooks, permissions) — 링크·자동 병합 대상 아님, 훅 등록은 수동 (§훅 등록)
 └── .mcp.json         # MCP 서버 설정 (context7, grep-app)
 ```
 
@@ -263,14 +425,6 @@ agentic-workflow/
 ```bash
 # 재설치
 ./install.sh  # 또는 install.ps1
-```
-
-## 업데이트
-
-```bash
-cd agentic-workflow
-git pull
-./install.sh
 ```
 
 ## 라이선스

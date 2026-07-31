@@ -1,0 +1,4 @@
+# Shell scripts must keep LF endings.
+# CRLF makes bash fail with `set: -: invalid option` / `syntax error near unexpected token`,
+# which is how update.sh and uninstall.sh were silently unrunnable on macOS/Linux.
+*.sh text eol=lf

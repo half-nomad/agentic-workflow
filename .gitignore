@@ -1,0 +1,18 @@
+.DS_Store
+*.log
+node_modules/
+
+# Runtime state (created during execution)
+.agentic/
+
+# Local settings (user-specific)
+.claude/settings.local.json
+
+# Logs directory
+logs/
+
+# Browser automation artifacts (claude-in-chrome / playwright MCP)
+.playwright-mcp/
+
+# Generated image assets (codex-image skill §4.4 default destination)
+outputs/

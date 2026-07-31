@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(git:*)",
+      "Bash(npm run:*)",
+      "Bash(npm test:*)",
+      "Bash(pnpm run:*)",
+      "Bash(pnpm test:*)",
+      "Bash(yarn run:*)",
+      "Bash(node:*)",
+      "Bash(powershell:*)",
+      "Bash(pwsh:*)",
+      "Read(**/*)",
+      "Write(.agentic/*)",
+      "Edit(.agentic/*)"
+    ],
+    "ask": [
+      "Bash(npm install:*)",
+      "Bash(npm i:*)",
+      "Bash(npm ci:*)",
+      "Bash(npm exec:*)",
+      "Bash(npx:*)",
+      "Bash(pnpm install:*)",
+      "Bash(pnpm add:*)",
+      "Bash(pnpm remove:*)",
+      "Bash(pnpm dlx:*)",
+      "Bash(yarn install:*)",
+      "Bash(yarn add:*)",
+      "Bash(yarn dlx:*)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh -c 'if command -v powershell >/dev/null 2>&1; then powershell -NoProfile -ExecutionPolicy Bypass -File \"$HOME/.claude/hooks/maestro-guard.ps1\"; else bash \"$HOME/.claude/hooks/maestro-guard.sh\"; fi'"
+          }
+        ]
+      }
+    ],
+    "PostCompact": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh -c 'if command -v powershell >/dev/null 2>&1; then powershell -NoProfile -ExecutionPolicy Bypass -File \"$HOME/.claude/hooks/maestro-compact-reload.ps1\"; else bash \"$HOME/.claude/hooks/maestro-compact-reload.sh\"; fi'"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh -c 'if command -v powershell >/dev/null 2>&1; then powershell -NoProfile -ExecutionPolicy Bypass -File \"$HOME/.claude/hooks/claude-md-sync.ps1\"; else bash \"$HOME/.claude/hooks/claude-md-sync.sh\"; fi'"
+          }
+        ]
+      },
+      {
+        "matcher": "Agent",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh -c 'if command -v powershell >/dev/null 2>&1; then powershell -NoProfile -ExecutionPolicy Bypass -File \"$HOME/.claude/hooks/verify-prompt.ps1\"; else bash \"$HOME/.claude/hooks/verify-prompt.sh\"; fi'"
+          }
+        ]
+      }
+    ]
+  }
+}

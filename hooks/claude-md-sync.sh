@@ -38,8 +38,9 @@ FILE=$(json_get "$INPUT" ".tool_input.file_path")
 # at a nonexistent ~/.claude/AGENTS.md, silently never regenerating the repo's.
 # Assign only on success: an empty FILE would make dirname yield "." and clobber
 # the current project's AGENTS.md.
+RESOLVED=0
 if command -v realpath >/dev/null 2>&1; then
-    _resolved=$(realpath "$FILE" 2>/dev/null) && [ -n "$_resolved" ] && FILE="$_resolved"
+    _resolved=$(realpath "$FILE" 2>/dev/null) && [ -n "$_resolved" ] && { FILE="$_resolved"; RESOLVED=1; }
 fi
 
 HEADER="<!-- AUTO-SYNCED from CLAUDE.md — edit CLAUDE.md, not this file. (hooks/claude-md-sync) -->"
@@ -61,17 +62,30 @@ SIBLING="$(dirname "$FILE")/AGENTS.md"
 [ -f "$SIBLING" ] && sync_to "$SIBLING"
 
 # 2) 전역 CLAUDE.md → Codex 전역 지침
-# Skip when ~/.codex/AGENTS.md is the very file branch 1 just wrote — under the
-# symlink install it links to the repo's tracked AGENTS.md, and `>` writes THROUGH
-# a symlink. Since this branch emits 4 header lines where branch 1 emits 3, the
-# two would fight on every edit and churn a git-tracked file forever. `-ef`
-# compares device+inode after following links; a bare `-L` test would also accept
-# a broken or wrong-target link and skip a sync that is genuinely needed.
-# The branch stays for Windows copy installs, where ~/.codex/AGENTS.md is a real
-# file and branch 1 no-ops.
-if [ -f "$HOME/.claude/CLAUDE.md" ] && [ "$FILE" -ef "$HOME/.claude/CLAUDE.md" ] && [ -d "$HOME/.codex" ] \
-   && ! [ "$HOME/.codex/AGENTS.md" -ef "$SIBLING" ]; then
-    sync_to "$HOME/.codex/AGENTS.md" "<!-- source: ~/.claude/CLAUDE.md · 상대 경로(rules/, skills/)는 ~/.claude/ 기준 -->"
+# `>` writes THROUGH a symlink, so this branch decides by what the destination
+# IS, never by what it merely is not:
+#   not a symlink  -> ours to write (the Windows copy install, which is why this
+#                     branch exists at all; there branch 1 no-ops)
+#   symlink -> $SIBLING -> branch 1 already wrote that exact file. Writing again
+#                     would fight it: this branch emits 4 header lines where
+#                     branch 1 emits 3, churning a git-tracked file forever.
+#   any other symlink, broken included -> NOT ours. Never write through a link
+#                     whose destination we did not create.
+CODEX_AGENTS="$HOME/.codex/AGENTS.md"
+if [ -f "$HOME/.claude/CLAUDE.md" ] && [ "$FILE" -ef "$HOME/.claude/CLAUDE.md" ] && [ -d "$HOME/.codex" ]; then
+    if [ -L "$HOME/.claude/CLAUDE.md" ] && [ "$RESOLVED" -ne 1 ]; then
+        # Edited through the deployed link with no realpath available: $SIBLING
+        # is a guess (~/.claude/AGENTS.md, which does not exist), the -ef test
+        # below is meaningless, and the sync would write through the Codex link
+        # into the repo's tracked AGENTS.md. Skip rather than guess.
+        echo "claude-md-sync: cannot resolve ~/.claude/CLAUDE.md (no realpath); skipped ~/.codex/AGENTS.md sync" >&2
+    elif [ ! -L "$CODEX_AGENTS" ]; then
+        sync_to "$CODEX_AGENTS" "<!-- source: ~/.claude/CLAUDE.md · 상대 경로(rules/, skills/)는 ~/.claude/ 기준 -->"
+    elif [ "$CODEX_AGENTS" -ef "$SIBLING" ]; then
+        : # branch 1 already wrote it
+    else
+        echo "claude-md-sync: ~/.codex/AGENTS.md is a symlink to something this repo did not create; skipped (writing would overwrite its target)" >&2
+    fi
 fi
 
 exit 0

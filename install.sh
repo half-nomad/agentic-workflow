@@ -19,7 +19,18 @@ set -euo pipefail
 
 # Canonical, because uninstall recognises its own links by "target starts with
 # $REPO/". A non-canonical path here makes that prefix match fail silently later.
-REPO="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
+#
+# Captured through a sentinel rather than a bare `$(pwd -P)`: command
+# substitution strips trailing newlines, so a checkout whose path ends in one
+# would collapse to a *different, real* path — and uninstall would then match
+# links belonging to that other directory. Same reason `dirname` is done with
+# parameter expansion instead of the external command.
+_src="${BASH_SOURCE[0]}"
+_dir="${_src%/*}"
+if [ "$_dir" = "$_src" ]; then _dir="."; fi
+REPO="$(cd -P -- "$_dir" && printf '%sX' "$PWD")"
+REPO="${REPO%X}"
+unset _src _dir
 
 CLAUDE_HOME="$HOME/.claude"
 CODEX_HOME="$HOME/.codex"
@@ -35,22 +46,62 @@ die() { printf 'ERROR: %s\n' "$*" >&2; exit 1; }
 # own instructions could live outside the block. A whole-file symlink silently
 # breaks that promise, and a backup nobody reads is a silent loss — so refuse.
 guard_claude_md() {
-    local dest="$CLAUDE_HOME/CLAUDE.md" src="$REPO/CLAUDE.md" leftover
+    local dest="$CLAUDE_HOME/CLAUDE.md" src="$REPO/CLAUDE.md" leftover content topo nb ne fb fe
 
-    # A symlink is already ours (or the user's own choice); nothing to protect.
-    if [ -L "$dest" ] || [ ! -f "$dest" ]; then return 0; fi
+    # Exempt ONLY the link this installer itself deploys — that is the
+    # idempotent re-install. Every other symlink is the user's own alias, and
+    # exempting it here would hand it straight to link(), which replaces it.
+    if [ -L "$dest" ]; then
+        if [ "$(readlink "$dest")" = "$src" ]; then return 0; fi
+        if [ -e "$dest" ] && [ -e "$src" ] && [ "$dest" -ef "$src" ]; then return 0; fi
+    fi
 
-    if grep -qxF "$BEGIN_MARK" "$dest" && grep -qxF "$END_MARK" "$dest"; then
-        leftover="$(awk -v b="$BEGIN_MARK" -v e="$END_MARK" '
-            $0 == b { inb = 1; next }
-            $0 == e { inb = 0; next }
-            inb     { next }
-                    { print }' "$dest")"
-    else
+    # Absent, a broken link, or a link to a directory: no content to protect.
+    # link() still backs up whatever object is sitting there.
+    if [ ! -f "$dest" ]; then return 0; fi
+
+    # A leading UTF-8 BOM is not whitespace, so it would read as personal
+    # content and block an otherwise legitimate install. Strip exactly one.
+    content="$(cat "$dest")"
+    content="${content#$'\xEF\xBB\xBF'}"
+
+    # Marker topology, counted before anything is trusted. `grep -q BEGIN &&
+    # grep -q END` accepts END-before-BEGIN and duplicate markers alike; the
+    # awk state machine then reports an empty leftover for both, and personal
+    # text outside the *real* block gets replaced. Require exactly one of each,
+    # in order, or refuse to interpret the file at all.
+    topo="$(printf '%s\n' "$content" | awk -v b="$BEGIN_MARK" -v e="$END_MARK" '
+        $0 == b { nb++; if (!fb) fb = NR }
+        $0 == e { ne++; if (!fe) fe = NR }
+        END     { print nb+0, ne+0, fb+0, fe+0 }')"
+    set -- $topo
+    nb="$1" ne="$2" fb="$3" fe="$4"
+
+    if [ "$nb" -eq 1 ] && [ "$ne" -eq 1 ] && [ "$fb" -lt "$fe" ]; then
+        leftover="$(printf '%s\n' "$content" | awk -v fb="$fb" -v fe="$fe" 'NR < fb || NR > fe')"
+    elif [ "$nb" -eq 0 ] && [ "$ne" -eq 0 ]; then
         # No marker pair. The file is unmanaged unless it is byte-identical to
         # what we ship (i.e. an old whole-file install nobody edited).
         if [ -f "$src" ] && cmp -s "$dest" "$src"; then return 0; fi
-        leftover="$(cat "$dest")"
+        leftover="$content"
+    else
+        cat >&2 <<EOF
+ERROR: ~/.claude/CLAUDE.md has malformed agentic-workflow markers.
+
+  Found $nb x  $BEGIN_MARK
+        $ne x  $END_MARK
+  A managed file has exactly one of each, BEGIN before END. Anything else is
+  ambiguous — this installer cannot tell which lines are yours, and guessing
+  would replace them.
+
+  Open ~/.claude/CLAUDE.md, leave a single well-formed marker pair (or delete
+  the markers entirely and move your own instructions to
+      ~/.claude/rules/personal.md
+  which this repo never ships, overwrites or removes), then re-run ./install.sh.
+
+  Nothing has been changed.
+EOF
+        exit 1
     fi
 
     if printf '%s' "$leftover" | grep -q '[^[:space:]]'; then
@@ -77,14 +128,16 @@ EOF
 BACKED_UP_FROM=""
 BACKED_UP_TO=""
 
-# Move a real file/dir aside, keeping its path under a timestamped backup root.
-# Loud on purpose: a silent backup is indistinguishable from data loss.
+# Move a real file/dir/symlink aside, keeping its path under a timestamped
+# backup root. Loud on purpose: a silent backup is indistinguishable from data
+# loss. `mv` on a symlink renames the link itself, so the link text survives —
+# which is the whole point for aliases the user made by hand.
 backup() {
     local path="$1" rel dest
     rel="${path#"$HOME"/}"
     dest="$BACKUP_ROOT/$rel"
     mkdir -p "$(dirname "$dest")"
-    mv "$path" "$dest" || die "could not move $path aside; nothing else was changed"
+    mv "$path" "$dest" || die "could not move $path aside; that path was left alone, but paths linked earlier in this run have already changed"
     BACKED_UP_FROM="$path"
     BACKED_UP_TO="$dest"
     printf '\n  *** BACKED UP: %s\n  ***       -> %s\n\n' "$path" "$dest"
@@ -95,22 +148,35 @@ link() {
     BACKED_UP_FROM=""
     BACKED_UP_TO=""
 
-    if [ -L "$dest" ]; then
-        # Already correct -> free and silent. This is what makes re-running
-        # install after `git pull` a no-op.
-        if [ "$(readlink "$dest")" = "$src" ]; then return 0; fi
-        rm "$dest"
-    elif [ -e "$dest" ]; then
+    # Already correct -> free and silent. This is what makes re-running install
+    # after `git pull` a no-op.
+    if [ -L "$dest" ] && [ "$(readlink "$dest")" = "$src" ]; then return 0; fi
+
+    # Anything else at this path is the user's, symlink included: an alias like
+    # ~/.claude/hooks/verify-prompt.sh -> ~/personal/verify.sh is unrecoverable
+    # once `rm` takes it, because its only content is the link text. Back it up
+    # exactly like a real file. `-L ||` because -e is false for a broken link.
+    if [ -L "$dest" ] || [ -e "$dest" ]; then
         backup "$dest"
     fi
 
     mkdir -p "$(dirname "$dest")"
     # `ln -s`, never `ln -sf`: -sf onto an existing symlink-to-directory creates
     # the new link INSIDE that directory instead of replacing it, and skills/
-    # deploys directory links. The explicit rm above is the replacement path.
+    # deploys directory links. The backup above is the replacement path.
     if ! ln -s "$src" "$dest"; then
-        if [ -n "$BACKED_UP_TO" ] && mv "$BACKED_UP_TO" "$BACKED_UP_FROM"; then
-            printf '  RESTORED: %s\n' "$BACKED_UP_FROM" >&2
+        if [ -n "$BACKED_UP_TO" ]; then
+            # Restore only into an empty slot. Blind `mv` back would clobber
+            # whatever created $dest in the meantime — losing someone else's
+            # file while "recovering" ours.
+            if [ ! -e "$BACKED_UP_FROM" ] && [ ! -L "$BACKED_UP_FROM" ]; then
+                if mv "$BACKED_UP_TO" "$BACKED_UP_FROM"; then
+                    printf '  RESTORED: %s\n' "$BACKED_UP_FROM" >&2
+                fi
+            else
+                printf '  NOT RESTORED: %s exists again; your copy stays at %s\n' \
+                    "$BACKED_UP_FROM" "$BACKED_UP_TO" >&2
+            fi
         fi
         die "failed to link $dest -> $src"
     fi
@@ -121,19 +187,38 @@ link() {
 # at nothing. In rules/ that means a rule silently stops loading; in hooks/ every
 # matching tool call errors. `git pull` cannot fix it — re-running install can,
 # which is why install is part of the documented update path.
+
+# The one target this installer would have written at $1 — empty if $1 is not a
+# path it deploys to at all. "Points into the repo" is too loose a test: a link
+# the user made by hand, say ~/.claude/rules/scratch.md -> $REPO/docs/notes.md,
+# also points into the repo and is not ours to delete.
+expected_target() {
+    local l="$1" rel
+    case "$l" in
+        "$CODEX_HOME"/AGENTS.md) printf '%s\n' "$REPO/AGENTS.md"; return 0 ;;
+        "$CLAUDE_HOME"/*)        rel="${l#"$CLAUDE_HOME"/}" ;;
+        *)                       return 0 ;;
+    esac
+    case "$rel" in
+        */*/*)                              return 0 ;;  # deeper than we deploy
+        CLAUDE.md)                          printf '%s\n' "$REPO/CLAUDE.md" ;;
+        agents/*|rules/*|hooks/*|skills/*)  printf '%s\n' "$REPO/$rel" ;;
+    esac
+}
+
 sweep_dangling() {
-    local root="$1" depth="$2" l
+    local root="$1" depth="$2" l want
     [ -d "$root" ] || return 0
+    # -mindepth 1: without it, find reports $root itself when ~/.claude is a
+    # symlink, and the rm below would take out the user's whole config dir.
     while IFS= read -r l; do
-        case "$(readlink "$l")" in
-            "$REPO"/*)
-                if [ ! -e "$l" ]; then
-                    rm "$l"
-                    printf '  removed dangling %s (upstream file is gone)\n' "${l#"$HOME"/}"
-                fi
-                ;;
-        esac
-    done < <(find "$root" -maxdepth "$depth" -type l)
+        want="$(expected_target "$l")"
+        [ -n "$want" ] || continue
+        if [ "$(readlink "$l")" = "$want" ] && [ ! -e "$l" ]; then
+            rm "$l"
+            printf '  removed dangling %s (upstream file is gone)\n' "${l#"$HOME"/}"
+        fi
+    done < <(find "$root" -mindepth 1 -maxdepth "$depth" -type l)
 }
 
 # --- run ---------------------------------------------------------------------

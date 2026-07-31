@@ -45,12 +45,39 @@ function Assert-ClaudeMdOwnership {
     $lines = @(Get-Content -LiteralPath $dest)
     $leftover = ''
 
-    if (($lines -contains $beginMark) -and ($lines -contains $endMark)) {
-        $inBlock = $false
-        $kept = foreach ($line in $lines) {
-            if ($line -eq $beginMark) { $inBlock = $true; continue }
-            if ($line -eq $endMark) { $inBlock = $false; continue }
-            if (-not $inBlock) { $line }
+    # Marker topology, counted before anything is trusted. "contains BEGIN and
+    # contains END" accepts END-before-BEGIN and duplicate markers alike; the
+    # state machine then reports an empty leftover for both, and personal text
+    # outside the *real* block gets overwritten. Require exactly one of each, in
+    # order, or refuse to interpret the file at all.
+    $nb = 0; $ne = 0; $fb = -1; $fe = -1
+    for ($i = 0; $i -lt $lines.Count; $i++) {
+        if ($lines[$i] -ceq $beginMark) { $nb++; if ($fb -lt 0) { $fb = $i } }
+        elseif ($lines[$i] -ceq $endMark) { $ne++; if ($fe -lt 0) { $fe = $i } }
+    }
+
+    if (($nb -ne 0) -or ($ne -ne 0)) {
+        if (-not (($nb -eq 1) -and ($ne -eq 1) -and ($fb -lt $fe))) {
+            Write-Host ''
+            Write-Host 'ERROR: ~\.claude\CLAUDE.md has malformed agentic-workflow markers.' -ForegroundColor Red
+            Write-Host ''
+            Write-Host ('  Found ' + $nb + ' x  ' + $beginMark)
+            Write-Host ('        ' + $ne + ' x  ' + $endMark)
+            Write-Host '  A managed file has exactly one of each, BEGIN before END. Anything else'
+            Write-Host '  is ambiguous - this installer cannot tell which lines are yours, and'
+            Write-Host '  guessing would overwrite them.'
+            Write-Host ''
+            Write-Host '  Open ~\.claude\CLAUDE.md, leave a single well-formed marker pair (or'
+            Write-Host '  delete the markers entirely and move your own instructions to'
+            Write-Host '      ~\.claude\rules\personal.md'
+            Write-Host '  which this repo never ships, overwrites or removes), then re-run.'
+            Write-Host ''
+            Write-Host '  Nothing has been changed.'
+            Write-Host ''
+            exit 1
+        }
+        $kept = foreach ($i in 0..($lines.Count - 1)) {
+            if (($i -lt $fb) -or ($i -gt $fe)) { $lines[$i] }
         }
         $leftover = ($kept -join "`n")
     }
@@ -89,19 +116,58 @@ function Assert-ClaudeMdOwnership {
 # --- deployment --------------------------------------------------------------
 $deployed = New-Object System.Collections.Generic.List[string]
 
-# Paths this install already owns from a previous run: safe to overwrite.
-# Anything else sitting at a destination is the user's, and gets moved aside
-# loudly instead of being clobbered.
-$previous = New-Object System.Collections.Generic.HashSet[string] ([System.StringComparer]::OrdinalIgnoreCase)
+# Fingerprint of what we deployed, so ownership is a property of the CONTENT and
+# not merely of the pathname. `skills\maestro` appearing in an old manifest does
+# not prove the directory sitting there today is still ours - the user may have
+# replaced it - and deleting on the strength of a remembered path is how you
+# destroy someone's work on a reinstall.
+#   file: SHA256 of its bytes
+#   dir : SHA256 of the "<relpath><TAB><sha256>" listing of its files, LF-joined,
+#         sorted ordinally
+function Get-PathFingerprint([string]$path) {
+    if (-not (Test-Path -LiteralPath $path)) { return $null }
+    if (Test-Path -LiteralPath $path -PathType Leaf) {
+        return (Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash
+    }
+    $root = [System.IO.Path]::GetFullPath($path).TrimEnd('\', '/')
+    $records = New-Object System.Collections.Generic.List[string]
+    foreach ($f in (Get-ChildItem -LiteralPath $path -Recurse -File -Force)) {
+        $rel = [System.IO.Path]::GetFullPath($f.FullName).Substring($root.Length + 1) -replace '\\', '/'
+        $records.Add($rel + "`t" + (Get-FileHash -LiteralPath $f.FullName -Algorithm SHA256).Hash)
+    }
+    $arr = $records.ToArray()
+    [System.Array]::Sort($arr, [System.StringComparer]::Ordinal)
+    $sha = [System.Security.Cryptography.SHA256]::Create()
+    try {
+        $bytes = $sha.ComputeHash([System.Text.Encoding]::UTF8.GetBytes(($arr -join "`n")))
+    }
+    finally { $sha.Dispose() }
+    return (-join ($bytes | ForEach-Object { $_.ToString('X2') }))
+}
+
+# Paths this install already owns from a previous run AND whose content still
+# matches what it left there: safe to overwrite. Anything else sitting at a
+# destination is the user's, and gets moved aside loudly instead of clobbered.
+# A legacy manifest line (path only, no fingerprint) is unverifiable, so it
+# claims nothing - the destination is backed up as if it were the user's.
+$previous = @{}
 if (Test-Path -LiteralPath $manifestPath -PathType Leaf) {
     foreach ($line in (Get-Content -LiteralPath $manifestPath)) {
-        if ($line.Trim()) { [void]$previous.Add($line.Trim()) }
+        $t = $line.Trim()
+        if (-not $t) { continue }
+        if ($t.StartsWith('#')) { continue }
+        if ($t -match '^([0-9A-Fa-f]{64})\s+(.+)$') { $previous[$Matches[2]] = $Matches[1] }
+        else { $previous[$t] = $null }
     }
 }
 
 function Move-Aside([string]$dest, [string]$rel) {
     if (-not (Test-Path -LiteralPath $dest)) { return }
-    if ($previous.Contains($rel)) { return }
+    if ($previous.ContainsKey($rel)) {
+        $recorded = $previous[$rel]
+        if ($recorded -and ($recorded -eq (Get-PathFingerprint $dest))) { return }
+        Write-Host ('  note: ' + $rel + ' no longer matches what this installer left there - backing it up rather than overwriting') -ForegroundColor Yellow
+    }
     $target = Join-Path $backupRoot $rel
     $targetDir = Split-Path -Parent $target
     if (-not (Test-Path -LiteralPath $targetDir)) {
@@ -122,7 +188,7 @@ function Deploy-File([string]$src, [string]$dest) {
         New-Item -ItemType Directory -Path $destDir -Force | Out-Null
     }
     Copy-Item -LiteralPath $src -Destination $dest -Force
-    [void]$deployed.Add($rel)
+    [void]$deployed.Add(((Get-PathFingerprint $dest) + '  ' + $rel))
     Write-Host ('  copied ' + $rel)
 }
 
@@ -133,7 +199,7 @@ function Deploy-Dir([string]$src, [string]$dest) {
         Remove-Item -LiteralPath $dest -Recurse -Force
     }
     Copy-Item -LiteralPath $src -Destination $dest -Recurse -Force
-    [void]$deployed.Add($rel)
+    [void]$deployed.Add(((Get-PathFingerprint $dest) + '  ' + $rel))
     Write-Host ('  copied ' + $rel + '\')
 }
 
@@ -182,7 +248,25 @@ if (Test-Path -LiteralPath $agentsMd -PathType Leaf) {
     }
 }
 
-Set-Content -LiteralPath $manifestPath -Value $deployed -Encoding utf8
+# Manifest format - one record per deployed path, readable on purpose:
+#
+#   <SHA256>  <path relative to the user profile>
+#
+# The fingerprint is of what THIS run wrote (file: hash of its bytes; directory:
+# hash of its sorted "<relpath><TAB><sha256>" listing). It is what makes
+# ownership verifiable: on reinstall or uninstall, a path whose fingerprint no
+# longer matches is not ours any more and is backed up / skipped instead of
+# being deleted. Lines starting with '#' are comments. Older manifests carrying
+# a bare path are still read, but claim nothing - they cannot be verified.
+$manifestHeader = @(
+    '# agentic-workflow install manifest - written by install.ps1, read by uninstall.ps1.',
+    '# Format:  <SHA256>  <path relative to %USERPROFILE%>',
+    '#   file      -> SHA256 of the file bytes',
+    '#   directory -> SHA256 of its sorted "<relpath><TAB><SHA256>" listing, LF-joined',
+    '# A path whose fingerprint no longer matches is no longer ours: install backs it',
+    '# up instead of overwriting, uninstall skips it instead of deleting. Do not edit.'
+)
+Set-Content -LiteralPath $manifestPath -Value ($manifestHeader + $deployed) -Encoding utf8
 Write-Host ''
 Write-Host ('  manifest: ' + $manifestPath + ' (' + $deployed.Count + ' entries)')
 if (Test-Path -LiteralPath $backupRoot) {

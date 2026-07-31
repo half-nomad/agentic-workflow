@@ -12,7 +12,17 @@
 
 set -euo pipefail
 
-REPO="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
+# Captured through a sentinel rather than a bare `$(pwd -P)`: command
+# substitution strips trailing newlines, so a checkout whose path ends in one
+# would silently collapse to a *different, real* path — and this script would
+# then match, and delete, links belonging to that other directory. Same reason
+# `dirname` is done with parameter expansion instead of the external command.
+_src="${BASH_SOURCE[0]}"
+_dir="${_src%/*}"
+if [ "$_dir" = "$_src" ]; then _dir="."; fi
+REPO="$(cd -P -- "$_dir" && printf '%sX' "$PWD")"
+REPO="${REPO%X}"
+unset _src _dir
 n=0
 
 echo ""
@@ -29,7 +39,10 @@ for root in "$HOME/.claude" "$HOME/.codex"; do
         case "$(readlink "$l")" in
             "$REPO"/*) rm "$l"; echo "  removed ${l#"$HOME"/}"; n=$((n+1)) ;;
         esac
-    done < <(find "$root" -maxdepth 2 -type l)
+        # -mindepth 1: without it, a ~/.claude that is itself a symlink into
+        # the repo is reported by find as its own match, and the rm above would
+        # delete the user's entire config directory link.
+    done < <(find "$root" -mindepth 1 -maxdepth 2 -type l)
 done
 
 echo ""

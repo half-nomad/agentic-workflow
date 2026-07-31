@@ -13,15 +13,33 @@ if (-not $file) { exit 0 }
 if ((Split-Path $file -Leaf) -ne 'CLAUDE.md') { exit 0 }
 if (-not (Test-Path $file)) { exit 0 }
 
+# Is $p a reparse point (symlink / junction)? $false for absent paths.
+function Test-IsLink([string]$p) {
+    try {
+        $item = Get-Item -LiteralPath $p -Force -ErrorAction Stop
+        return (($item.Attributes -band [System.IO.FileAttributes]::ReparsePoint) -ne 0)
+    } catch { return $false }
+}
+
 # Full path with links followed; $null when it cannot be determined. PowerShell
 # has no `-ef`, so file identity is compared through this.
+#
+# PS 5.1 has no ResolveLinkTarget, and Resolve-Path does NOT dereference a final
+# symlink — it would hand back the link's own path and every identity test below
+# would silently compare the wrong thing. Rather than reimplement reparse-point
+# resolution against DeviceIoControl for a case that only arises under Developer
+# Mode on Windows, record that resolution was unavailable and let the caller
+# skip the branch that depends on it.
+$script:LinkResolutionUnavailable = $false
 function Resolve-FullPath([string]$p) {
     try {
-        $item = Get-Item -LiteralPath $p -ErrorAction Stop
-        try {
-            $target = $item.ResolveLinkTarget($true)   # PS 7+; throws on 5.1
+        $item = Get-Item -LiteralPath $p -Force -ErrorAction Stop
+        if (($item.Attributes -band [System.IO.FileAttributes]::ReparsePoint) -ne 0) {
+            $target = $null
+            try { $target = $item.ResolveLinkTarget($true) } catch { $target = $null }
             if ($target) { return $target.FullName }
-        } catch { }
+            $script:LinkResolutionUnavailable = $true
+        }
         return (Resolve-Path -LiteralPath $p -ErrorAction Stop).ProviderPath
     } catch { return $null }
 }
@@ -33,6 +51,7 @@ function Resolve-FullPath([string]$p) {
 # would make the parent path '.' and clobber the current project's AGENTS.md).
 $resolvedFile = Resolve-FullPath $file
 if ($resolvedFile) { $file = $resolvedFile }
+$editedThroughUnresolvableLink = $script:LinkResolutionUnavailable
 
 $header = '<!-- AUTO-SYNCED from CLAUDE.md - edit CLAUDE.md, not this file. (hooks/claude-md-sync) -->'
 $rulesNote = '<!-- Also read ~/.claude/rules/*.md (secure-coding, global, ...) and apply those rules identically when working here. -->'
@@ -51,22 +70,35 @@ $isGlobal = $false
 try {
     $isGlobal = ((Resolve-Path $file -ErrorAction Stop).Path -eq (Resolve-Path $globalMd -ErrorAction Stop).Path)
 } catch { $isGlobal = $false }
-# Skip when ~\.codex\AGENTS.md IS the file branch 1 just wrote (it can be a link
-# to the repo's tracked AGENTS.md). This branch emits one extra header line, so
-# the two would fight on every edit and churn a tracked file. PowerShell has no
-# `-ef`, so compare resolved full paths.
-# A wrong-target or broken link must NOT count as "same" — that would skip a sync
-# that is genuinely needed — so both sides must resolve to a real path first.
+# Set-Content writes THROUGH a symlink, so this branch decides by what the
+# destination IS, never by what it merely is not:
+#   not a link -> ours to write (the Windows copy install, which is why this
+#                 branch exists at all; there branch 1 no-ops)
+#   link -> $sibling -> branch 1 already wrote that exact file. This branch emits
+#                 one extra header line, so the two would fight on every edit and
+#                 churn a git-tracked file.
+#   any other link, broken included -> NOT ours. Never write through a link whose
+#                 destination we did not create.
 $codexAgents = Join-Path $codexDir 'AGENTS.md'
-$sameAsSibling = $false
-$codexResolved = Resolve-FullPath $codexAgents
-$siblingResolved = Resolve-FullPath $sibling
-if ($codexResolved -and $siblingResolved -and ($codexResolved -eq $siblingResolved)) {
-    $sameAsSibling = $true
-}
 
-if ($isGlobal -and (Test-Path $codexDir) -and -not $sameAsSibling) {
-    $note = '<!-- source: ~/.claude/CLAUDE.md - relative paths (rules/, skills/) resolve under ~/.claude/ -->'
-    Set-Content -Path (Join-Path $codexDir 'AGENTS.md') -Value ($header + "`n" + $rulesNote + "`n" + $note + "`n`n" + $body) -Encoding utf8
+if ($isGlobal -and (Test-Path $codexDir)) {
+    if ($editedThroughUnresolvableLink) {
+        # PS 5.1 could not dereference the edited CLAUDE.md, so $sibling is a
+        # guess and the identity test below is meaningless. Skip rather than
+        # write through a link we cannot account for.
+        [Console]::Error.WriteLine('claude-md-sync: cannot resolve the edited CLAUDE.md link on this PowerShell; skipped ~\.codex\AGENTS.md sync')
+    }
+    elseif (-not (Test-IsLink $codexAgents)) {
+        $note = '<!-- source: ~/.claude/CLAUDE.md - relative paths (rules/, skills/) resolve under ~/.claude/ -->'
+        Set-Content -Path $codexAgents -Value ($header + "`n" + $rulesNote + "`n" + $note + "`n`n" + $body) -Encoding utf8
+    }
+    else {
+        $codexResolved = Resolve-FullPath $codexAgents
+        $siblingResolved = Resolve-FullPath $sibling
+        if (-not ($codexResolved -and $siblingResolved -and ($codexResolved -eq $siblingResolved))) {
+            [Console]::Error.WriteLine('claude-md-sync: ~\.codex\AGENTS.md is a link to something this repo did not create; skipped (writing would overwrite its target)')
+        }
+        # else: branch 1 already wrote it
+    }
 }
 exit 0

@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed — 심볼릭 링크 배포 전환 후 문서 정합성
+
+- **`README.md` §주의사항에 5번째 불변식 추가** — 저장소 워킹트리가 곧 라이브 설정이라는 심볼릭 링크 배포의 핵심 성질이 누락돼 있었다. 복사 방식이 제공하던 "저장소 상태 ↔ 배포 상태" 완충을 심볼릭 링크가 없앴다는 것, 이 체크아웃에서의 git 작업(checkout/rebase/stash/reset --hard, 커밋 전 편집 포함)이 즉시 모든 프로젝트·모든 세션의 가드 훅·보안 룰에 반영된다는 것을 명시.
+- **`README.md` §훅 등록의 "이어붙이기, 교체 아님" 경고를 스니펫보다 앞으로 이동** — 기존 위치는 첫 JSON 블록보다 ~100줄 아래였고 `PostCompact`를 언급하지 않았다. 이미 자기 훅을 등록해 둔 독자(바로 이 경고가 필요한 사람)가 스니펫부터 붙여넣어 `hooks` 값 전체를 교체 — 자신의 보안 훅을 포함해 **조용히** 비활성화할 위험이 있었다. 도입부로 전진 배치하고 `PreToolUse`/`PostCompact`/`PostToolUse` 세 이벤트를 모두 명시.
+- **`~/.claude` (private) README §주의 — 삭제된 `update.sh`·`cp -f` 서술을 심볼릭 링크 현실로 교체** — 이름 충돌 시 이제는 덮어쓰지 않고 개인 추적본이 `.maestro-backup-<타임스탬프>/`로 밀려나며 그 자리에 공개 레포를 가리키는 링크가 들어선다. 감지 신호는 `git -C ~/.claude status`(일반 파일 → 심볼릭 링크로의 modified), 복구는 백업에서 되돌리고 필요시 파일명을 바꾸는 것.
+- **`README.md` 개요·불변식 #1·#3 자구 정정** — 개요의 "예외는 `settings.json` 뿐" 나열이 §업데이트의 `pull && install.sh` 상시 처방과 불일치해, 갱신의 모델만 서술하고 정확한 명령은 §업데이트로 위임하도록 교체. 불변식 #3(저장소 이동)에 "모든 링크가 즉시 죽은 링크가 되어 룰이 조용히 로드를 멈추고(`secure-coding` 포함 — 소리 없는 보안 회귀) 훅 호출이 에러를 낸다"는 더 큰 결과를 추가. 불변식 #1의 `find` 예시 명령에 "정상적인 일반 파일도 함께 나열되니 걸러서 봐야 한다"는 해석 caveat 추가.
+- **`CLAUDE.md:51` 자구 정정** — "레포가 소유한 파일만 덮어쓰고" → "링크하고". 심볼릭 링크 하에서는 아무것도 덮어써지지 않고 목적지에 링크가 걸리며, 밀려나는 실제 파일은 백업된다 — 보장 자체는 그대로이고 동사만 갱신.
+
 ### Added — Codex 직접 호출 규약 (mode 무관)
 - **`CLAUDE.md` §Activation 에 2줄 신설** — 오케스트레이터가 Codex 를 부를 땐 `codex:codex-rescue` 서브에이전트 경유가 아니라 companion 직접 호출이 정본. 기존 Codex 규정이 전부 maestro 스코프(`rules/maestro-workflow.md` §Codex Integration · `skills/maestro/WORKFLOW.md` §Codex)라 **일반 대화에서의 호출은 정본이 아예 없었다** — 그 공백을 메운다.
 - **근거 (2026-07-30 A/B 실측)** — 동일 프롬프트·동일 작업(프론트 단일 HTML · 백엔드 무의존 Node `http`)으로 두 경로 비교: **품질 동등**(양쪽 7/7, 백엔드는 서버 기동 후 6개 엔드포인트 curl 로 독립 검증) · **비용 ~30배**(네이티브 `subagent_tokens` 31~32k/회 vs 직접 ~1k) · **워크스페이스 고정**(서브에이전트는 `--cwd` 미전달로 세션 레포 밖 작업 불가 — 시도 시 30,890 tok 소모 후 DENIED·산출물 0) · **실패 시 침묵**(`agents/codex-rescue.md` 가 *"If the Bash call fails or Codex cannot be invoked, return nothing"* 을 규약으로 두고 `status`/`result` 호출도 금지 — 복잡 작업에서 응답이 끊긴 채 사용자가 수동 폴링해야 했던 원인).

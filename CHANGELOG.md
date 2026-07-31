@@ -86,7 +86,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed — `verify-*` / `manage-skills` 를 배포물처럼 서술하던 문서 10곳
 - **선택 의존성으로 문구 교정** — `rules/maestro-workflow.md` 와 `skills/maestro/WORKFLOW.md` Phase 6 은 처음부터 *"프로젝트에 있으면 위임, 없으면 `git diff` 리뷰"* 로 올바르게 쓰여 있었는데 `README.md`(7곳)·`docs/maestro-summary.md`(3곳)만 이 레포가 제공하는 것처럼 읽혔다. **스킬을 배포하는 게 아니라 문구를 고친다** — `verify-compliance-kisa` 는 KISA 규제(로케일 종속), `verify-infrastructure` 는 호스트 하드닝(스택 종속)이라 배포 기준에 맞지 않는다.
-- **`settings.json` 의 `Write(.agentic/*)` → `Edit(.agentic/*)`** — 파일 권한 체크는 `Edit` 룰만 매칭하므로 기존 항목은 무효였다. 오케스트레이터가 `.agentic/maestro-mode.state` 를 쓰는 경로다.
+- **`settings.json` 의 무효 항목 `Write(.agentic/*)` 제거** — 파일 권한 체크는 `Edit` 룰만 매칭하므로 이 항목은 처음부터 효력이 없었다. `Edit(.agentic/*)` 는 이미 있었으므로 실제 권한은 그대로다 (오케스트레이터가 `.agentic/maestro-mode.state` 를 쓰는 경로). headless 실행이 뱉은 경고로 발견.
 
 ## [4.5.0] - 2026-07-29
 

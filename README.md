@@ -438,4 +438,4 @@ MIT
 
 ---
 
-*Maestro Workflow v4.1.4*
+*Maestro Workflow v4.5.0*

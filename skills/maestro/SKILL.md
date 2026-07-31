@@ -50,7 +50,6 @@ Examples (heuristics, not hard rules):
 - "노션" / "Notion" → `notion-*`
 - "PDF" / "merge PDFs" → `pdf`
 - "테스트" / "verify" / 5+ files → `verify-*`
-- "이미지 생성" → `codex-image`
 - "옵시디언 노트" → `note-*` (my-note-skills)
 
 ## Workflow Reminder (상세는 `rules/maestro-workflow.md`)

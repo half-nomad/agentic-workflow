@@ -83,12 +83,15 @@ All notable changes to this project will be documented in this file.
 
 ### Removed — 공개 범위를 maestro 하네스로 축소
 - **`skills/{codex-image,session-summary,multi-worktree-safety}/` 제거** — 오픈소스 편입 기준 4개(개인 커스터마이징 / 특정 스택·로케일 종속 / 보안·유출 노출 / 로컬 민감정보) 중 하나 이상에 걸린다. 공개 레포는 **maestro · secure-coding · memory-management** 3개 하네스 스킬만 배포한다. 세 스킬은 개인 저장소로 이관돼 사라지지 않는다 (같은 배치에서 버전 관리 밖에 있던 스킬 18개도 함께 편입). 죽은 참조 6곳(`README.md` 표 3행 + 디렉터리 트리 1곳, `docs/maestro-summary.md` 세션 종료 1곳, `CLAUDE.md`·`AGENTS.md` 의 Codex 호출 예시) 동시 정리. `CHANGELOG` 기존 항목은 판단 기록이라 남긴다.
+- **`skills/maestro/SKILL.md` §Skill Candidates 의 `codex-image` 예시 제거** — 같은 배치의 죽은 참조 정리에서 빠졌던 7번째. 나머지 예시(`notion-*` · `pdf` · `verify-*` · `note-*`)는 독자가 얻을 수 있는 스킬을 가리키지만 `codex-image` 는 이제 개인 저장소에만 있어, 공개 문서가 **독자가 구할 수 없는 것**을 후보로 제안하게 된다. 같은 배치가 `CLAUDE.md` 쪽 언급은 이미 익명화했으므로 내부 정합성 문제이기도 하다.
 
 ### Fixed — `verify-*` / `manage-skills` 를 배포물처럼 서술하던 문서 10곳
 - **선택 의존성으로 문구 교정** — `rules/maestro-workflow.md` Phase 6 은 처음부터 *"프로젝트에 있으면 위임, 없으면 `git diff` 리뷰"* 로 올바르게 쓰여 있었는데 `README.md`(7곳)·`docs/maestro-summary.md`(3곳)만 이 레포가 제공하는 것처럼 읽혔다. **스킬을 배포하는 게 아니라 문구를 고친다** — `verify-compliance-kisa` 는 KISA 규제(로케일 종속), `verify-infrastructure` 는 호스트 하드닝(스택 종속)이라 배포 기준에 맞지 않는다.
 - **`settings.json` 의 무효 항목 `Write(.agentic/*)` 제거** — 파일 권한 체크는 `Edit` 룰만 매칭하므로 이 항목은 처음부터 효력이 없었다. `Edit(.agentic/*)` 는 이미 있었으므로 실제 권한은 그대로다 (오케스트레이터가 `.agentic/maestro-mode.state` 를 쓰는 경로). headless 실행이 뱉은 경고로 발견.
 - **`/maestro` 활성화가 새 프로젝트에서 조용히 실패하던 문제** — `skills/maestro/SKILL.md` 의 `echo > .agentic/maestro-mode.state` 가 `.agentic/` 부재 시 실패하고, 가드는 상태 파일이 없으면 비활성이라 **강제 메커니즘 자체가 안 켜졌다**. `.agentic/` 는 gitignore 대상이라 모든 새 클론이 해당된다. `mkdir -p` 선행으로 수정.
 - **Phase 6 의 조건과 동작 불일치** — 조건은 `verify-*` 일반인데 동작은 `verify-implementation` 고정이라, 다른 `verify-*` 만 가진 프로젝트가 Yes 분기로 들어가 읽을 파일이 없고 fallback 도 못 탔다. `skills/maestro/WORKFLOW.md`·`SKILL.md` 를 조건에 맞춰 일반화 (`rules/` 는 원래 올바랐다).
+- **`docs/maestro-summary.md` v1.8 이력 항목 소급 수정 복원** — 이 배치가 해당 줄을 현재형 문구(`프로젝트가 verify-* 스킬을 제공하면 …`)로 **교체**해 v1.8 이 실제로 무엇을 했는지의 기록을 지웠다. 같은 릴리스가 `CHANGELOG` 에 대해서는 *"기존 항목은 판단 기록이라 남긴다"* 를 명시했으므로 한쪽만 소급 수정하는 건 자기모순이다. 원문(`verify-*` 스킬(manage-skills, verify-implementation) 연동)을 되살리고 현재 상태는 **괄호로 부기**한다 — 기록은 보존하되 이 레포가 그 스킬을 배포한다는 오해는 남기지 않는다.
+- **`README.md` 푸터 버전을 `CLAUDE.md` 와 동기화** — `v4.1.4` → `v4.5.0`. 두 진입 문서가 서로 다른 버전을 주장하고 있었다.
 
 ### Changed — 배포 방식: 복사 → 심볼릭 링크
 

@@ -261,7 +261,7 @@ N개 에이전트 병렬 실행?     → Swarm
 **v1.8 - 2026-02-18**
 
 - Evaluator 패턴 구현 → VERIFY 조건부 단계 추가
-- 프로젝트가 `verify-*` 스킬을 제공하면 Phase 6 에서 자동 연동 (선택 의존성)
+- `verify-*` 스킬(manage-skills, verify-implementation) 연동 (현재는 선택 의존성 — 이 레포가 배포하지 않는다)
 - boulder.json 세션 복원을 스킬 프롬프트 방식으로 복구
 - deprecated 정리: /ulw alias, Semi-Auto Mode 제거, 규칙 파일 영문 전환
 

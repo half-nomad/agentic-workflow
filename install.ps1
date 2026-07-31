@@ -22,9 +22,6 @@ $codexHome = Join-Path $userHome '.codex'
 $manifestPath = Join-Path $claudeHome '.maestro-manifest.txt'
 $backupRoot = Join-Path $claudeHome ('.maestro-backup-' + (Get-Date -Format 'yyyyMMdd-HHmmss'))
 
-$beginMark = '<!-- BEGIN agentic-workflow -->'
-$endMark = '<!-- END agentic-workflow -->'
-
 function Get-RelPath([string]$path) {
     $full = [System.IO.Path]::GetFullPath($path)
     $root = [System.IO.Path]::GetFullPath($userHome).TrimEnd('\', '/')
@@ -32,85 +29,6 @@ function Get-RelPath([string]$path) {
         return $full.Substring($root.Length).TrimStart('\', '/')
     }
     return $full
-}
-
-# --- CLAUDE.md ownership guard ----------------------------------------------
-# Same rule as install.sh: this script overwrites ~\.claude\CLAUDE.md wholesale,
-# and older installs promised that anything outside the marker block survives.
-# Refuse rather than quietly discard it into a backup nobody reads.
-function Assert-ClaudeMdOwnership {
-    $dest = Join-Path $claudeHome 'CLAUDE.md'
-    if (-not (Test-Path -LiteralPath $dest -PathType Leaf)) { return }
-
-    $lines = @(Get-Content -LiteralPath $dest)
-    $leftover = ''
-
-    # Marker topology, counted before anything is trusted. "contains BEGIN and
-    # contains END" accepts END-before-BEGIN and duplicate markers alike; the
-    # state machine then reports an empty leftover for both, and personal text
-    # outside the *real* block gets overwritten. Require exactly one of each, in
-    # order, or refuse to interpret the file at all.
-    $nb = 0; $ne = 0; $fb = -1; $fe = -1
-    for ($i = 0; $i -lt $lines.Count; $i++) {
-        if ($lines[$i] -ceq $beginMark) { $nb++; if ($fb -lt 0) { $fb = $i } }
-        elseif ($lines[$i] -ceq $endMark) { $ne++; if ($fe -lt 0) { $fe = $i } }
-    }
-
-    if (($nb -ne 0) -or ($ne -ne 0)) {
-        if (-not (($nb -eq 1) -and ($ne -eq 1) -and ($fb -lt $fe))) {
-            Write-Host ''
-            Write-Host 'ERROR: ~\.claude\CLAUDE.md has malformed agentic-workflow markers.' -ForegroundColor Red
-            Write-Host ''
-            Write-Host ('  Found ' + $nb + ' x  ' + $beginMark)
-            Write-Host ('        ' + $ne + ' x  ' + $endMark)
-            Write-Host '  A managed file has exactly one of each, BEGIN before END. Anything else'
-            Write-Host '  is ambiguous - this installer cannot tell which lines are yours, and'
-            Write-Host '  guessing would overwrite them.'
-            Write-Host ''
-            Write-Host '  Open ~\.claude\CLAUDE.md, leave a single well-formed marker pair (or'
-            Write-Host '  delete the markers entirely and move your own instructions to'
-            Write-Host '      ~\.claude\rules\personal.md'
-            Write-Host '  which this repo never ships, overwrites or removes), then re-run.'
-            Write-Host ''
-            Write-Host '  Nothing has been changed.'
-            Write-Host ''
-            exit 1
-        }
-        $kept = foreach ($i in 0..($lines.Count - 1)) {
-            if (($i -lt $fb) -or ($i -gt $fe)) { $lines[$i] }
-        }
-        $leftover = ($kept -join "`n")
-    }
-    else {
-        # No marker pair: unmanaged, unless identical to what we ship.
-        $src = Join-Path $repo 'CLAUDE.md'
-        $current = ((Get-Content -LiteralPath $dest -Raw) -replace "`r`n", "`n").TrimEnd()
-        $shipped = ''
-        if (Test-Path -LiteralPath $src -PathType Leaf) {
-            $shipped = ((Get-Content -LiteralPath $src -Raw) -replace "`r`n", "`n").TrimEnd()
-        }
-        if ($current -eq $shipped) { return }
-        $leftover = $current
-    }
-
-    if ($leftover -match '\S') {
-        Write-Host ''
-        Write-Host 'ERROR: ~\.claude\CLAUDE.md holds instructions this installer would overwrite.' -ForegroundColor Red
-        Write-Host ''
-        Write-Host '  install.ps1 replaces ~\.claude\CLAUDE.md with the copy shipped in'
-        Write-Host ('      ' + (Join-Path $repo 'CLAUDE.md'))
-        Write-Host '  so anything you wrote in that file would be lost - and a backup you never'
-        Write-Host '  open is the same as losing it.'
-        Write-Host ''
-        Write-Host '  Move your own instructions to'
-        Write-Host '      ~\.claude\rules\personal.md'
-        Write-Host '  which is user-owned: this repo never ships, overwrites or removes it, and'
-        Write-Host '  it loads in every project just like CLAUDE.md. Then re-run install.ps1.'
-        Write-Host ''
-        Write-Host '  Nothing has been changed.'
-        Write-Host ''
-        exit 1
-    }
 }
 
 # --- deployment --------------------------------------------------------------
@@ -162,6 +80,7 @@ if (Test-Path -LiteralPath $manifestPath -PathType Leaf) {
 }
 
 function Move-Aside([string]$dest, [string]$rel) {
+    $script:movedAside = $false
     if (-not (Test-Path -LiteralPath $dest)) { return }
     if ($previous.ContainsKey($rel)) {
         $recorded = $previous[$rel]
@@ -174,6 +93,7 @@ function Move-Aside([string]$dest, [string]$rel) {
         New-Item -ItemType Directory -Path $targetDir -Force | Out-Null
     }
     Move-Item -LiteralPath $dest -Destination $target -Force
+    $script:movedAside = $true
     Write-Host ''
     Write-Host ('  *** BACKED UP: ' + $dest) -ForegroundColor Yellow
     Write-Host ('  ***       -> ' + $target) -ForegroundColor Yellow
@@ -210,8 +130,6 @@ Write-Host ('  repo: ' + $repo)
 Write-Host ('  into: ' + $claudeHome)
 Write-Host ''
 
-Assert-ClaudeMdOwnership
-
 foreach ($sub in @('agents', 'rules', 'hooks', 'skills')) {
     $d = Join-Path $claudeHome $sub
     if (-not (Test-Path -LiteralPath $d)) { New-Item -ItemType Directory -Path $d -Force | Out-Null }
@@ -220,6 +138,17 @@ foreach ($sub in @('agents', 'rules', 'hooks', 'skills')) {
 $claudeMd = Join-Path $repo 'CLAUDE.md'
 if (Test-Path -LiteralPath $claudeMd -PathType Leaf) {
     Deploy-File $claudeMd (Join-Path $claudeHome 'CLAUDE.md')
+    # Displaced like any other path - but this is the one whose disappearance
+    # sends people looking, so name its replacement instead of leaving them to
+    # infer it from a backup path. Only when something was actually moved: an
+    # idempotent re-install backs nothing up.
+    if ($script:movedAside) {
+        Write-Host '  NOTE: ~\.claude\CLAUDE.md is now the copy shipped by this repo. Put your' -ForegroundColor Yellow
+        Write-Host '        own global instructions in ~\.claude\rules\personal.md - this repo' -ForegroundColor Yellow
+        Write-Host '        never ships, overwrites or removes it, and it loads exactly like' -ForegroundColor Yellow
+        Write-Host '        CLAUDE.md does.' -ForegroundColor Yellow
+        Write-Host ''
+    }
 }
 
 foreach ($sub in @('agents', 'rules', 'hooks')) {

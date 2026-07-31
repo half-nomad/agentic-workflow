@@ -36,93 +36,7 @@ CLAUDE_HOME="$HOME/.claude"
 CODEX_HOME="$HOME/.codex"
 BACKUP_ROOT="$CLAUDE_HOME/.maestro-backup-$(date +%Y%m%d-%H%M%S)"
 
-BEGIN_MARK='<!-- BEGIN agentic-workflow -->'
-END_MARK='<!-- END agentic-workflow -->'
-
 die() { printf 'ERROR: %s\n' "$*" >&2; exit 1; }
-
-# --- CLAUDE.md ownership guard ----------------------------------------------
-# Older installs merged only the text between the markers and told users their
-# own instructions could live outside the block. A whole-file symlink silently
-# breaks that promise, and a backup nobody reads is a silent loss — so refuse.
-guard_claude_md() {
-    local dest="$CLAUDE_HOME/CLAUDE.md" src="$REPO/CLAUDE.md" leftover content topo nb ne fb fe
-
-    # Exempt ONLY the link this installer itself deploys — that is the
-    # idempotent re-install. Every other symlink is the user's own alias, and
-    # exempting it here would hand it straight to link(), which replaces it.
-    if [ -L "$dest" ]; then
-        if [ "$(readlink "$dest")" = "$src" ]; then return 0; fi
-        if [ -e "$dest" ] && [ -e "$src" ] && [ "$dest" -ef "$src" ]; then return 0; fi
-    fi
-
-    # Absent, a broken link, or a link to a directory: no content to protect.
-    # link() still backs up whatever object is sitting there.
-    if [ ! -f "$dest" ]; then return 0; fi
-
-    # A leading UTF-8 BOM is not whitespace, so it would read as personal
-    # content and block an otherwise legitimate install. Strip exactly one.
-    content="$(cat "$dest")"
-    content="${content#$'\xEF\xBB\xBF'}"
-
-    # Marker topology, counted before anything is trusted. `grep -q BEGIN &&
-    # grep -q END` accepts END-before-BEGIN and duplicate markers alike; the
-    # awk state machine then reports an empty leftover for both, and personal
-    # text outside the *real* block gets replaced. Require exactly one of each,
-    # in order, or refuse to interpret the file at all.
-    topo="$(printf '%s\n' "$content" | awk -v b="$BEGIN_MARK" -v e="$END_MARK" '
-        $0 == b { nb++; if (!fb) fb = NR }
-        $0 == e { ne++; if (!fe) fe = NR }
-        END     { print nb+0, ne+0, fb+0, fe+0 }')"
-    set -- $topo
-    nb="$1" ne="$2" fb="$3" fe="$4"
-
-    if [ "$nb" -eq 1 ] && [ "$ne" -eq 1 ] && [ "$fb" -lt "$fe" ]; then
-        leftover="$(printf '%s\n' "$content" | awk -v fb="$fb" -v fe="$fe" 'NR < fb || NR > fe')"
-    elif [ "$nb" -eq 0 ] && [ "$ne" -eq 0 ]; then
-        # No marker pair. The file is unmanaged unless it is byte-identical to
-        # what we ship (i.e. an old whole-file install nobody edited).
-        if [ -f "$src" ] && cmp -s "$dest" "$src"; then return 0; fi
-        leftover="$content"
-    else
-        cat >&2 <<EOF
-ERROR: ~/.claude/CLAUDE.md has malformed agentic-workflow markers.
-
-  Found $nb x  $BEGIN_MARK
-        $ne x  $END_MARK
-  A managed file has exactly one of each, BEGIN before END. Anything else is
-  ambiguous — this installer cannot tell which lines are yours, and guessing
-  would replace them.
-
-  Open ~/.claude/CLAUDE.md, leave a single well-formed marker pair (or delete
-  the markers entirely and move your own instructions to
-      ~/.claude/rules/personal.md
-  which this repo never ships, overwrites or removes), then re-run ./install.sh.
-
-  Nothing has been changed.
-EOF
-        exit 1
-    fi
-
-    if printf '%s' "$leftover" | grep -q '[^[:space:]]'; then
-        cat >&2 <<EOF
-ERROR: ~/.claude/CLAUDE.md holds instructions this installer would hide.
-
-  install.sh replaces ~/.claude/CLAUDE.md with a symlink to
-      $src
-  so anything you wrote in that file would stop being read — and a backup you
-  never open is the same as losing it.
-
-  Move your own instructions to
-      ~/.claude/rules/personal.md
-  which is user-owned: this repo never ships, overwrites or removes it, and it
-  is loaded in every project just like CLAUDE.md. Then re-run ./install.sh.
-
-  Nothing has been changed.
-EOF
-        exit 1
-    fi
-}
 
 # --- linking -----------------------------------------------------------------
 BACKED_UP_FROM=""
@@ -228,12 +142,25 @@ echo "  repo: $REPO"
 echo "  into: $CLAUDE_HOME"
 echo ""
 
-guard_claude_md
-
 mkdir -p "$CLAUDE_HOME/agents" "$CLAUDE_HOME/rules" "$CLAUDE_HOME/hooks" "$CLAUDE_HOME/skills"
 
 if [ -f "$REPO/CLAUDE.md" ]; then
+    # Displaced like any other path — but this is the one whose disappearance
+    # sends people looking, so name its replacement instead of leaving them to
+    # infer it from a backup path. Only when real content actually moved: -f is
+    # false for an absent file and for a dangling link, and an idempotent
+    # re-install backs nothing up.
+    claude_md_had_file=""
+    [ -f "$CLAUDE_HOME/CLAUDE.md" ] && claude_md_had_file=1
     link "$REPO/CLAUDE.md" "$CLAUDE_HOME/CLAUDE.md"
+    if [ -n "$claude_md_had_file" ] && [ -n "$BACKED_UP_TO" ]; then
+        cat <<'EOF'
+  NOTE: ~/.claude/CLAUDE.md is now a link into this repo. Put your own global
+        instructions in ~/.claude/rules/personal.md — this repo never ships,
+        overwrites or removes it, and it loads exactly like CLAUDE.md does.
+
+EOF
+    fi
 fi
 
 for d in agents rules hooks; do

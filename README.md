@@ -370,7 +370,7 @@ agentic-workflow/
 ├── skills/           # Skills (maestro) — 디렉터리 단위로 ~/.claude/skills/ 에 링크
 ├── rules/            # maestro-workflow.md 하나뿐 — allowlist 로 ~/.claude/rules/ 에 링크 (나머지 rules/ 는 사용자 것)
 ├── hooks/            # Hook 스크립트 (maestro-guard, verify-prompt 등) — .ps1 + .sh 크로스 플랫폼, 파일 단위로 ~/.claude/hooks/ 에 링크
-├── docs/             # 설계 문서 (v4.0 과최적화 진단, Dynamic Workflows 하이브리드 feasibility 등)
+├── docs/             # 시점 기록 — 각 문서 상단에 작성일이 있고, 그때의 판단을 그대로 둡니다 (현재 동작은 rules/ 와 이 README 가 정본)
 ├── CLAUDE.md         # 진입점 — 활성화 명령, 상태 관리. ~/.claude/CLAUDE.md 로 통째 링크
 ├── install.sh        # Linux/macOS/WSL 설치·업데이트 스크립트 (심볼릭 링크 방식)
 ├── install.ps1       # Windows 설치·업데이트 스크립트 (복사 + 매니페스트 기록)
@@ -416,7 +416,6 @@ agentic-workflow/
 | Codex auto-trigger | 1개 (Codex#1 plan adversarial) | **2개** (Codex#1 + Codex#2, complex auto) |
 | 검증 단위 | test / lint 고정 | **framework-agnostic axis** (프로젝트 opt-in) + 5c Anomaly Comparator |
 | 대규모 병렬 EXECUTE | Task 위임만 | **Dynamic Workflows 위임 후보** (≥5 독립·사전명세, research-preview) |
-| 공급망 권한 (v4.1.1, 이후 제거) | `npm:*` / `npx:*` 등 wildcard allow | 한때 `install/add/dlx/npx` 를 ask 로 좁혔으나, **패키지 매니저 권한 정책은 maestro 의 일이 아니라 각자의 보안 태세**라 이 저장소에서 뺐습니다 |
 
 상세 근거: `docs/maestro-v4-overoptimization-analysis.md` (v4.0 진단) + `docs/maestro-hybrid-feasibility.md` (v4.1 하이브리드).
 

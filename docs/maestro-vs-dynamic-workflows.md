@@ -38,7 +38,7 @@
 
 ## 2. 같은 뿌리 — 그래서 비교가 의미 있다
 
-`docs/maestro-summary.md`가 명시하듯 Maestro의 "4+1 패턴"은 Anthropic "Building Effective Agents"를 그대로 구현한 것이다. Dynamic Workflows도 같은 5패턴을 코드 primitive로 인코딩한다:
+`README.md`가 명시하듯 Maestro의 "4+1 패턴"은 Anthropic "Building Effective Agents"를 그대로 구현한 것이다. Dynamic Workflows도 같은 5패턴을 코드 primitive로 인코딩한다:
 
 | Anthropic 패턴 | Maestro 구현 | Dynamic Workflows 구현 |
 |---|---|---|
@@ -66,7 +66,7 @@
 | **재개/저널** | MEMORY.md `Next Session` (거친·산문형) | 에이전트별 캐시 저널, `resumeFromRunId` (세밀·자동) |
 | **검증 철학** | 5b/5c/5d + Anomaly Comparator + Codex#1/#2 | adversarial verify·judge panel·completeness critic (코드 primitive) |
 | **교차 벤더 검증** | Codex(GPT-5.x) 통합 — 이종 모델 adversarial | Claude 전용 (tier만 선택: opus/sonnet/haiku) |
-| **거버넌스/보안** | `maestro-guard` 훅 (오케스트레이터 직접 수정 차단) — *작성 시점엔 secure-coding 룰과 npm 공급망 가드도 이 저장소가 배포했으나, 이후 "이 저장소는 maestro 만 배포한다"로 정리되며 사용자 소유로 이관됐습니다* | 구조적 가드(에이전트 캡, 스크립트 내 shell 금지)만, 도메인 정책 없음 |
+| **거버넌스/보안** | secure-coding 룰 + npm 공급망 가드 + maestro-guard 훅 | 구조적 가드(에이전트 캡, 스크립트 내 shell 금지)만, 도메인 정책 없음 |
 | **진입 비용** | 자연어 `/maestro` — JS 불필요, 소·중 작업에 적합 | JS 스크립트 작성 필요, opt-in(`ultracode`) — 대규모에 적합 |
 | **격리** | Task 서브에이전트 컨텍스트 격리 | 동일 + `isolation:'worktree'` (병렬 파일 변경 충돌 방지) |
 
@@ -91,7 +91,7 @@ Maestro의 정체성은 Plan-first + 승인(대화형·협업형). Dynamic Workf
 **Maestro가 가진 것 (Workflows엔 없음)**
 - Plan-first + 명시적 인간 승인 게이트, 대화 중 실시간 조정
 - Codex(이종 벤더) adversarial 교차 검증
-- 도메인 보안·거버넌스 정책 (작성 시점 기준. 이후 사용자 소유로 이관 — 위 표 주석 참조)
+- 도메인 보안·거버넌스 정책(secure-coding, npm 공급망 가드)
 - 무코드 진입 — 소·중 작업에 가볍다
 - 프로젝트 agent/skill 자동 발견 + 사용자 승인 기반 후보 제안
 

@@ -428,6 +428,24 @@ agentic-workflow/
 ./install.sh  # 또는 install.ps1
 ```
 
+## 알려진 한계
+
+### Windows 경로는 실제 Windows 에서 검증되지 않았습니다
+
+`install.ps1` · `uninstall.ps1` 과 `hooks/*.ps1` 은 **macOS 의 pwsh 7 에서만** 실행 검증됐습니다. POSIX 쪽(`install.sh` · `uninstall.sh`)은 심볼릭 링크·백업·멱등·언인스톨을 격리된 `$HOME` 에서 전부 실측했지만, Windows 경로는 그 환경에서 재현되지 않는 부분이 남아 있습니다.
+
+Windows 에서 쓰시거나 검증에 기여하실 수 있다면, 아래가 확인이 필요한 지점입니다:
+
+| 항목 | 왜 macOS 에서 확인이 안 되나 |
+|---|---|
+| **PowerShell 5.1** | Windows 기본 셸. `ResolveLinkTarget` 이 없어 `claude-md-sync.ps1` 이 심볼릭 링크를 해석하지 못하고, 이 경우 Codex 미러링을 **건너뛰도록** 만들어 뒀다 (잘못 추측해 링크 너머로 쓰는 것보다 안전). 그 분기가 실제로 발동하는지 미확인 |
+| **백슬래시 경로** | macOS 의 `Join-Path` 는 `/` 를 만든다. `\` 환경에서 경로 비교·봉쇄 로직이 같게 동작하는지 미확인 |
+| **`%USERPROFILE%` 전개** | README 의 네이티브 PowerShell 훅 스니펫이 이 변수를 쓴다. 훅 `command` 안에서 전개되지 않으면 절대 경로로 바꿔 써야 한다 |
+| **manifest 경로 봉쇄** | `uninstall.ps1` 은 manifest 의 각 경로를 정규화해 배포 루트 안인지 검사한 뒤에만 지운다. `..\` 를 포함한 항목이 실제로 거부되는지 확인 필요 |
+| **manifest 지문 검사** | `install.ps1` 은 배포한 파일의 해시를 기록하고, 재설치·제거 시 해시가 다르면 **지우지 않고 백업**한다. `Get-FileHash` 동작과 디렉터리 지문 계산이 NTFS 에서 같은지 확인 필요 |
+
+Windows 는 심볼릭 링크에 개발자 모드가 필요해 **복사 + manifest** 방식으로 배포합니다. POSIX 의 링크 방식과 구조가 다르므로, 위 항목은 POSIX 쪽 검증으로 대체되지 않습니다.
+
 ## 라이선스
 
 MIT

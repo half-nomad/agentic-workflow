@@ -22,6 +22,10 @@ All notable changes to this project will be documented in this file.
 - **`REPO` 캡처가 개행으로 끝나는 체크아웃 경로를 다른 실제 경로로 붕괴시킴** — 명령 치환이 후행 개행을 삭제하므로 `<...>/repo\n` 체크아웃이 `<...>/repo` 로 접혔고, uninstall 이 **그 다른 디렉터리의 링크를** 매치해 삭제했다(재현 확인). `install.sh`·`uninstall.sh` 모두 sentinel 캡처(`printf '%sX' "$PWD"` → `${REPO%X}`)로 교체하고 `dirname` 도 파라미터 확장으로 대체 — 두 스크립트는 같은 `$REPO` 문자열에 합의해야 하므로 한쪽만 고칠 수 없다.
 - **선두 UTF-8 BOM 이 정상 설치를 차단** — BOM 은 공백이 아니라 `grep '[^[:space:]]'` 에 걸려 개인 지침으로 오인됐다. 마커·leftover 검사 전에 선두 BOM 1개를 제거.
 
+### Added — `README.md` §알려진 한계 (Windows 미검증 고지)
+
+- **`.ps1` 경로가 실제 Windows 에서 검증되지 않았음을 명시하고, 확인이 필요한 5개 지점을 표로 공개** — PowerShell 5.1 의 `ResolveLinkTarget` 부재 · 백슬래시 경로 · `%USERPROFILE%` 전개 · manifest 경로 봉쇄 · manifest 지문 검사. macOS 의 pwsh 7 에서만 실행 검증했고, Windows 는 심볼릭 링크가 아니라 **복사 + manifest** 라 구조가 달라 POSIX 쪽 검증으로 대체되지 않는다. 검증 항목을 개인 메모가 아니라 **레포에 두는 이유**는, 그 검증이 이 코드가 배포된 *다른 기계*에서 일어나기 때문이다 — 로컬 메모는 거기까지 따라가지 않는다.
+
 ### Removed — `CLAUDE.md` 소유권 특례 (위 두 항목의 의도적 되돌림)
 
 - **`install.sh` `guard_claude_md` (78줄) · `install.ps1` `Assert-ClaudeMdOwnership` (74줄) 삭제 — `CLAUDE.md` 를 나머지 21개 배포 경로와 같은 백업 규칙으로 통일.** 위 §배포 스크립트 항목의 `guard_claude_md` 링크 면제 수정과 마커 토폴로지 검증은 *그 가드가 존재한다는 전제 위에서는* 옳은 수정이었고 기록으로 남긴다. 되돌리는 건 전제 쪽이다.

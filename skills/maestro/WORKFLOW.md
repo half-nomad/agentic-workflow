@@ -325,4 +325,4 @@ Phase 6 VERIFY — verify-implementation skill → PASS
 
 ---
 
-*Maestro WORKFLOW v4.3.0 (지연 로드) — 구속 룰 정본은 `rules/maestro-workflow.md`. 이 파일은 절차·템플릿·예시·근거 전용.*
+*Maestro WORKFLOW v4.5.0 (지연 로드) — 구속 룰 정본은 `rules/maestro-workflow.md`. 이 파일은 절차·템플릿·예시·근거 전용.*

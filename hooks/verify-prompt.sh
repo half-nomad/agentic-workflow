@@ -32,26 +32,18 @@ TOOL_NAME=$(json_get "$INPUT" ".tool_name")
 if [ "$TOOL_NAME" = "Agent" ]; then
     STATE_FILE="$PROJECT_DIR/.agentic/maestro-mode.state"
     if [ -f "$STATE_FILE" ]; then
-        # Run git diff stat
+        # Emit INFORMATION, not exhortation. What the orchestrator cannot get for
+        # free is "what did that agent actually change" — a tool call it would
+        # otherwise have to spend. Reminders to run tests and check success
+        # criteria are already binding in rules/maestro-workflow.md (§5b output
+        # contract, §Result Integration); repeating them after every single Agent
+        # return is noise that trains the reader to skim past this block.
         DIFF_STAT=$(git -C "$PROJECT_DIR" diff --stat 2>/dev/null)
         if [ -n "$DIFF_STAT" ]; then
-            echo "[VERIFY] Agent completed. Changed files:"
+            echo "[VERIFY] Agent completed. Uncommitted changes in the worktree:"
             echo "$DIFF_STAT"
             echo ""
         fi
-
-        # Check for test runner
-        HAS_TESTS=false
-        [ -f "$PROJECT_DIR/package.json" ] && HAS_TESTS=true
-        [ -f "$PROJECT_DIR/pytest.ini" ] && HAS_TESTS=true
-        [ -f "$PROJECT_DIR/pyproject.toml" ] && HAS_TESTS=true
-        [ -f "$PROJECT_DIR/Gemfile" ] && HAS_TESTS=true
-
-        if [ "$HAS_TESTS" = true ]; then
-            echo "[VERIFY] Test suite detected. Run tests before marking complete."
-        fi
-
-        echo "[VERIFY] Review changes against success criteria before proceeding."
     fi
 fi
 

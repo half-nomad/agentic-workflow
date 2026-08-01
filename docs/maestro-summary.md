@@ -1,5 +1,8 @@
 # Maestro Workflow System 요약 문서
 
+> ⚠️ **역사 문서 (v1.8 기준).** 이 문서는 `/ultrawork` · `/swarm` · `/ralph` 를 *현재 동작하는 모드*로 서술하지만, 그것들은 이후 `/maestro` + 자연어 modifier 로 흡수돼 더 이상 없습니다. 현재 정본은 **`rules/maestro-workflow.md`**(구속 룰) 와 **`skills/maestro/WORKFLOW.md`**(절차) 이고, 사용법은 `README.md` 입니다.
+> 남겨두는 이유는 그때의 판단과 이후 변경의 근거를 대조할 수 있게 하기 위함입니다 — 고쳐 쓰지 않습니다.
+
 > Claude Code를 위한 패턴 기반 오케스트레이션 시스템
 
 ---

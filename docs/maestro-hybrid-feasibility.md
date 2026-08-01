@@ -1,5 +1,8 @@
 # Maestro × Dynamic Workflows — 하이브리드 실현 가능성 탐구
 
+> ⚠️ **탐구 문서 — probe 전 가설과 probe 후 결론이 한 파일에 함께 남아 있습니다.** 앞부분의 suspend/restore 권장과 훅 신설 제안은 **§7·§10 의 후속 결정이 supersede 합니다** (`.suspended` 프로토콜은 폐기됐고, `verify-workflow` 훅은 빌드했다가 제거됐습니다 — `CHANGELOG.md` 참조). 앞뒤 결론이 어긋나 보이면 **뒤가 최신**입니다.
+> 탐구 과정 자체가 기록이라 정리하지 않고 둡니다.
+
 **Date**: 2026-06-06
 **Purpose**: `docs/maestro-vs-dynamic-workflows.md`(Part 1 비교)의 후속. "EXECUTE를 Dynamic Workflow로 위임하는 하이브리드"가 *실질적으로* 가능한지, 어디서 깨지는지, 과최적화는 아닌지를 근거 기반 + 적대적 검증으로 진단.
 **Method**: 실제 훅 소스 확인 + architect adversarial review(Codex 부재 환경 fallback).

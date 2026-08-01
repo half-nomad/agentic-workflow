@@ -22,6 +22,13 @@ All notable changes to this project will be documented in this file.
 - **`REPO` 캡처가 개행으로 끝나는 체크아웃 경로를 다른 실제 경로로 붕괴시킴** — 명령 치환이 후행 개행을 삭제하므로 `<...>/repo\n` 체크아웃이 `<...>/repo` 로 접혔고, uninstall 이 **그 다른 디렉터리의 링크를** 매치해 삭제했다(재현 확인). `install.sh`·`uninstall.sh` 모두 sentinel 캡처(`printf '%sX' "$PWD"` → `${REPO%X}`)로 교체하고 `dirname` 도 파라미터 확장으로 대체 — 두 스크립트는 같은 `$REPO` 문자열에 합의해야 하므로 한쪽만 고칠 수 없다.
 - **선두 UTF-8 BOM 이 정상 설치를 차단** — BOM 은 공백이 아니라 `grep '[^[:space:]]'` 에 걸려 개인 지침으로 오인됐다. 마커·leftover 검사 전에 선두 BOM 1개를 제거.
 
+### Changed — 부품 2건 · 역사 문서 표시 (마이그레이션과 분리된 커밋)
+
+- **`agents/librarian.md` 의 `tools:` allowlist 제거** — 선언한 7개 중 3개가 이 환경에서 해석되지 않았다 (`mcp__context7__*` 는 플러그인 설치 시 `mcp__plugin_context7_context7__*` 가 되고, `mcp__grep-app__searchGitHub` 는 부재). allowlist 라 **문서 검색 전문 에이전트가 문서 검색 MCP 를 못 쓰면서도 그 사실을 말하지 않는** 상태였다. **어떤 목록으로 바꿔도 재발한다 — MCP 이름은 설치 형태에 의존한다.** 선언을 없애 사용자가 가진 도구를 물려받게 하고, 도구 순서는 *이름이 아니라 능력*으로 기술했다 (`WebSearch` 로 GitHub 에 닿으므로 코드 검색 서버 부재는 불편이지 블로커가 아님). 파일 미수정 제한은 산문으로. 나머지 3개 에이전트와 frontmatter 형식도 통일.
+- **`hooks/verify-prompt.{sh,ps1}` 에서 훈계 2줄 제거** — `git diff --stat` 은 *정보*(오케스트레이터가 툴 콜 없이 변경 파악)라 남기고, `"Run tests before marking complete"` 와 `"Review changes against success criteria"` 는 구속 룰(§5b 출력 계약 · §Result Integration)이 이미 강제하는 것의 반복이라 제거. 매 Agent 반환마다 같은 훈계가 붙으면 읽는 쪽이 이 블록 전체를 건너뛰게 된다. 마커 4종(`package.json` 등) 기반 테스트 탐지도 함께 제거 — 조잡했고 이 레포에선 한 번도 발동하지 않았다.
+- **역사 문서에 표시** — `docs/maestro-summary.md` 는 `/ultrawork`·`/swarm`·`/ralph` 를 현재 모드로 서술하는 v1.8 세계관이라 상단에 역사 배너 + 현재 정본 링크. `docs/maestro-hybrid-feasibility.md` 는 probe 전 가설과 후 결론이 한 파일에 공존하므로 일반 배너 대신 **"§7·§10 의 후속 결정이 이전 suspend/훅 제안을 supersede 한다"** 를 구체적으로 명시. 둘 다 고쳐 쓰지 않는다. `docs/maestro-v4-overoptimization-analysis.md` 는 **대상에서 제외** — 제목·날짜·목적이 명확해 현재로 오인할 경로가 없다.
+- **`skills/maestro/WORKFLOW.md` 푸터** `v4.3.0` → `v4.5.0` (v4.5.x 변경이 실제로 이 파일을 고쳤다).
+
 ### Fixed — 문서가 현행 규약과 어긋나던 6곳
 
 - **`README.md` 가 금지된 호출 경로를 시연했다** — `codex:codex-rescue` second opinion 예시 2곳 + 개요 1곳. 현행 규약은 companion 직접 호출이 정본이고 rescue 경유는 soft violation 이다 (`rules/maestro-workflow.md` §Soft Violation Guard). 직접 호출 서술로 교체하고, fallback 이 *mode T 등가 대체일 뿐* 교차벤더 축은 미충족으로 남는다는 점도 명시.

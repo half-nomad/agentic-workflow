@@ -10,6 +10,18 @@ agentic-workflow는 Claude Code CLI에 최적화된 **Maestro** 오케스트레�
 
 **이 저장소가 배포하는 것은 Maestro 하나입니다.** `~/.claude/rules/` 에 놓는 파일은 `maestro-workflow.md` 뿐이고, 코딩 규율·보안 정책·메모리 규약처럼 상시 적용되는 것은 사람마다 다르므로 배포하지 않습니다 — 그 자리는 여러분의 것이고, 설치·갱신·제거 어느 것도 건드리지 않습니다.
 
+**`~/.claude/CLAUDE.md` 도 건드리지 않습니다.** `rules/*.md` 와 `CLAUDE.md` 는 시스템 프롬프트에 같은 tier 로 실리므로(둘 다 *user's private global instructions for all projects*), 룰 파일로 배포해도 동작이 같습니다. 덮어쓸 이유가 없으니 덮어쓰지 않습니다 — 여러분의 전역 지시는 그대로 유지됩니다.
+
+### Codex 를 함께 쓴다면 (선택, 최초 1회)
+
+Codex 는 `~/.codex/AGENTS.md` 를 읽습니다. 그 파일도 **여러분의 것이라 이 저장소가 쓰지 않습니다.** Codex 에게 Claude 와 같은 룰을 보이려면 거기에 한 줄만 추가하세요:
+
+```markdown
+Also read ~/.claude/rules/*.md and apply those rules identically when working here.
+```
+
+Maestro 의 Codex 교차검증(Codex#1 / Codex#2)은 프로젝트 디렉터리에서 실행되므로 이 설정 없이도 동작합니다. 위 한 줄은 Codex 가 **전역 룰까지** 보게 하려는 경우에만 필요합니다.
+
 > 이전 버전에서 올라오신다면 → [`docs/migrations.md`](docs/migrations.md)
 
 ## 주요 특징

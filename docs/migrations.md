@@ -51,8 +51,20 @@
 |---|---|---|
 | 배포 방식 | 복사 (`install.sh` + `update.sh`) | **심볼릭 링크** — 배포본이 곧 저장소 워킹트리. `update.sh` 제거, `git pull && install.sh` |
 | 배포 범위 | `rules/` 5개 + `skills/` 6개 | **`rules/maestro-workflow.md` 1개 + `skills/maestro` 1개.** 코딩 규율·보안 정책·메모리 규약은 사용자 소유로 이관 |
+| **`~/.claude/CLAUDE.md`** | 저장소가 덮어씀 (마커 블록으로 병합) | **건드리지 않음.** Maestro 규약은 룰 파일로 배포 — `rules/*.md` 와 `CLAUDE.md` 는 같은 tier 라 동작이 같다 |
+| **`~/.codex/AGENTS.md`** | 저장소가 배포 | **건드리지 않음.** 필요하면 한 줄 직접 추가 (README §Codex) |
 | `rules/` 배치 | glob (`rules/*`) | **allowlist** — 나중에 같은 이름이 추가돼도 사용자 파일을 밀어내지 않음 |
 | `settings.json` | 저장소가 권한·훅 모두 제시 | 훅 등록만 안내. 패키지 매니저 권한 정책은 각자의 보안 태세 |
+
+**`CLAUDE.md` 를 덮어쓰지 않게 된 이유**가 이 릴리스에서 가장 큰 단순화입니다. 덮어쓰기 때문에 사용자 내용을 지키려 마커 블록 병합이 필요했고, 그게 두 언어 152줄이었으며, 그걸 걷어내자 *"개인 지시는 `rules/personal.md` 에"* 라는 별도 관리 대상이 생겼습니다 — **전부 "덮어쓴다"는 한 선택의 파생**이었습니다. 룰 파일은 여러 개가 그냥 공존하므로 병합할 것이 애초에 없습니다.
+
+**이전 설치에서 올라온다면**: `~/.claude/CLAUDE.md` 와 `~/.codex/AGENTS.md` 가 이 저장소를 가리키는 링크(또는 복사본)로 남아 있을 수 있습니다. 새 `install.sh` 는 그 경로를 더 이상 관리하지 않으므로 자동으로 정리되지 않습니다 — 직접 지우면 그 자리가 여러분에게 돌아옵니다.
+
+```bash
+# 이 저장소를 가리키고 있을 때만 지운다
+readlink ~/.claude/CLAUDE.md ~/.codex/AGENTS.md   # 확인 후
+rm -f ~/.claude/CLAUDE.md ~/.codex/AGENTS.md
+```
 
 이전 버전에서 올라온다면: `git pull` 후 `install.sh` 를 한 번 실행하면 됩니다. 복사본으로 깔려 있던 파일은 `~/.claude/.maestro-backup-<타임스탬프>/` 로 밀려나고 그 자리에 링크가 들어섭니다 — 지워지는 것은 없습니다. `rules/` 에 직접 적어둔 개인 지시가 있다면 그대로 유지됩니다.
 

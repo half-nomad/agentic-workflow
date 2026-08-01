@@ -1,7 +1,6 @@
 # claude-md-sync.ps1
 # PostToolUse hook (Edit|Write|MultiEdit): CLAUDE.md 저장 시 AGENTS.md 자동 싱크 (Windows)
 #  - 같은 디렉토리에 AGENTS.md 가 이미 존재할 때만 갱신 (프로젝트별 opt-in)
-#  - 전역 ~/.claude/CLAUDE.md 저장 시 ~/.codex/AGENTS.md (Codex 전역 지침) 로도 싱크
 # Non-blocking: always exit 0
 
 $raw = [Console]::In.ReadToEnd()
@@ -63,42 +62,4 @@ if (Test-Path $sibling) {
     Set-Content -Path $sibling -Value ($header + "`n" + $rulesNote + "`n`n" + $body) -Encoding utf8
 }
 
-# 2) 전역 CLAUDE.md → Codex 전역 지침
-$globalMd = Join-Path $env:USERPROFILE '.claude\CLAUDE.md'
-$codexDir = Join-Path $env:USERPROFILE '.codex'
-$isGlobal = $false
-try {
-    $isGlobal = ((Resolve-Path $file -ErrorAction Stop).Path -eq (Resolve-Path $globalMd -ErrorAction Stop).Path)
-} catch { $isGlobal = $false }
-# Set-Content writes THROUGH a symlink, so this branch decides by what the
-# destination IS, never by what it merely is not:
-#   not a link -> ours to write (the Windows copy install, which is why this
-#                 branch exists at all; there branch 1 no-ops)
-#   link -> $sibling -> branch 1 already wrote that exact file. This branch emits
-#                 one extra header line, so the two would fight on every edit and
-#                 churn a git-tracked file.
-#   any other link, broken included -> NOT ours. Never write through a link whose
-#                 destination we did not create.
-$codexAgents = Join-Path $codexDir 'AGENTS.md'
-
-if ($isGlobal -and (Test-Path $codexDir)) {
-    if ($editedThroughUnresolvableLink) {
-        # PS 5.1 could not dereference the edited CLAUDE.md, so $sibling is a
-        # guess and the identity test below is meaningless. Skip rather than
-        # write through a link we cannot account for.
-        [Console]::Error.WriteLine('claude-md-sync: cannot resolve the edited CLAUDE.md link on this PowerShell; skipped ~\.codex\AGENTS.md sync')
-    }
-    elseif (-not (Test-IsLink $codexAgents)) {
-        $note = '<!-- source: ~/.claude/CLAUDE.md - relative paths (rules/, skills/) resolve under ~/.claude/ -->'
-        Set-Content -Path $codexAgents -Value ($header + "`n" + $rulesNote + "`n" + $note + "`n`n" + $body) -Encoding utf8
-    }
-    else {
-        $codexResolved = Resolve-FullPath $codexAgents
-        $siblingResolved = Resolve-FullPath $sibling
-        if (-not ($codexResolved -and $siblingResolved -and ($codexResolved -eq $siblingResolved))) {
-            [Console]::Error.WriteLine('claude-md-sync: ~\.codex\AGENTS.md is a link to something this repo did not create; skipped (writing would overwrite its target)')
-        }
-        # else: branch 1 already wrote it
-    }
-}
 exit 0

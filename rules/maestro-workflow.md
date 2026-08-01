@@ -10,6 +10,42 @@ description: "Maestro binding rules — guards, hard rules, decision criteria, o
 **이 파일 = 구속 룰 정본** (가드 · Hard rule · 판정 기준 · 출력 계약). 항상 로드되며 compact 후에도 유지된다.
 **절차 · 템플릿 · 예시 · 사고 근거 = `~/.claude/skills/maestro/WORKFLOW.md`** (지연 로드).
 
+> **이 파일이 이 저장소가 `~/.claude/` 에 놓는 유일한 파일이다.** `~/.claude/CLAUDE.md` 는 건드리지 않는다 — 그 자리는 전적으로 당신 것이고, `rules/` 의 다른 파일들도 마찬가지다. `rules/*.md` 와 `CLAUDE.md` 는 시스템 프롬프트에 **같은 tier 로 실리므로**(둘 다 *user's private global instructions for all projects*), 여기 있든 거기 있든 동작은 같다.
+
+---
+
+## Activation
+
+| Command | Mode | Behavior |
+|---------|------|----------|
+| `/maestro [task]` | Maestro | Plan + delegate + skill chain. 자연어로 autonomy / parallel / goal / codex 자동 분기 (modifier 표는 §Phase 1) |
+| (none) | Default | Normal interaction (no orchestration, no hooks) |
+
+> Fable 은 modifier 가 아니라 @architect frontmatter 고정 — `agents/architect.md` §Model.
+> 자율 반복은 Claude Code 내장 `/goal` 사용.
+> Codex 는 **선택적** — 미설치 시 architect 단독 흐름으로 fallback (§Codex Integration).
+
+> **Codex 직접 호출** (mode 무관) — 오케스트레이터가 Codex 를 부를 땐 `codex:codex-rescue` 경유가 아니라 companion 직접 호출이 정본. 호출당 ~31k tok 절감 + 실패해도 job ID 로 회수 (서브에이전트는 실패 시 침묵이 규약이고 자기 잡도 못 꺼낸다).
+> 프롬프트는 **stdin 또는 `--prompt-file` 로만** — 단일 인자 `task "..."` 는 재토크나이즈로 인용부호·개행이 소실된다. 명령·경로 → `skills/maestro/WORKFLOW.md` §Codex. **스킬이 호출 경로를 명시하면 그쪽이 우선** (예: 서브에이전트의 `--write` 기본값에 의존하는 스킬은 직접 호출로 바꾸면 조용히 실패한다).
+
+## State Persistence
+
+Sessions resume via MEMORY.md `## Next Session` section (auto-loaded into system prompt):
+- "계속" / "continue": Resume from Next Session context
+- "새로 시작" / "new": Clear `## Next Session`, fresh start
+
+## Compact Instructions
+
+When summarizing this session during /compact, always preserve:
+- Current task and its success criteria
+- Architectural decisions made and their reasoning
+- Files being modified and why
+- Errors encountered and how they were resolved
+- Which agents were delegated what work and their results
+- Phase 5 substep status if mid-execution (5a impl / 5b self-test / 5c full suite / 5d review with fix-loop iteration count)
+- Next steps remaining (TODO items)
+- Active mode (Maestro/default)
+
 > **재로드 (Hard)**: `/maestro` 진입 시 **무조건** `skills/maestro/WORKFLOW.md` 를 읽는다. "이미 읽었으니 됐다" 는 판단 금지 — compact 후 요약 잔재가 남아 오판을 유도할 수 있다. 판단이 아니라 절차다.
 
 ```

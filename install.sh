@@ -2,7 +2,7 @@
 #
 # Agentic Workflow installer (Linux / macOS / WSL)
 #
-# Symlinks this repo into ~/.claude (and ~/.codex). Nothing is copied, so
+# Symlinks this repo into ~/.claude. Nothing is copied, so
 # `git pull` is the update: the deployed config IS the repo working tree.
 #
 # Granularity is a safety property, not a style choice:
@@ -36,7 +36,6 @@ REPO="${REPO%X}"
 unset _src _dir
 
 CLAUDE_HOME="$HOME/.claude"
-CODEX_HOME="$HOME/.codex"
 BACKUP_ROOT="$CLAUDE_HOME/.maestro-backup-$(date +%Y%m%d-%H%M%S)"
 
 die() { printf 'ERROR: %s\n' "$*" >&2; exit 1; }
@@ -112,13 +111,11 @@ link() {
 expected_target() {
     local l="$1" rel
     case "$l" in
-        "$CODEX_HOME"/AGENTS.md) printf '%s\n' "$REPO/AGENTS.md"; return 0 ;;
         "$CLAUDE_HOME"/*)        rel="${l#"$CLAUDE_HOME"/}" ;;
         *)                       return 0 ;;
     esac
     case "$rel" in
         */*/*)                              return 0 ;;  # deeper than we deploy
-        CLAUDE.md)                          printf '%s\n' "$REPO/CLAUDE.md" ;;
         agents/*|rules/*|hooks/*|skills/*)  printf '%s\n' "$REPO/$rel" ;;
     esac
 }
@@ -147,25 +144,15 @@ echo ""
 
 mkdir -p "$CLAUDE_HOME/agents" "$CLAUDE_HOME/rules" "$CLAUDE_HOME/hooks" "$CLAUDE_HOME/skills"
 
-if [ -f "$REPO/CLAUDE.md" ]; then
-    # Displaced like any other path — but this is the one whose disappearance
-    # sends people looking, so name its replacement instead of leaving them to
-    # infer it from a backup path. Only when real content actually moved: -f is
-    # false for an absent file and for a dangling link, and an idempotent
-    # re-install backs nothing up.
-    claude_md_had_file=""
-    [ -f "$CLAUDE_HOME/CLAUDE.md" ] && claude_md_had_file=1
-    link "$REPO/CLAUDE.md" "$CLAUDE_HOME/CLAUDE.md"
-    if [ -n "$claude_md_had_file" ] && [ -n "$BACKED_UP_TO" ]; then
-        cat <<'EOF'
-  NOTE: ~/.claude/CLAUDE.md is now a link into this repo. Put your own global
-        instructions in any file under ~/.claude/rules/ — this installer places
-        exactly one rule file (maestro-workflow.md) and never touches the rest.
-        Files there load exactly like CLAUDE.md does.
-
-EOF
-    fi
-fi
+# ~/.claude/CLAUDE.md is deliberately NOT deployed. It is yours.
+#
+# Shipping our instructions there meant overwriting a file the user owns, which
+# forced a marker-block merge to protect their content, which was 152 lines of
+# topology parsing across two languages — all of it downstream of one avoidable
+# choice. rules/*.md and CLAUDE.md are loaded at the same tier (the system prompt
+# labels both "user's private global instructions for all projects"), so a rule
+# file behaves identically and never collides with anything of yours. There is
+# nothing to merge when files simply coexist.
 
 for d in agents hooks; do
     [ -d "$REPO/$d" ] || continue
@@ -198,18 +185,17 @@ if [ -d "$REPO/skills" ]; then
     done
 fi
 
-# Codex reads the same config through AGENTS.md. Only if it is already set up —
-# creating ~/.codex for someone who does not use Codex is not our business.
-if [ -f "$REPO/AGENTS.md" ]; then
-    if [ -d "$CODEX_HOME" ]; then
-        link "$REPO/AGENTS.md" "$CODEX_HOME/AGENTS.md"
-    else
-        echo "  skipped ~/.codex/AGENTS.md (no ~/.codex — Codex not installed)"
-    fi
-fi
+# ~/.codex/AGENTS.md is NOT deployed either, for the same reason as
+# ~/.claude/CLAUDE.md: it is Codex's equivalent of that file and it belongs to
+# you. This repo's AGENTS.md is generated from this repo's CLAUDE.md, and both
+# are *contributor* instructions for working on this checkout — shipping them as
+# someone's global Codex context would tell Codex how to edit this repo in every
+# project they open.
+#
+# To let Codex see the same rules Claude gets, add one line to your own
+# ~/.codex/AGENTS.md — see "Codex" in the project README.
 
 sweep_dangling "$CLAUDE_HOME" 2
-sweep_dangling "$CODEX_HOME" 1
 
 if [ -d "$BACKUP_ROOT" ]; then
     echo ""

@@ -6,7 +6,8 @@
 # re-running this script - copies do not track upstream the way links do.
 #
 # Granularity mirrors install.sh and is a safety property:
-#   CLAUDE.md, agents\*, rules\*, hooks\*  -> per FILE (your own files live there)
+#   agents\* hooks\*  -> per FILE   (your own files live there)
+#   rules\             -> ALLOWLIST (maestro-workflow.md only; CLAUDE.md is NOT deployed)
 #   skills\<name>\                         -> per DIR  (each is wholly ours)
 #
 # Every deployed path is recorded in ~\.claude\.maestro-manifest.txt, and
@@ -135,21 +136,15 @@ foreach ($sub in @('agents', 'rules', 'hooks', 'skills')) {
     if (-not (Test-Path -LiteralPath $d)) { New-Item -ItemType Directory -Path $d -Force | Out-Null }
 }
 
-$claudeMd = Join-Path $repo 'CLAUDE.md'
-if (Test-Path -LiteralPath $claudeMd -PathType Leaf) {
-    Deploy-File $claudeMd (Join-Path $claudeHome 'CLAUDE.md')
-    # Displaced like any other path - but this is the one whose disappearance
-    # sends people looking, so name its replacement instead of leaving them to
-    # infer it from a backup path. Only when something was actually moved: an
-    # idempotent re-install backs nothing up.
-    if ($script:movedAside) {
-        Write-Host '  NOTE: ~\.claude\CLAUDE.md is now the copy shipped by this repo. Put your' -ForegroundColor Yellow
-        Write-Host '        own global instructions in ~\.claude\rules\personal.md - this repo' -ForegroundColor Yellow
-        Write-Host '        never ships, overwrites or removes it, and it loads exactly like' -ForegroundColor Yellow
-        Write-Host '        CLAUDE.md does.' -ForegroundColor Yellow
-        Write-Host ''
-    }
-}
+# ~\.claude\CLAUDE.md is deliberately NOT deployed. It is yours.
+#
+# Shipping our instructions there meant overwriting a file the user owns, which
+# forced a marker-block merge to protect their content, which was 152 lines of
+# topology parsing across two languages - all of it downstream of one avoidable
+# choice. rules\*.md and CLAUDE.md are loaded at the same tier (the system prompt
+# labels both "user's private global instructions for all projects"), so a rule
+# file behaves identically and never collides with anything of yours. There is
+# nothing to merge when files simply coexist.
 
 foreach ($sub in @('agents', 'hooks')) {
     $srcDir = Join-Path $repo $sub
@@ -179,16 +174,13 @@ if (Test-Path -LiteralPath $skillsDir) {
     }
 }
 
-# Codex reads the same config through AGENTS.md - only if it is already set up.
-$agentsMd = Join-Path $repo 'AGENTS.md'
-if (Test-Path -LiteralPath $agentsMd -PathType Leaf) {
-    if (Test-Path -LiteralPath $codexHome -PathType Container) {
-        Deploy-File $agentsMd (Join-Path $codexHome 'AGENTS.md')
-    }
-    else {
-        Write-Host '  skipped ~\.codex\AGENTS.md (no ~\.codex - Codex not installed)'
-    }
-}
+# ~\.codex\AGENTS.md is NOT deployed either, for the same reason as
+# ~\.claude\CLAUDE.md: it is Codex's equivalent of that file and it belongs to
+# you. This repo's AGENTS.md is generated from this repo's CLAUDE.md, and both
+# are *contributor* instructions for working on this checkout.
+#
+# To let Codex see the same rules Claude gets, add one line to your own
+# ~\.codex\AGENTS.md - see "Codex" in the project README.
 
 # Manifest format - one record per deployed path, readable on purpose:
 #

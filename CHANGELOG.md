@@ -41,6 +41,15 @@ All notable changes to this project will be documented in this file.
 - **modifier 정본이 두 곳에 있었고 트리거 집합이 갈렸다** — `SKILL.md` 에만 `"알아서"`·`"여러"`·`"지속적으로"`·`"second opinion"`·`"main만"` 이 있었다. **정본을 `rules/maestro-workflow.md` 한 곳으로** 모으고 `SKILL.md` 는 포인터로 축약 (`rules/memory-management.md` §Drift 경보 가 경고하는 바로 그 복제 패턴이었다).
 - **전역 지시가 프로젝트 스코프 저장소를 참조했다 (범주 오류)** — `CLAUDE.md`·`AGENTS.md` 가 Codex 호출 명령의 정본으로 `memory/reference_codex_direct_call.md` 를 가리켰는데, 그건 프로젝트별 memory 라 이 레포를 clone 한 사람에게는 **도달할 수 없는 경로**다. 명령 표를 `skills/maestro/WORKFLOW.md` §Codex 로 이관(레포 소유 위치)하고 `agents/architect.md` 의 참조도 그리로. 실운영에서 얻은 주의사항(로그 정지 ≠ 좀비 · `status --wait` 조기 반환 · 병렬 호출 시 `mktemp`)도 함께 실었다.
 
+### Changed — `~/.claude/CLAUDE.md` 를 더 이상 덮어쓰지 않는다 (이 릴리스에서 가장 큰 단순화)
+
+- **`CLAUDE.md` 를 배포 대상에서 제외.** Maestro 규약(Activation · State Persistence · Compact Instructions)은 `rules/maestro-workflow.md` 로 옮겼다. `rules/*.md` 와 `CLAUDE.md` 는 시스템 프롬프트에 **같은 tier 로 실린다** — 둘 다 *"user's private global instructions for all projects"* 로 라벨링되는 것을 실측 확인했다. 동작이 같은데 남의 파일을 덮어쓸 이유가 없다.
+- **이게 그동안의 복잡도의 뿌리였다** — 덮어쓰기 → 사용자 내용 파괴 → 마커 블록 병합(두 언어 152줄) → 그게 과잉이라 제거 → *"개인 지시는 `rules/personal.md` 로"* → **별도 관리 대상 탄생**. 2번부터가 전부 1번의 파생이었고, `rules/` 는 여러 파일이 그냥 공존하는 구조라 **병합할 것이 애초에 없다.**
+- **`~/.codex/AGENTS.md` 도 같은 이유로 배포 중단.** 그건 Codex 쪽의 `CLAUDE.md` 이고 사용자 것이다. 게다가 이 저장소의 `AGENTS.md` 는 이제 *기여자용* `CLAUDE.md` 에서 생성되므로, 전역에 배포하면 **Codex 가 모든 프로젝트에서 "이 저장소를 고치는 법"을 지침으로 받게 된다.** Codex 에게 전역 룰을 보이려면 사용자가 자기 `AGENTS.md` 에 한 줄 추가 (README §Codex).
+- **`hooks/claude-md-sync.{sh,ps1}` 의 branch #2 제거** — 전역 `CLAUDE.md` 를 배포하지 않으니 동기화할 대상 자체가 없고, 남겨두면 *사용자 소유* `~/.codex/AGENTS.md` 에 쓰게 된다. branch #1(형제 `AGENTS.md` 재생성)만 남아 훅이 단일 목적이 됐다.
+- **레포 `CLAUDE.md` 는 기여자용으로 재작성** — 배포 범위 표 · 워킹트리가 곧 라이브 설정이라는 경고 · 검증 명령 · 편입 기준 4항. 배포되지 않으므로 사용자 컨텍스트를 차지하지 않는다.
+- 링크 수 16 → **14**.
+
 ### Removed — 소속 재정의: 이 레포는 *maestro 워크플로우* 하나만 배포한다
 
 - **`rules/{global,secure-coding,memory-management,typescript}.md` + `skills/{secure-coding,memory-management}/` 제거** — 개인 하네스로 이관. 판단축은 **명시적 모드 vs 상시 배경**이다: maestro 는 진입점이 `/maestro` 인 워크플로우 제품이고, 코딩 규율·보안 정책·메모리 규약은 사용자마다 다르며 시한부인 것도 있다 (`secure-coding` 의 공급망 정책은 *"공격 종식 확인 + 사용자 명시 해제까지 유효"*, devcontainer/pnpm 전제 · `global` 의 커밋 스타일은 `Co-Authored-By` 금지 등 개인 취향 · `memory-management` 의 `memory/feedback_*` 경로는 시스템 특정).

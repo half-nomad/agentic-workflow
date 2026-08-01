@@ -30,13 +30,7 @@ On `— 작업 완료 —`, delete this file.
 
 Detect modifier intent from natural language. No flags needed.
 
-| User wording | Modifier applied |
-|---|---|
-| "맡길게" / "autonomous" / "끝까지" / "알아서" | **approval skip** (auto-execute after plan) |
-| "병렬로" / "동시에" / "여러" / "parallel" | **Parallelization pattern** preferred |
-| "완료될 때까지" / "until done" / "지속적으로" / "끝날 때까지" | **`/goal` activation** (extract completion criterion from task) |
-| "코덱스에게도" / "교차 검증" / "second opinion" | **Codex user-explicit** invocation (beyond auto trigger) |
-| "코덱스 없이" / "main만" | **Codex excluded** |
+**트리거 표의 정본은 `rules/maestro-workflow.md` §Phase 1 Modifier detection 이다** — 여기에 복제하지 않는다. 두 곳에 적어두면 트리거 집합이 갈리고, 실제로 갈렸던 적이 있다 (`"알아서"`·`"여러"`·`"지속적으로"`·`"second opinion"`·`"main만"` 이 한쪽에만 있었다).
 
 > Fable 은 modifier 가 아니라 **@architect frontmatter 고정** — 상세 `agents/architect.md` §Model.
 

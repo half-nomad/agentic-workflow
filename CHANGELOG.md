@@ -22,6 +22,15 @@ All notable changes to this project will be documented in this file.
 - **`REPO` 캡처가 개행으로 끝나는 체크아웃 경로를 다른 실제 경로로 붕괴시킴** — 명령 치환이 후행 개행을 삭제하므로 `<...>/repo\n` 체크아웃이 `<...>/repo` 로 접혔고, uninstall 이 **그 다른 디렉터리의 링크를** 매치해 삭제했다(재현 확인). `install.sh`·`uninstall.sh` 모두 sentinel 캡처(`printf '%sX' "$PWD"` → `${REPO%X}`)로 교체하고 `dirname` 도 파라미터 확장으로 대체 — 두 스크립트는 같은 `$REPO` 문자열에 합의해야 하므로 한쪽만 고칠 수 없다.
 - **선두 UTF-8 BOM 이 정상 설치를 차단** — BOM 은 공백이 아니라 `grep '[^[:space:]]'` 에 걸려 개인 지침으로 오인됐다. 마커·leftover 검사 전에 선두 BOM 1개를 제거.
 
+### Fixed — 문서가 현행 규약과 어긋나던 6곳
+
+- **`README.md` 가 금지된 호출 경로를 시연했다** — `codex:codex-rescue` second opinion 예시 2곳 + 개요 1곳. 현행 규약은 companion 직접 호출이 정본이고 rescue 경유는 soft violation 이다 (`rules/maestro-workflow.md` §Soft Violation Guard). 직접 호출 서술로 교체하고, fallback 이 *mode T 등가 대체일 뿐* 교차벤더 축은 미충족으로 남는다는 점도 명시.
+- **`README.md` 가 architect 를 `opus` 로 적었다** — 실제 frontmatter 는 `model: fable`.
+- **`"끝까지"` + `"맡길게"` 가 `/goal` 도 켠다고 서술했다** — 둘 다 approval skip 이고 `/goal` 트리거는 별개 표현(`"완료될 때까지"` 등)이다. 예시대로 입력하면 문서와 다르게 동작했다.
+- **Parallelization 을 "강제"라 서술했다** — modifier 정본은 `preferred` 다.
+- **modifier 정본이 두 곳에 있었고 트리거 집합이 갈렸다** — `SKILL.md` 에만 `"알아서"`·`"여러"`·`"지속적으로"`·`"second opinion"`·`"main만"` 이 있었다. **정본을 `rules/maestro-workflow.md` 한 곳으로** 모으고 `SKILL.md` 는 포인터로 축약 (`rules/memory-management.md` §Drift 경보 가 경고하는 바로 그 복제 패턴이었다).
+- **전역 지시가 프로젝트 스코프 저장소를 참조했다 (범주 오류)** — `CLAUDE.md`·`AGENTS.md` 가 Codex 호출 명령의 정본으로 `memory/reference_codex_direct_call.md` 를 가리켰는데, 그건 프로젝트별 memory 라 이 레포를 clone 한 사람에게는 **도달할 수 없는 경로**다. 명령 표를 `skills/maestro/WORKFLOW.md` §Codex 로 이관(레포 소유 위치)하고 `agents/architect.md` 의 참조도 그리로. 실운영에서 얻은 주의사항(로그 정지 ≠ 좀비 · `status --wait` 조기 반환 · 병렬 호출 시 `mktemp`)도 함께 실었다.
+
 ### Removed — 소속 재정의: 이 레포는 *maestro 워크플로우* 하나만 배포한다
 
 - **`rules/{global,secure-coding,memory-management,typescript}.md` + `skills/{secure-coding,memory-management}/` 제거** — 개인 하네스로 이관. 판단축은 **명시적 모드 vs 상시 배경**이다: maestro 는 진입점이 `/maestro` 인 워크플로우 제품이고, 코딩 규율·보안 정책·메모리 규약은 사용자마다 다르며 시한부인 것도 있다 (`secure-coding` 의 공급망 정책은 *"공격 종식 확인 + 사용자 명시 해제까지 유효"*, devcontainer/pnpm 전제 · `global` 의 커밋 스타일은 `Co-Authored-By` 금지 등 개인 취향 · `memory-management` 의 `memory/feedback_*` 경로는 시스템 특정).

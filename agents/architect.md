@@ -69,7 +69,7 @@ printf '%s' "<independent review request>" > "$REQ"
 node "$CX" task --prompt-file "$REQ"
 ```
 
-Pass the prompt via `--prompt-file` or stdin only — a single-argument `task "..."` is re-tokenized and loses quotes and newlines (`CLAUDE.md` §Codex 직접 호출).
+Pass the prompt via `--prompt-file` or stdin only — a single-argument `task "..."` is re-tokenized and loses quotes and newlines. Full command reference: `skills/maestro/WORKFLOW.md` §Codex.
 
 **Use it when**: the decision affects 5+ files or core systems · trade-offs conflict with no clear winner · security- or performance-critical review · cross-domain expertise needed · you were called in for fix-loop escalation.
 

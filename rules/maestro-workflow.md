@@ -34,8 +34,16 @@ Simple → skip to EXECUTE. Complex → PATTERN.
 > **예외 — `goal`**: `goal` modifier 는 complexity 무관하게 PLAN/APPROVE 를 **1회 강제**한다. Simple 이 EXECUTE 로 직행하면 §Mode Behavior 의 *"APPROVE 는 최초 1회만"* 을 받을 단계 자체가 사라지기 때문.
 
 **Modifier detection** (silently apply; plan 이 생성되는 경우 `Modifiers:` 로 표시):
-- approval skip (`"맡길게"` / `"autonomous"` / `"끝까지"`) · parallel preferred (`"병렬로"` / `"동시에"`)
-- goal activation (`"완료될 때까지"` / `"until done"` — extract criterion) · codex on/off (`"코덱스에게도"` / `"코덱스 없이"`)
+| 사용자 표현 | 적용되는 modifier |
+|---|---|
+| `"맡길게"` · `"autonomous"` · `"끝까지"` · `"알아서"` | **approval skip** — plan 후 자동 진행 |
+| `"병렬로"` · `"동시에"` · `"여러"` · `"parallel"` | **Parallelization preferred** (강제 아님) |
+| `"완료될 때까지"` · `"until done"` · `"지속적으로"` · `"끝날 때까지"` | **`/goal` 활성화** — 완료 조건을 task 에서 추출 |
+| `"코덱스에게도"` · `"교차 검증"` · `"second opinion"` | **Codex 강제 호출** (auto trigger 와 별개, simple 도) |
+| `"코덱스 없이"` · `"main만"` | **Codex 배제** (Hard rule 영역 포함) |
+
+Modifier 는 조합된다. 예: `"이거 병렬로 맡길게"` → Parallelization + approval skip.
+**이 표가 정본이다** — `skills/maestro/SKILL.md` 는 여기를 가리킨다 (양쪽에 적으면 트리거 집합이 갈린다).
 
 **Architect prefilter — 5 Effect 영역** (prefilter only; 최종 확정은 Phase 3):
 

@@ -19,12 +19,12 @@ agentic-workflow는 Claude Code CLI에 최적화된 **Maestro** 오케스트레�
 - **Codex 이중 auto-trigger**: complex task 시 Codex#1 (plan adversarial, Phase 4) + Codex#2 (test verification, Phase 5d) 자동 invoke. user-explicit / stuck 5+ escalation 은 별도 카테고리
 - **Dynamic Workflows 하이브리드 (v4.1, research-preview)**: ≥5 독립·사전명세·자기검증 항목의 대규모 병렬 EXECUTE 를 Workflow 툴로 위임 가능 (never auto-fire — Phase 4 승인 필수, 완료 후 5c/5d Hard 의무)
 - **Skill 1차 시민화**: PATTERN 단계에서 사용 가능한 skill을 자동 매칭, 사용자 approval로 확정
-- **선택적 Codex 통합**: `codex:codex-rescue` 미설치 환경에선 무음 fallback (architect 단독 흐름)
+- **선택적 Codex 통합**: companion CLI 직접 호출. 미설치 환경에선 무음 fallback (architect 단독 흐름 — 단 mode T 등가 대체일 뿐 교차벤더 적대 축은 미충족으로 남습니다)
 - **도구 기반 검증 (Phase 6)**: success criteria sign-off — 프로젝트에 `verify-*` 스킬이 있으면 활용, 없으면 `git diff` 리뷰 + 체크리스트 (테스트 실행은 5b/5c 에서 이미 완료)
 - **순수 오케스트레이터 역할**: 메인은 위임만, 직접 파일 수정은 hooks로 차단
 - **Context Embedding**: 서브에이전트에 스키마/패턴/제약 직접 주입 (5b output contract 요구사항 포함)
 - **4+1 패턴**: Chaining, Parallelization, Routing, Orchestrator-Workers, Evaluator
-- **4개 전문 에이전트**: architect (opus), frontend-engineer (opus), librarian (sonnet), document-writer (sonnet) + 자동 발견되는 프로젝트 에이전트
+- **4개 전문 에이전트**: architect (fable), frontend-engineer (opus), librarian (sonnet), document-writer (sonnet) + 자동 발견되는 프로젝트 에이전트
 - **State Persistence**: MEMORY.md로 세션 간 컨텍스트 유지
 
 ## 설치 방법
@@ -343,7 +343,7 @@ Obsidian 노트 스킬은 별도 플러그인 [`my-note-skills`](https://github.
 /maestro TODO 목록 전부 처리하고 테스트까지 끝까지 맡길게
 ```
 
-→ `"끝까지"` + `"맡길게"` 감지 → approval skip + `/goal` 자동 활성화로 완료까지 자율 반복
+→ `"끝까지"` + `"맡길게"` 감지 → **approval skip** (둘 다 같은 modifier 입니다). `/goal` 을 함께 켜려면 `"완료될 때까지"` / `"until done"` 처럼 **완료 조건을 말하는 표현**을 씁니다 — 트리거가 별개입니다
 
 ### 예시 3: 병렬 리서치 (이전 `/swarm` 대체)
 
@@ -351,7 +351,7 @@ Obsidian 노트 스킬은 별도 플러그인 [`my-note-skills`](https://github.
 /maestro React, Vue, Angular 에러 핸들링 동시에 비교 조사
 ```
 
-→ `"동시에"` 감지 → Parallelization 패턴 강제 → 3개 @librarian 병렬 → 결과 합성
+→ `"동시에"` 감지 → Parallelization 패턴 **우선 선택**(강제가 아니라 preferred) → 3개 @librarian 병렬 → 결과 합성
 
 ### 예시 4: Codex 교차 검증
 
@@ -359,8 +359,8 @@ Obsidian 노트 스킬은 별도 플러그인 [`my-note-skills`](https://github.
 /maestro 이 PR 아키텍처 리뷰, 코덱스에게도 의견 받아
 ```
 
-→ `@architect` 리뷰 + `codex:codex-rescue` second opinion → 두 의견 통합 보고
-(`codex:codex-rescue` 미설치 시 자동으로 architect 단독 흐름)
+→ `@architect` 리뷰 + Codex second opinion (companion 직접 호출) → 두 의견 통합 보고
+(Codex 미설치 시 자동으로 architect 단독 흐름)
 
 ## 디렉토리 구조
 

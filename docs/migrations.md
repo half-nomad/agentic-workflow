@@ -55,3 +55,21 @@
 | `settings.json` | 저장소가 권한·훅 모두 제시 | 훅 등록만 안내. 패키지 매니저 권한 정책은 각자의 보안 태세 |
 
 이전 버전에서 올라온다면: `git pull` 후 `install.sh` 를 한 번 실행하면 됩니다. 복사본으로 깔려 있던 파일은 `~/.claude/.maestro-backup-<타임스탬프>/` 로 밀려나고 그 자리에 링크가 들어섭니다 — 지워지는 것은 없습니다. `rules/` 에 직접 적어둔 개인 지시가 있다면 그대로 유지됩니다.
+
+### 복사 시절에 깔렸지만 지금은 배포하지 않는 것
+
+위 문단은 *같은 자리에 링크가 들어서면서 밀려나는* 파일 얘기입니다. 그런데 **더 이상 배포하지 않는 파일은 새 `install.sh` 가 아예 방문하지 않으므로 밀려나지도 않고 그대로 남습니다.** v4.1 이하에서 설치했다면 `~/.claude/` 에 아래가 복사본으로 있을 수 있습니다:
+
+```
+rules/global.md  rules/secure-coding.md  rules/memory-management.md  rules/typescript.md
+skills/secure-coding/  skills/memory-management/
+skills/codex-image/  skills/session-summary/  skills/multi-worktree-safety/
+```
+
+**그대로 두셔도 됩니다** — 이제 그 자리는 여러분 것이고, 룰은 소유자와 무관하게 로드되므로 계속 동작합니다. 저장소가 갱신해 주지 않을 뿐입니다. 원치 않으면 지우면 되고, 계속 쓰고 싶으면 손대지 마세요.
+
+또 v4.1 이하의 인스톨러가 만들던 관리 파일 두 개가 남아 있을 수 있습니다. 현재 스크립트는 이 이름을 **읽지도 쓰지도 않으므로 스스로 사라지지 않습니다** — 안심하고 지우면 됩니다:
+
+```bash
+rm -f ~/.claude/.agentic-workflow-source ~/.claude/.agentic-workflow-manifest
+```

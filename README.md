@@ -6,18 +6,22 @@ Claude Code를 위한 Maestro 오케스트레이션 시스템. 패턴 기반 에
 
 agentic-workflow는 Claude Code CLI에 최적화된 **Maestro** 오케스트레이션 시스템입니다. Claude가 오케스트레이터 역할을 수행하여 작업을 분석하고, 적절한 패턴을 선택하고, 필요한 에이전트를 식별한 후 계획을 제출합니다.
 
-이 저장소는 Maestro의 **배포본 소스**입니다. `git clone` 후 `install.sh` / `install.ps1`을 실행하면 저장소의 `CLAUDE.md`, `agents/`, `rules/`, `hooks/`, `skills/`가 사용자의 `~/.claude/`에 심볼릭 링크(Windows는 복사)로 연결됩니다. 배포된 설정은 곧 이 저장소의 워킹트리이므로, 갱신의 본질은 `git pull`입니다 — 정확한 절차와 왜 그것만으로 부족한지는 아래 §업데이트를 참고하세요. 훅 등록은 최초 1회 수동으로 합니다 (아래 §훅 등록 참조).
+이 저장소는 Maestro의 **배포본 소스**입니다. `git clone` 후 `install.sh` / `install.ps1`을 실행하면 `CLAUDE.md`, 에이전트 4개, 훅, `rules/maestro-workflow.md`, `skills/maestro/` 가 사용자의 `~/.claude/`에 심볼릭 링크(Windows는 복사)로 연결됩니다. 배포된 설정은 곧 이 저장소의 워킹트리이므로, 갱신의 본질은 `git pull`입니다 — 정확한 절차와 왜 그것만으로 부족한지는 아래 §업데이트를 참고하세요. 훅 등록은 최초 1회 수동으로 합니다 (아래 §훅 등록 참조).
+
+**이 저장소가 배포하는 것은 Maestro 하나입니다.** `~/.claude/rules/` 에 놓는 파일은 `maestro-workflow.md` 뿐이고, 코딩 규율·보안 정책·메모리 규약처럼 상시 적용되는 것은 사람마다 다르므로 배포하지 않습니다 — 그 자리는 여러분의 것이고, 설치·갱신·제거 어느 것도 건드리지 않습니다.
+
+> 이전 버전에서 올라오신다면 → [`docs/migrations.md`](docs/migrations.md)
 
 ## 주요 특징
 
 - **단일 진입점 `/maestro`**: 모든 복잡 작업은 `/maestro`로 시작. autonomy / parallel / goal / codex는 자연어로 자동 분기
-- **Plan agent 분리 + 5 Effect/Hard rule (v4.0)**: plan 작성은 built-in Plan agent (clean context) 위임. Architect 호출은 5 Effect 영역 prefilter + **Hard rule** (ownership / invariants / failure modes 변경 → mandatory, modifier off 불가) 로 결정
+- **Plan agent 분리 + 5 Effect/Hard rule**: plan 작성은 built-in Plan agent (clean context) 위임. Architect 호출은 5 Effect 영역 prefilter + **Hard rule** (ownership / invariants / failure modes 변경 → mandatory, modifier off 불가) 로 결정
 - **명시적 테스트 + lint 단계 (5b/5c)**: Worker self-test (output contract — `tests` / `lint` / `build` (+ 등록 axis) / `known_gaps`) + 오케스트레이터 full suite 실행 + **Anomaly Comparator** (mechanical baseline 비교 — 추상 표현 dismissal 금지). 적용 불가 axis 는 `N/A — <reason>` 명시
-- **Framework-agnostic axis mechanism (v3.3)**: 검증 axis 는 프로젝트가 `.claude/maestro-axes.md` 로 opt-in 등록, 미등록 시 framework auto-detect fallback
+- **Framework-agnostic axis mechanism**: 검증 axis 는 프로젝트가 `.claude/maestro-axes.md` 로 opt-in 등록, 미등록 시 framework auto-detect fallback
 - **프로젝트 에이전트 자동 발견**: `~/.claude/agents/` + `.claude/agents/` + `agents/` 3 위치 스캔 (session-once cache). 도메인 매칭 시 글로벌 에이전트 preempt (예: 프로젝트 `@code-reviewer` → 글로벌 `@architect` 대체)
-- **Post-impl review (5d) — Reviewer·Codex#2 병렬 분업 (v4.0)**: orchestrator 가 Reviewer (코드 axis — project R1 첫 매칭 또는 `@architect` fallback) 와 Codex#2 (test axis) 를 직접 병렬 호출 → 두 출력 통합 → fix-loop max 3 → 초과 시 `@architect` escalation
+- **Post-impl review (5d) — Reviewer·Codex#2 병렬 분업**: orchestrator 가 Reviewer (코드 axis — project R1 첫 매칭 또는 `@architect` fallback) 와 Codex#2 (test axis) 를 직접 병렬 호출 → 두 출력 통합 → fix-loop max 3 → 초과 시 `@architect` escalation
 - **Codex 이중 auto-trigger**: complex task 시 Codex#1 (plan adversarial, Phase 4) + Codex#2 (test verification, Phase 5d) 자동 invoke. user-explicit / stuck 5+ escalation 은 별도 카테고리
-- **Dynamic Workflows 하이브리드 (v4.1, research-preview)**: ≥5 독립·사전명세·자기검증 항목의 대규모 병렬 EXECUTE 를 Workflow 툴로 위임 가능 (never auto-fire — Phase 4 승인 필수, 완료 후 5c/5d Hard 의무)
+- **Dynamic Workflows 하이브리드**: ≥5 독립·사전명세·자기검증 항목의 대규모 병렬 EXECUTE 를 Workflow 툴로 위임 가능 (never auto-fire — Phase 4 승인 필수, 완료 후 5c/5d Hard 의무)
 - **Skill 1차 시민화**: PATTERN 단계에서 사용 가능한 skill을 자동 매칭, 사용자 approval로 확정
 - **선택적 Codex 통합**: companion CLI 직접 호출. 미설치 환경에선 무음 fallback (architect 단독 흐름 — 단 mode T 등가 대체일 뿐 교차벤더 적대 축은 미충족으로 남습니다)
 - **도구 기반 검증 (Phase 6)**: success criteria sign-off — 프로젝트에 `verify-*` 스킬이 있으면 활용, 없으면 `git diff` 리뷰 + 체크리스트 (테스트 실행은 5b/5c 에서 이미 완료)
@@ -77,7 +81,7 @@ Windows는 복사 방식이라 `git pull`이 상류를 자동으로 추적하지
 ./uninstall.sh
 ```
 
-이 저장소 안쪽을 가리키는 심볼릭 링크만 제거합니다. 실제 파일은 `-type l` 검사에서 걸러지고, 다른 곳을 가리키는 링크는 저장소 경로 접두사 매칭에서 걸러지므로 `rules/personal.md`나 개인 훅 같은 사용자 파일은 구조적으로 삭제될 수 없습니다.
+이 저장소 안쪽을 가리키는 심볼릭 링크만 제거합니다. 실제 파일은 `-type l` 검사에서 걸러지고, 다른 곳을 가리키는 링크는 저장소 경로 접두사 매칭에서 걸러지므로 여러분이 `rules/`에 직접 둔 파일이나 개인 훅은 **구조적으로** 삭제될 수 없습니다.
 
 **Windows (PowerShell)**
 
@@ -379,45 +383,6 @@ agentic-workflow/
 ├── settings.json     # Claude Code 설정 (hooks, permissions) — 링크·자동 병합 대상 아님, 훅 등록은 수동 (§훅 등록)
 └── .mcp.json         # MCP 서버 설정 (context7, grep-app)
 ```
-
-## v2.x → v3.0 마이그레이션
-
-| 이전 (v2.x) | 신규 (v3.0) |
-|---|---|
-| `/ultrawork [task]` | `/maestro [task] ... 맡길게` (또는 `... autonomous`) |
-| `/swarm [task]` | `/maestro [task] ... 병렬로` (또는 `... 동시에`) |
-| `/ralph start` | `/maestro [task] ... 완료될 때까지` (내장 `/goal` 자동 활성화) |
-| `/ralph cancel` | `/goal` 자체 명령으로 해제 (이전 `.agentic/ralph-loop.state.md`는 더 이상 사용 X) |
-
-자율 반복 backend가 모델 self-judge(`/ralph`) → 독립 fast model 검증(`/goal`)으로 바뀌어 false completion 위험이 줄었습니다.
-
-## v3.0 → v3.1 마이그레이션
-
-| 변경 영역 | v3.0 | v3.1 |
-|---|---|---|
-| 테스트 실행 | 암묵적 (Phase 6 fallback 한 줄) | **5b worker self-test + 5c orchestrator full suite** (first-class) |
-| Worker output | 자유 형식 | **output contract** (`tests_run` / `results` / `not_run_reason` / `known_gaps`) 필수 |
-| Post-impl review | `@architect` 강제 | **project reviewer R1 우선** (자동 발견), `@architect` fallback |
-| Fix-loop | 무제한 | **max 3** + `@architect` escalation |
-| Project agents | 글로벌 4개만 인지 | **`.claude/agents/*.md` 자동 발견** (session-once cache, surface-only) |
-| Codex 자동 trigger | 2개 (사용자 발화 / stuck 5+) | **1개** (Plan adversarial). 나머지는 user-explicit / review-internal / stuck 5+ escalation |
-| Plan template | Verification 행 없음 | **5a~5d + Phase 6 명시 5행** |
-| Phase 6 VERIFY | 테스트 실행 포함 가능 | narrow: **최종 sanity sign-off 만** (`verify-*` 있으면 위임) |
-
-호환성: v3.0 에 작성된 plan / agent / skill 은 그대로 동작. v3.1 는 추가 가시화 + 누락 방어 layer.
-
-## v3.1 → v4.1 마이그레이션
-
-| 변경 영역 | v3.1 | v4.0 / v4.1 |
-|---|---|---|
-| Plan 작성 | orchestrator 직접 (누적 컨텍스트) | **built-in Plan agent 분리** (clean context) |
-| Architect 호출 | Decision Gate (keyword + 5문항 self-review) | **5 Effect prefilter + Hard rule** (ownership/invariants/failure modes → mandatory, modifier off 불가) |
-| 5d review | reviewer → 재량 Codex#2 invoke | **Reviewer (코드 axis) + Codex#2 (test axis) 병렬 분업**, orchestrator 가 통합 |
-| Codex auto-trigger | 1개 (Codex#1 plan adversarial) | **2개** (Codex#1 + Codex#2, complex auto) |
-| 검증 단위 | test / lint 고정 | **framework-agnostic axis** (프로젝트 opt-in) + 5c Anomaly Comparator |
-| 대규모 병렬 EXECUTE | Task 위임만 | **Dynamic Workflows 위임 후보** (≥5 독립·사전명세, research-preview) |
-
-상세 근거: `docs/maestro-v4-overoptimization-analysis.md` (v4.0 진단) + `docs/maestro-hybrid-feasibility.md` (v4.1 하이브리드).
 
 ## 문제 해결
 

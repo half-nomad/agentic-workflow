@@ -22,6 +22,14 @@ All notable changes to this project will be documented in this file.
 - **`REPO` 캡처가 개행으로 끝나는 체크아웃 경로를 다른 실제 경로로 붕괴시킴** — 명령 치환이 후행 개행을 삭제하므로 `<...>/repo\n` 체크아웃이 `<...>/repo` 로 접혔고, uninstall 이 **그 다른 디렉터리의 링크를** 매치해 삭제했다(재현 확인). `install.sh`·`uninstall.sh` 모두 sentinel 캡처(`printf '%sX' "$PWD"` → `${REPO%X}`)로 교체하고 `dirname` 도 파라미터 확장으로 대체 — 두 스크립트는 같은 `$REPO` 문자열에 합의해야 하므로 한쪽만 고칠 수 없다.
 - **선두 UTF-8 BOM 이 정상 설치를 차단** — BOM 은 공백이 아니라 `grep '[^[:space:]]'` 에 걸려 개인 지침으로 오인됐다. 마커·leftover 검사 전에 선두 BOM 1개를 제거.
 
+### Fixed — 구속 룰 정본 내부 모순 3건 + 파생 모순 1건 (감사 발견 · 전건 재현 후 수정)
+
+- **`"코덱스 없이"` 가 Hard rule 영역에 적용되는지가 같은 파일 안에서 반대로 정의됐다** — `:83` 은 modifier 가 있으면 Codex#1 **무조건 미실행**, `:285` 는 *"off (Hard rule 영역 제외)"* 로 **끄지 못함**. **둘 다 `rules/maestro-workflow.md` 안이라 "충돌 시 rules 우선" 타이브레이크가 작동하지 않는다.** `WORKFLOW.md §Exclusion`·`SKILL.md` modifier 표·`agents/architect.md` §Skip it when 세 곳이 **무조건 배제**로 일치하므로 `:285` 의 괄호를 삭제해 그쪽으로 통일. **판단 근거**: `:287` 의 재디스패치 Hard rule 은 *"미설치·호출 실패"* 규정 — **시스템이 Codex 에 도달 실패한 경우와 사용자가 안 쓰기로 한 경우는 다르다.** 이 구분을 명문화하는 문단을 §Codex Integration 에 추가.
+- **`goal` modifier 의 승인 의미가 갈렸다** — `:89` 자동 진행 vs `:278` *"APPROVE 는 최초 1회만"*. `/goal` 은 반복 실행이라 최초 1회 승인이 사용자 가시성의 마지막 지점이므로 `:278` 을 정본으로, `:89` 에서 `goal` 을 제거.
+- **`Simple + goal` 파생 모순** — 위 둘을 함께 적용하면 Simple 은 `:32` 로 EXECUTE 직행인데 `goal` 은 최초 APPROVE 를 요구해 **승인받을 단계가 사라진다**. `goal` 은 complexity 무관하게 PLAN/APPROVE 를 1회 강제한다고 `:32`·`WORKFLOW.md` Phase 3 에 명시.
+- **Simple task 가 PLAN 을 거치는지가 세 곳에서 달랐다** — `rules:32` *"Simple → skip to EXECUTE"* vs `WORKFLOW.md` *"`/maestro` 호출 자체가 Plan Mode 진입 조건"* vs `SKILL.md` 종료 지시의 무조건 *"present your plan"*. `rules:32` 를 정본으로 나머지를 조건화하고, 파생으로 남던 `:34`(modifier 표시)·`SKILL.md` §Skill Candidates(Simple 에선 스캔 안 함)·`README.md` 워크플로우 단계(Simple 직행 표시)까지 정리.
+- **2차 모순 예방** — `:87` 의 *"Hard rule 영역은 modifier 로도 off 불가"* 가 Codex 까지 포함하는 것으로 읽힐 수 있어 *"= Architect 호출"* 로 한정하고 Codex 는 별개임을 명시.
+
 ### Added — `README.md` §알려진 한계 (Windows 미검증 고지)
 
 - **`.ps1` 경로가 실제 Windows 에서 검증되지 않았음을 명시하고, 확인이 필요한 5개 지점을 표로 공개** — PowerShell 5.1 의 `ResolveLinkTarget` 부재 · 백슬래시 경로 · `%USERPROFILE%` 전개 · manifest 경로 봉쇄 · manifest 지문 검사. macOS 의 pwsh 7 에서만 실행 검증했고, Windows 는 심볼릭 링크가 아니라 **복사 + manifest** 라 구조가 달라 POSIX 쪽 검증으로 대체되지 않는다. 검증 항목을 개인 메모가 아니라 **레포에 두는 이유**는, 그 검증이 이 코드가 배포된 *다른 기계*에서 일어나기 때문이다 — 로컬 메모는 거기까지 따라가지 않는다.

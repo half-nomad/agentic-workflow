@@ -31,7 +31,9 @@ ANALYZE → PATTERN (+ project agent scan)
 
 Simple → skip to EXECUTE. Complex → PATTERN.
 
-**Modifier detection** (silently apply, surface as `Modifiers:` in plan):
+> **예외 — `goal`**: `goal` modifier 는 complexity 무관하게 PLAN/APPROVE 를 **1회 강제**한다. Simple 이 EXECUTE 로 직행하면 §Mode Behavior 의 *"APPROVE 는 최초 1회만"* 을 받을 단계 자체가 사라지기 때문.
+
+**Modifier detection** (silently apply; plan 이 생성되는 경우 `Modifiers:` 로 표시):
 - approval skip (`"맡길게"` / `"autonomous"` / `"끝까지"`) · parallel preferred (`"병렬로"` / `"동시에"`)
 - goal activation (`"완료될 때까지"` / `"until done"` — extract criterion) · codex on/off (`"코덱스에게도"` / `"코덱스 없이"`)
 
@@ -84,9 +86,9 @@ plan 헤더에 `Architect: mandatory (Hard rule: <...>)` / `on (Effect: <...>)` 
 
 **승인 판별 (explicit affirmative only)**: 명시적 긍정 ("승인", "진행해", "고", "approve") 만 승인. 애매한 긍정 ("괜찮아 보이네", "그럴듯한데", "I guess") 은 **미승인** — 한 줄 재확인 후 진행.
 
-**plan-binding**: Verification 표는 진행 단계 정의. runtime skip 은 **사용자 modifier 로만** 조정 — orchestrator 재량 불가. Hard rule 영역은 modifier 로도 off 불가.
+**plan-binding**: Verification 표는 진행 단계 정의. runtime skip 은 **사용자 modifier 로만** 조정 — orchestrator 재량 불가. Hard rule 영역(= **Architect 호출**)은 modifier 로도 off 불가 — Codex 는 별개이며 `"코덱스 없이"` 로 끌 수 있다 (§Codex Integration).
 
-**Skip conditions**: `approval skip` / `goal` modifier 시 자동 진행 (Codex#1 은 그래도 실행).
+**Skip conditions**: `approval skip` modifier 시 자동 진행 (Codex#1 은 그래도 실행). `goal` 은 해당 없음 — 최초 APPROVE 1회는 받는다 (§Phase 1 예외 · §Mode Behavior).
 
 ## Phase 5: EXECUTE
 
@@ -281,8 +283,10 @@ Default 모드 (no `/maestro`): 오케스트레이션 없음 — 훅·위임 강
 
 Codex 플러그인 미설치 → Codex 단계는 **사용자 경고 없이** 우회하되, §Fallback 대로 @architect 가 mode T 를 대체한다 (조용한 건 경고이지 검증이 아니다). **Codex#1** = Phase 4 직후 plan adversarial · **Codex#2** = Phase 5d 병렬 verification (mode T/A).
 
-**Trigger 결정은 *Phase 1 complexity 판정* 한 곳** — complex 판정 시 auto-invoke, **Architect mandatory 영역은 complexity 무관 항상**. runtime 재량 skip 불가. **Elevated risk**: 본 task 가 *이전 Codex finding 메우기 / recursive verification* 패턴이면 simple 분류라도 Codex#2 강제.
-**User modifier**: `"코덱스 없이"`/`"main만"` → off (Hard rule 영역 제외) · `"코덱스에게도"`/`"교차 검증"` → simple 도 강제 on.
+**Trigger 결정은 *Phase 1 complexity 판정* 한 곳** — complex 판정 시 auto-invoke, **Architect mandatory 영역은 complexity 무관 항상** (단 `"코덱스 없이"` 가 없을 때). runtime 재량 skip 불가. **Elevated risk**: 본 task 가 *이전 Codex finding 메우기 / recursive verification* 패턴이면 simple 분류라도 Codex#2 강제.
+**User modifier**: `"코덱스 없이"`/`"main만"` → **off (Hard rule 영역 포함)** · `"코덱스에게도"`/`"교차 검증"` → simple 도 강제 on.
+
+> **사용자 배제 ≠ 호출 실패.** 아래 §Fallback 의 재디스패치 Hard rule 은 *Codex 에 도달하려다 실패한* 경우의 복구 규정이지, 사용자가 안 쓰기로 한 경우를 실패로 재분류하지 않는다. 배제 시엔 @architect 가 mode T 를 대체하고 mode A 는 미충족으로 남는다 (run log 에 명시).
 
 **Fallback (Hard)**: 미설치·호출 실패 시 @architect 가 대체 — 단 **mode T 등가 대체일 뿐**이고 교차벤더 적대 축(mode A)은 **미충족**으로 남는다. **mode A 대상 청크에서 Codex 실패(좀비화 포함) 시** fallback 으로 즉시 종결 금지: 런타임 복구 확인 후 **1회 재디스패치**, 그래도 실패면 run log 에 `codex mode A 미수행 (재디스패치 실패) — fallback 종결` 명시.
 

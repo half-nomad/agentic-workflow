@@ -46,6 +46,8 @@ Modifiers compose. Example: "이거 병렬로 맡길게" → Parallelization + a
 
 Scan available user-invocable skills (system reminders), compute relevance from `description`, propose matches as `[skill candidate] /skill-name — purpose` in the plan. **User approves at Phase 4 — never auto-invoke.**
 
+**Simple 판정 시에는 스캔하지 않는다** — plan 이 생성되지 않으므로 후보를 실을 자리가 없다.
+
 Examples (heuristics, not hard rules):
 - "노션" / "Notion" → `notion-*`
 - "PDF" / "merge PDFs" → `pdf`
@@ -84,4 +86,7 @@ If status is `completed` with no pending items, clear the `## Next Session` sect
 
 ---
 
-**Now check MEMORY.md's `## Next Session` for previous context, detect modifiers from the task per the rules, scan project agents (3 locations), then analyze and present your plan.**
+**Now check MEMORY.md's `## Next Session` for previous context, detect modifiers from the task per the rules, then run Phase 1 ANALYZE.**
+
+- **Complex 또는 `goal` modifier** → scan project agents (3 locations), Phase 2 PATTERN, then present your plan.
+- **Simple** → skip to EXECUTE (`rules/maestro-workflow.md:32`). No plan, no agent scan, no skill-candidate scan.

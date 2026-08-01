@@ -22,7 +22,9 @@ Agent discovery 결과는 세 위치 모두 plan 의 `Agents & Tools` 에 listin
 
 ## Phase 3: PLAN MODE 절차
 
-Plan Mode 진입 조건: 파일 수정 3+ / 새 기능 / 아키텍처 변경 / `/maestro` 호출.
+Plan Mode 진입 조건: **Phase 1 이 complex 로 판정**(파일 수정 3+ / 새 기능 / 아키텍처 변경) **또는 `goal` modifier**.
+
+`/maestro` 호출 자체는 조건이 아니다 — simple 판정이면 `rules/maestro-workflow.md:32` 대로 EXECUTE 로 직행한다. 단 `goal` 은 complexity 무관하게 PLAN/APPROVE 를 1회 강제한다 (최초 승인을 받을 단계가 사라지지 않도록).
 
 ```
 1. EnterPlanMode tool

@@ -220,6 +220,7 @@ Windows는 복사 방식이라 `git pull`이 상류를 자동으로 추적하지
 ### 워크플로우 단계
 
 1. **ANALYZE** - 작업 복잡도 평가 + 자연어 modifier 감지 + Architect prefilter (5 Effect + Hard rule)
+   → **simple 판정이면 여기서 바로 5. EXECUTE 로 직행**합니다 (plan 없음). 아래 2~4 는 complex 이거나 `goal` modifier 가 있을 때만 거칩니다.
 2. **PATTERN** - 실행 패턴 선택 + 프로젝트 에이전트 자동 발견 (3 위치) + skill candidates
 3. **[PLAN MODE]** - built-in Plan agent (clean context) 가 plan 작성 + Architect mandatory/on/skip 마킹 → orchestrator 가 Architect 호출
 4. **APPROVE** - Codex#1 adversarial review (자동, complex task) + 사용자 승인

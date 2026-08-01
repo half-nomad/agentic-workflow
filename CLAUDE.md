@@ -4,19 +4,6 @@
 
 ---
 
-## 🚨 보안 알림 — npm 공급망 공격 대응 (2026-05-13~ 진행 중)
-
-매 세션 진입 시 환기. 핵심:
-- **호스트 직접 `npm install` / `npx <anything>` / `pnpm install` (lockfile 변경) / `pnpm add` → ❌ 사용자 승인 필수** (sudo 비슷)
-- 보호 무력화 명령 (`--ignore-scripts=false`, `--foreground-scripts`, lockfile 비활성화) → ❌ 사용자 승인 필수
-- 권장 셋업: 패키지 매니저 전역 `ignoreScripts` + 7일 cooldown, 셸 wrapper 로 설치 명령 confirm, 일회성 실행은 `pnpm dlx` 경유
-
-상세 (사고 기록 / 자동 실행 정책 표 / 새 패키지 도입 검증 / 의심·사고 대응): **`rules/secure-coding.md` §Supply chain** (정본).
-
-이 룰은 공격 종식 확인 + 사용자 명시 해제까지 유효.
-
----
-
 ## Activation
 
 | Command | Mode | Behavior |
@@ -37,19 +24,16 @@
 
 ## Rules
 
-항상 로드되는 건 **얇게**, 상세는 스킬로 내린다 (progressive disclosure). `rules/` 는 자동 로드:
+이 레포는 룰을 **하나만** 배포한다. `~/.claude/rules/` 의 나머지 파일은 전부 당신 것이며, install·update·uninstall 이 건드리지 않는다.
 
 | Rule (상주) | 담는 것 | 지연 로드 |
 |---|---|---|
 | `rules/maestro-workflow.md` | **구속 룰 정본** — 가드 · Hard rule · 판정 기준 · 출력 계약 | `skills/maestro/WORKFLOW.md` (절차·템플릿·근거). `/maestro` 진입 시 **무조건** 재읽기 — compact 시 PostCompact 훅이 재주입 |
-| `rules/secure-coding.md` | Core Principles 7 + 트리거 표 + 공급망 실행 정책 | `secure-coding` 스킬 (CWE 매트릭스 · concern별 체크리스트 · 공급망 사고 배경) |
-| `rules/memory-management.md` | 정본 1곳 원칙 (WHAT/WHY/HOW) + drift 경보 | `memory-management` 스킬 (cross-check 명령 · 중복 분류 · 인덱스 임계점) |
-| `rules/global.md` | 모델 기본 판단으로 안 나오는 것만 — Simplicity / Surgical Changes / 커밋 스타일 | — |
-| `rules/typescript.md` | 취향이 갈리는 컨벤션만 (path-conditional: `**/*.ts`, `**/*.tsx`) | — |
-| `rules/personal.md` | **사용자 소유 — 이 레포가 배포하지 않는다.** 개인 훅·환경 특이사항 등 나에게만 해당하는 것 | — |
 
-> **개인 설정은 `~/.claude/rules/personal.md` 에.** 설치·갱신은 레포가 소유한 파일만 링크하고 그 외에는 손대지 않으므로, 이 파일은 재설치해도 유지된다. 전 프로젝트에 로드되니 **행동을 바꾸는 것만 짧게** 적는다 (조회성 정보는 memory 나 스킬로).
-> `~/.claude/CLAUDE.md` 는 이 레포 `CLAUDE.md` 로의 심볼릭 링크다 — 더 이상 관리 블록이 없다. 그 파일을 직접 고치면 이 레포를 고치는 것과 같다 (레포 관리자에겐 의도된 동작, 개인 메모를 적으려는 목적이면 잘못된 자리). 설치 시 그 자리에 실제 파일이 있으면 (사용자 고유 내용이 담겼더라도) 다른 경로와 같은 규칙으로 `.maestro-backup-<타임스탬프>/` 에 밀려난다 — 개인 전역 지시는 `rules/personal.md` 에.
+> **개인 전역 지시는 `~/.claude/rules/` 아무 파일에나.** `rules/` 는 전부 자동 로드되고 로딩은 소유권과 무관하다. 인스톨러는 위 한 파일만 배치하므로 나머지는 재설치해도 유지된다. 전 프로젝트에 로드되니 **행동을 바꾸는 것만 짧게** 적는다 (조회성 정보는 memory 나 스킬로).
+> `~/.claude/CLAUDE.md` 는 이 레포 `CLAUDE.md` 로의 심볼릭 링크다 — 관리 블록이 없다. 그 파일을 직접 고치면 이 레포를 고치는 것과 같다 (레포 관리자에겐 의도된 동작, 개인 메모를 적으려는 목적이면 잘못된 자리). 설치 시 그 자리에 실제 파일이 있으면 다른 경로와 같은 규칙으로 `.maestro-backup-<타임스탬프>/` 에 밀려난다.
+
+> **왜 하나뿐인가**: 이 레포는 *maestro 라는 오케스트레이션 워크플로우* 를 배포한다. 코딩 규율·보안 정책·메모리 규약처럼 상시 적용되는 것은 사용자마다 다르고 시한부인 경우도 있어 배포 대상이 아니다 — 각자의 `rules/` 에 둔다.
 
 > **룰을 늘리기 전에**: 그게 모델이 이미 아는 것인지 먼저 따진다. 일반 코딩 상식을 다시 적으면 시스템 프롬프트와 상충 지시가 되어 오히려 품질이 떨어진다. 주기적으로 `/doctor` 로 CLAUDE.md·스킬 크기를 점검한다.
 

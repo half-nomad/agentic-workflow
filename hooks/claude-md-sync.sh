@@ -44,7 +44,7 @@ if command -v realpath >/dev/null 2>&1; then
 fi
 
 HEADER="<!-- AUTO-SYNCED from CLAUDE.md — edit CLAUDE.md, not this file. (hooks/claude-md-sync) -->"
-RULES_NOTE="<!-- Also read ~/.claude/rules/*.md (secure-coding, global, ...) and apply those rules identically when working here. -->"
+RULES_NOTE="<!-- Also read ~/.claude/rules/*.md (maestro-workflow.md ships with this repo; the rest are the user's) and apply those rules identically when working here. -->"
 
 sync_to() {
     local target="$1" note="$2"

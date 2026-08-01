@@ -22,6 +22,20 @@ All notable changes to this project will be documented in this file.
 - **`REPO` 캡처가 개행으로 끝나는 체크아웃 경로를 다른 실제 경로로 붕괴시킴** — 명령 치환이 후행 개행을 삭제하므로 `<...>/repo\n` 체크아웃이 `<...>/repo` 로 접혔고, uninstall 이 **그 다른 디렉터리의 링크를** 매치해 삭제했다(재현 확인). `install.sh`·`uninstall.sh` 모두 sentinel 캡처(`printf '%sX' "$PWD"` → `${REPO%X}`)로 교체하고 `dirname` 도 파라미터 확장으로 대체 — 두 스크립트는 같은 `$REPO` 문자열에 합의해야 하므로 한쪽만 고칠 수 없다.
 - **선두 UTF-8 BOM 이 정상 설치를 차단** — BOM 은 공백이 아니라 `grep '[^[:space:]]'` 에 걸려 개인 지침으로 오인됐다. 마커·leftover 검사 전에 선두 BOM 1개를 제거.
 
+### Removed — 소속 재정의: 이 레포는 *maestro 워크플로우* 하나만 배포한다
+
+- **`rules/{global,secure-coding,memory-management,typescript}.md` + `skills/{secure-coding,memory-management}/` 제거** — 개인 하네스로 이관. 판단축은 **명시적 모드 vs 상시 배경**이다: maestro 는 진입점이 `/maestro` 인 워크플로우 제품이고, 코딩 규율·보안 정책·메모리 규약은 사용자마다 다르며 시한부인 것도 있다 (`secure-coding` 의 공급망 정책은 *"공격 종식 확인 + 사용자 명시 해제까지 유효"*, devcontainer/pnpm 전제 · `global` 의 커밋 스타일은 `Co-Authored-By` 금지 등 개인 취향 · `memory-management` 의 `memory/feedback_*` 경로는 시스템 특정).
+- **스킬 2개를 같이 옮긴 이유** — `rules/secure-coding.md` 가 *"Load the `secure-coding` skill before writing the code"* 로 스킬을 **구속 의존**으로 선언한다. 룰만 옮기면 소속 경계가 성립하지 않는다. 결과적으로 공개 레포의 스킬은 `maestro` 하나.
+- **손실 없음** — `~/.claude/rules/*.md` 는 **소유권과 무관하게 전부 자동 로드**된다. 따라서 공급망 정책의 상주성(명령 실행 *전* 게이트)이 유지된다. 버전 관리도 개인 저장소가 git 이라 오히려 개선됐다 (`personal.md` 는 그동안 어디에도 추적되지 않았다).
+- **`CLAUDE.md` §보안 알림 13줄 제거** — `rules/secure-coding.md §Supply chain` 과의 반쪽 중복이었고 정본이 레포를 떠났다. Rules 인덱스 표는 6행 → 1행.
+
+### Changed — `rules/` 배포를 glob 에서 allowlist 로 (새 계약을 코드로 강제)
+
+- **`install.sh` · `install.ps1` 의 `rules/*` glob → `maestro-workflow.md` 명시 allowlist.** glob 이면 나중에 누가 공개 레포에 `rules/global.md` 를 다시 추가했을 때 **재설치가 사용자의 개인 파일을 밀어낸다** (크게 알리고 밀어내지만 밀어내는 건 같다). 새 계약(*"`rules/` 의 나머지는 전부 당신 것"*)을 문서로만 두지 않고 코드가 보장하게 했다. `skills/` 는 의도적으로 glob 유지 — 그쪽은 레포에 있는 것이 정의상 전부 레포 소유다.
+- **`install.ps1` 에 은퇴 경로 처리 신설** — 이전 manifest 에는 있는데 이번에 배포되지 않는 항목(= 상류에서 제거된 파일)이 **아무도 소유하지 않는 고아**로 남던 문제. 새 manifest 가 그 항목을 버리므로 uninstall 도 영영 지우지 못했다. 지문이 그대로면 백업으로 이동, 사용자가 고쳤으면 그대로 두고 "이제 당신 것"이라고 알린다. Windows 복사 설치 전용 경로다.
+- **`Move-Aside` 를 쓰지 않은 이유를 주석에 명시** — 그 헬퍼는 지문이 **일치하면 조기 반환**한다 (배포 경로에선 "우리 것이니 덮어써도 됨"). 은퇴 경로에서는 일치가 정반대 의미(우리 것인데 더는 배포 안 함 → 치워야 함)라 직접 이동한다.
+- **`claude-md-sync` 의 `RULES_NOTE`** — Codex 에 심는 문구가 `(secure-coding, global, ...)` 를 예시로 들었는데 그 파일들이 레포 소유가 아니게 됐다. `maestro-workflow.md` 기준으로 교체.
+
 ### Fixed — 구속 룰 정본 내부 모순 3건 + 파생 모순 1건 (감사 발견 · 전건 재현 후 수정)
 
 - **`"코덱스 없이"` 가 Hard rule 영역에 적용되는지가 같은 파일 안에서 반대로 정의됐다** — `:83` 은 modifier 가 있으면 Codex#1 **무조건 미실행**, `:285` 는 *"off (Hard rule 영역 제외)"* 로 **끄지 못함**. **둘 다 `rules/maestro-workflow.md` 안이라 "충돌 시 rules 우선" 타이브레이크가 작동하지 않는다.** `WORKFLOW.md §Exclusion`·`SKILL.md` modifier 표·`agents/architect.md` §Skip it when 세 곳이 **무조건 배제**로 일치하므로 `:285` 의 괄호를 삭제해 그쪽으로 통일. **판단 근거**: `:287` 의 재디스패치 Hard rule 은 *"미설치·호출 실패"* 규정 — **시스템이 Codex 에 도달 실패한 경우와 사용자가 안 쓰기로 한 경우는 다르다.** 이 구분을 명문화하는 문단을 §Codex Integration 에 추가.

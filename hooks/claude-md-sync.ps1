@@ -54,7 +54,7 @@ if ($resolvedFile) { $file = $resolvedFile }
 $editedThroughUnresolvableLink = $script:LinkResolutionUnavailable
 
 $header = '<!-- AUTO-SYNCED from CLAUDE.md - edit CLAUDE.md, not this file. (hooks/claude-md-sync) -->'
-$rulesNote = '<!-- Also read ~/.claude/rules/*.md (secure-coding, global, ...) and apply those rules identically when working here. -->'
+$rulesNote = '<!-- Also read ~/.claude/rules/*.md (maestro-workflow.md ships with this repo; the rest are the user''s) and apply those rules identically when working here. -->'
 $body = Get-Content $file -Raw
 
 # 1) 같은 디렉토리 AGENTS.md — 이미 존재할 때만 (opt-in)

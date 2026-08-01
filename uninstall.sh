@@ -73,6 +73,9 @@ Left in place, on purpose:
                                 snippet in the project README. Leaving them
                                 behind makes every matching tool call error,
                                 because the hook scripts are now gone.
-  ~/.claude/rules/personal.md   user-owned; never installed, never removed.
+  ~/.claude/rules/*             everything except maestro-workflow.md is yours.
+                                install places that one file and nothing else,
+                                so the rest was never installed and is never
+                                removed.
 EOF
 echo ""

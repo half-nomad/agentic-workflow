@@ -6,9 +6,12 @@
 # `git pull` is the update: the deployed config IS the repo working tree.
 #
 # Granularity is a safety property, not a style choice:
-#   agents/ rules/ hooks/  -> per FILE  (your own files live in those dirs)
+#   agents/ hooks/         -> per FILE  (your own files live in those dirs)
+#   rules/                 -> ALLOWLIST (maestro-workflow.md only; the rest of
+#                             ~/.claude/rules/ is yours and we never claim it)
 #   skills/<name>/         -> per DIR   (each shipped skill dir is wholly ours)
-# A directory symlink over ~/.claude/rules would erase rules/personal.md.
+# A directory symlink over ~/.claude/rules or ~/.claude/hooks would erase the
+# files you keep there.
 #
 # settings.json is never touched — see the reminder printed at the end.
 #
@@ -156,14 +159,15 @@ if [ -f "$REPO/CLAUDE.md" ]; then
     if [ -n "$claude_md_had_file" ] && [ -n "$BACKED_UP_TO" ]; then
         cat <<'EOF'
   NOTE: ~/.claude/CLAUDE.md is now a link into this repo. Put your own global
-        instructions in ~/.claude/rules/personal.md — this repo never ships,
-        overwrites or removes it, and it loads exactly like CLAUDE.md does.
+        instructions in any file under ~/.claude/rules/ — this installer places
+        exactly one rule file (maestro-workflow.md) and never touches the rest.
+        Files there load exactly like CLAUDE.md does.
 
 EOF
     fi
 fi
 
-for d in agents rules hooks; do
+for d in agents hooks; do
     [ -d "$REPO/$d" ] || continue
     for f in "$REPO/$d"/*; do
         [ -f "$f" ] || continue
@@ -171,6 +175,21 @@ for d in agents rules hooks; do
     done
 done
 
+# rules/ is an ALLOWLIST, not a glob — deliberately asymmetric with the loops
+# above and below. The contract is that install places exactly one rule file and
+# that every other file in ~/.claude/rules/ belongs to you: your own global.md,
+# secure-coding.md, personal.md and so on live there and this repo must never
+# claim them. A glob would mean that adding a same-named rule upstream displaces
+# your file on the next reinstall (loudly backed up, but displaced all the same).
+# Adding a rule here is a deliberate act; make it one.
+for f in maestro-workflow.md; do
+    [ -f "$REPO/rules/$f" ] || continue
+    link "$REPO/rules/$f" "$CLAUDE_HOME/rules/$f"
+done
+
+# skills/ stays a glob: unlike rules/, whatever sits in this repo's skills/ is
+# wholly ours by definition, and a name collision with one of your own skills is
+# reported loudly by link() before anything moves.
 if [ -d "$REPO/skills" ]; then
     for s in "$REPO"/skills/*/; do
         s="${s%/}"

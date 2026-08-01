@@ -151,7 +151,7 @@ if (Test-Path -LiteralPath $claudeMd -PathType Leaf) {
     }
 }
 
-foreach ($sub in @('agents', 'rules', 'hooks')) {
+foreach ($sub in @('agents', 'hooks')) {
     $srcDir = Join-Path $repo $sub
     if (-not (Test-Path -LiteralPath $srcDir)) { continue }
     foreach ($f in (Get-ChildItem -LiteralPath $srcDir -File)) {
@@ -159,6 +159,19 @@ foreach ($sub in @('agents', 'rules', 'hooks')) {
     }
 }
 
+# rules\ is an ALLOWLIST, not a glob - deliberately asymmetric with the loops
+# above and below. This installer places exactly one rule file; every other file
+# in ~\.claude\rules\ is yours (your own global.md, personal.md, ...). A glob
+# would mean that adding a same-named rule upstream displaces your file on the
+# next reinstall. Adding a rule here is a deliberate act; make it one.
+foreach ($ruleName in @('maestro-workflow.md')) {
+    $src = Join-Path (Join-Path $repo 'rules') $ruleName
+    if (Test-Path -LiteralPath $src) {
+        Deploy-File $src (Join-Path (Join-Path $claudeHome 'rules') $ruleName)
+    }
+}
+
+# skills\ stays a glob: whatever sits in this repo's skills\ is wholly ours.
 $skillsDir = Join-Path $repo 'skills'
 if (Test-Path -LiteralPath $skillsDir) {
     foreach ($s in (Get-ChildItem -LiteralPath $skillsDir -Directory)) {
@@ -187,6 +200,41 @@ if (Test-Path -LiteralPath $agentsMd -PathType Leaf) {
 # longer matches is not ours any more and is backed up / skipped instead of
 # being deleted. Lines starting with '#' are comments. Older manifests carrying
 # a bare path are still read, but claim nothing - they cannot be verified.
+# Retired paths: recorded by a previous run, not deployed by this one - the file
+# left this repo upstream. Without this pass they would sit in ~\.claude\ forever,
+# owned by nobody: the new manifest drops them, so uninstall will never remove
+# them either. If the fingerprint still matches what we left, the copy is
+# provably still ours and is moved to the backup root. If it no longer matches,
+# the user edited it - say so and leave it alone; it is theirs now.
+$deployedRels = @{}
+foreach ($line in $deployed) {
+    if ($line -match '^[0-9A-Fa-f]{64}\s+(.+)$') { $deployedRels[$Matches[1]] = $true }
+}
+foreach ($rel in @($previous.Keys)) {
+    if ($deployedRels.ContainsKey($rel)) { continue }
+    $dest = Join-Path $userHome $rel
+    if (-not (Test-Path -LiteralPath $dest)) { continue }
+    $recorded = $previous[$rel]
+    if ($recorded -and (Get-PathFingerprint $dest) -eq $recorded) {
+        # NOT Move-Aside: that helper returns early on a fingerprint match,
+        # because in the deploy path a match means "ours, safe to overwrite".
+        # Here a match means the opposite - ours, and no longer shipped, so it
+        # has to go. Move it explicitly.
+        $target = Join-Path $backupRoot $rel
+        $targetDir = Split-Path -Parent $target
+        if (-not (Test-Path -LiteralPath $targetDir)) {
+            New-Item -ItemType Directory -Path $targetDir -Force | Out-Null
+        }
+        Move-Item -LiteralPath $dest -Destination $target -Force
+        Write-Host ''
+        Write-Host ('  *** RETIRED: ' + $rel + ' is no longer shipped') -ForegroundColor Yellow
+        Write-Host ('  ***       -> ' + $target) -ForegroundColor Yellow
+        Write-Host ''
+    } else {
+        Write-Host ('  RETIRED: ' + $rel + ' is no longer shipped and differs from what we left - kept in place, it is yours now') -ForegroundColor Yellow
+    }
+}
+
 $manifestHeader = @(
     '# agentic-workflow install manifest - written by install.ps1, read by uninstall.ps1.',
     '# Format:  <SHA256>  <path relative to %USERPROFILE%>',

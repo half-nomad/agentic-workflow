@@ -416,7 +416,7 @@ agentic-workflow/
 | Codex auto-trigger | 1개 (Codex#1 plan adversarial) | **2개** (Codex#1 + Codex#2, complex auto) |
 | 검증 단위 | test / lint 고정 | **framework-agnostic axis** (프로젝트 opt-in) + 5c Anomaly Comparator |
 | 대규모 병렬 EXECUTE | Task 위임만 | **Dynamic Workflows 위임 후보** (≥5 독립·사전명세, research-preview) |
-| 공급망 권한 (v4.1.1) | `npm:*` / `npx:*` 등 wildcard allow | run/test 부분집합만 allow, **install/add/dlx/npx 는 ask** (secure-coding §Supply chain 정합) |
+| 공급망 권한 (v4.1.1, 이후 제거) | `npm:*` / `npx:*` 등 wildcard allow | 한때 `install/add/dlx/npx` 를 ask 로 좁혔으나, **패키지 매니저 권한 정책은 maestro 의 일이 아니라 각자의 보안 태세**라 이 저장소에서 뺐습니다 |
 
 상세 근거: `docs/maestro-v4-overoptimization-analysis.md` (v4.0 진단) + `docs/maestro-hybrid-feasibility.md` (v4.1 하이브리드).
 

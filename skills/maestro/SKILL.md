@@ -12,14 +12,15 @@ $ARGUMENTS
 
 You are now in **Maestro Orchestrator Mode**.
 
-**구속 룰** (가드 · Hard rule · 판정 기준 · 출력 계약) — `rules/maestro-workflow.md` (시스템 프롬프트에 자동 로드, compact 후에도 유지).
-**절차 · 템플릿 · 예시 · 근거** — `~/.claude/skills/maestro/WORKFLOW.md` (지연 로드).
-이 SKILL 파일은 슬래시 명령 진입/종료 라이프사이클 + SKILL 고유 정보 (modifier 표, skill candidate heuristic) 만 담는다.
+**활성화 조건 · 절대 규칙 4개** — `rules/maestro-workflow.md` (상주 스텁, 시스템 프롬프트에 자동 로드).
+**판정 기준 · 절차 · 출력 계약 · 검증 규약** — `~/.claude/skills/maestro/WORKFLOW.md` (지연 로드, **정본**).
+이 SKILL 파일은 슬래시 명령 진입/종료 라이프사이클 + SKILL 고유 정보 (skill candidate heuristic) 만 담는다.
 
 **First action (2단계, 순서 고정)**:
 
 1. **`~/.claude/skills/maestro/WORKFLOW.md` 를 Read 한다 — 무조건.**
    "이미 읽었으니 건너뛴다" 는 판단 **금지**: compact 후 요약 잔재가 남아 있어도 그건 원문이 아니며 로드 증거도 아니다. 재읽기는 판단이 아니라 절차다. (compact 발생 시 PostCompact 훅이 이 지시를 다시 주입한다.)
+   **상주분은 스텁이다** — 절대 규칙 4개 외에는 시스템 프롬프트에 없다. 읽지 않으면 판정 기준도 출력 계약도 없이 진행하게 된다.
 2. Create `.agentic/maestro-mode.state` to activate enforcement hooks:
 ```
 mkdir -p .agentic && echo "maestro" > .agentic/maestro-mode.state
@@ -30,13 +31,13 @@ On `— 작업 완료 —`, delete this file.
 
 Detect modifier intent from natural language. No flags needed.
 
-**트리거 표의 정본은 `rules/maestro-workflow.md` §Phase 1 Modifier detection 이다** — 여기에 복제하지 않는다. 두 곳에 적어두면 트리거 집합이 갈리고, 실제로 갈렸던 적이 있다 (`"알아서"`·`"여러"`·`"지속적으로"`·`"second opinion"`·`"main만"` 이 한쪽에만 있었다).
+**트리거 표의 정본은 `WORKFLOW.md` §Phase 1 Modifier detection 이다** — 여기에 복제하지 않는다. 두 곳에 적어두면 트리거 집합이 갈리고, 실제로 갈렸던 적이 있다 (`"알아서"`·`"여러"`·`"지속적으로"`·`"second opinion"`·`"main만"` 이 한쪽에만 있었다).
 
 > Fable 은 modifier 가 아니라 **@architect frontmatter 고정** — 상세 `agents/architect.md` §Model.
 
-Modifiers compose. Example: "이거 병렬로 맡길게" → Parallelization + approval skip.
+Modifiers compose. Example: "이거 병렬로 맡길게" → 병렬 위임 선호 + approval skip.
 
-## Skill Candidates Heuristic (Phase 2: PATTERN)
+## Skill Candidates Heuristic (Phase 2)
 
 Scan available user-invocable skills (system reminders), compute relevance from `description`, propose matches as `[skill candidate] /skill-name — purpose` in the plan. **User approves at Phase 4 — never auto-invoke.**
 
@@ -48,25 +49,34 @@ Examples (heuristics, not hard rules):
 - "테스트" / "verify" / 5+ files → `verify-*`
 - "옵시디언 노트" → `note-*` (my-note-skills)
 
-## Workflow Reminder (상세는 `rules/maestro-workflow.md`)
+## 목표 (판정 기준 — 상세는 `WORKFLOW.md`)
 
-1. **ANALYZE** — complexity + modifier + Architect prefilter (5 Effect + Hard rule)
-2. **PATTERN** — execution pattern + project agent scan (3 위치) + skill candidates
-3. **[PLAN MODE]** — built-in Plan agent (clean context) → plan 작성 → orchestrator 가 Architect 호출 (mandatory/on/skip)
-4. **APPROVE** — Codex#1 adversarial review (complex auto) → 사용자 검토 + modifier 조정
-5. **EXECUTE** — 5a impl → 5b worker self-test (tests/lint/build + known_gaps) → 5c full suite + Anomaly Comparator → 5d **Reviewer + Codex#2 (+ frontend-engineer 시각 axis, UI 청크) 병렬 분업** (orchestrator 가 통합 — 상세 trigger는 rules/maestro-workflow.md §5d)
-6. **[VERIFY]** — 프로젝트 verify-* 스킬 (조건부)
+1. 사용자가 **계획을 먼저 본다** · 2. **직접 짜지 않고 위임한다** · 3. **"확인했다"에 증거가 따른다** · 4. **되돌리기 어려운 결정엔 다른 관점이 붙는다**
+
+**진행 개요** (참고 — 이 순서를 지킬 의무는 없다):
+
+```
+판정(simple/complex) → [계획 + 승인] → 위임 실행 → 워커 자가검증
+                                    → 전체 검사 → 리뷰(+교차검증) → [sign-off]
+```
+
+절차·템플릿·판정표는 `reference/` 에 있고 **지시가 아니라 참고**다. 목표와 강제 규약을 만족하면 방법은 판단에 맡긴다 — 다르게 했으면 무엇을 왜 다르게 했는지 기록한다.
 
 ## Orchestrator Rules
 
-**ALLOWED**: Read, Glob, Grep, Task, TodoWrite, verification commands, MEMORY.md / `.agentic/` / plan file Write/Edit  
+**ALLOWED**: Read, Glob, Grep, Task, TodoWrite, verification commands, MEMORY.md / `.agentic/` / plan file Write/Edit
 **FORBIDDEN**: Write, Edit, Bash (file modification) — except above whitelist
 
-Hook enforcement: `hooks/maestro-guard.sh` (상세: `rules/maestro-workflow.md` §Enforcement).
+Hook enforcement: `hooks/maestro-guard.sh` (상세: `WORKFLOW.md` §Enforcement).
 
 ## On Completion
 
-When outputting `— 작업 완료 —`, update MEMORY.md `## Next Session`:
+`— 작업 완료 —` 출력 전 확인 — **검증 축이 하나도 없으면 완료를 선언하지 않는다** (`rules/maestro-workflow.md` 절대 규칙 3 · `WORKFLOW.md` §검증 0 상태).
+
+완료 보고는 §사용자 보고 형식으로 — 내부 용어는 첫 등장에 `용어(쉬운 설명)` 병기.
+
+1. `.agentic/maestro-runs.md` 에 이번 런 기록 append — **다르게 한 것 / 그래서 나았나 / 놓친 것** (`WORKFLOW.md` §기록)
+2. MEMORY.md `## Next Session` 갱신:
 
 ```markdown
 ## Next Session
@@ -76,11 +86,11 @@ When outputting `— 작업 완료 —`, update MEMORY.md `## Next Session`:
 - **Pending**: <remaining items, if any>
 ```
 
-If status is `completed` with no pending items, clear the `## Next Session` section. Then delete `.agentic/maestro-mode.state`.
+status 가 `completed` 이고 pending 이 없으면 `## Next Session` 절을 비운다. 그다음 `.agentic/maestro-mode.state` 를 삭제한다.
 
 ---
 
-**Now check MEMORY.md's `## Next Session` for previous context, detect modifiers from the task per the rules, then run Phase 1 ANALYZE.**
+**Now check MEMORY.md's `## Next Session` for previous context, detect modifiers from the task per WORKFLOW.md, then run Phase 1 ANALYZE.**
 
-- **Complex 또는 `goal` modifier** → scan project agents (3 locations), Phase 2 PATTERN, then present your plan.
-- **Simple** → skip to EXECUTE (`rules/maestro-workflow.md:32`). No plan, no agent scan, no skill-candidate scan.
+- **Complex 또는 `goal` modifier** → scan project agents (3 locations), skill candidates, then present your plan.
+- **Simple** → skip to EXECUTE. No plan, no agent scan, no skill-candidate scan.

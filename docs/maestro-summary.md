@@ -2,7 +2,7 @@
 
 **Date**: 2026-02-18
 **Purpose**: v1.8 시점의 시스템 전체 요약 — 동기, 패턴 선택 근거, 그때까지의 작업 내용.
-**Status**: 그 시점 기록. 현재 동작은 `rules/maestro-workflow.md`(구속 룰) · `skills/maestro/WORKFLOW.md`(절차) · `README.md`(사용법) 가 정본.
+**Status**: 그 시점 기록. 현재 동작은 `skills/maestro/WORKFLOW.md`(목표·강제 규약) · `rules/maestro-workflow.md`(상주 스텁) · `README.md`(사용법) 가 정본.
 
 > Claude Code를 위한 패턴 기반 오케스트레이션 시스템
 

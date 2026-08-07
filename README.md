@@ -6,9 +6,24 @@ Claude Code를 위한 Maestro 오케스트레이션 시스템. 패턴 기반 에
 
 agentic-workflow는 Claude Code CLI에 최적화된 **Maestro** 오케스트레이션 시스템입니다. Claude가 오케스트레이터 역할을 수행하여 작업을 분석하고, 적절한 패턴을 선택하고, 필요한 에이전트를 식별한 후 계획을 제출합니다.
 
-이 저장소는 Maestro의 **배포본 소스**입니다. `git clone` 후 `install.sh` / `install.ps1`을 실행하면 `CLAUDE.md`, 에이전트 4개, 훅, `rules/maestro-workflow.md`, `skills/maestro/` 가 사용자의 `~/.claude/`에 심볼릭 링크(Windows는 복사)로 연결됩니다. 배포된 설정은 곧 이 저장소의 워킹트리이므로, 갱신의 본질은 `git pull`입니다 — 정확한 절차와 왜 그것만으로 부족한지는 아래 §업데이트를 참고하세요. 훅 등록은 최초 1회 수동으로 합니다 (아래 §훅 등록 참조).
+이 저장소는 Maestro의 **배포본 소스**입니다. `git clone` 후 `install.sh` / `install.ps1`을 실행하면 에이전트 4개, 훅, `rules/maestro-workflow.md`, `skills/maestro/` 가 사용자의 `~/.claude/`에 심볼릭 링크(Windows는 복사)로 연결됩니다. 배포된 설정은 곧 이 저장소의 워킹트리이므로, 갱신의 본질은 `git pull`입니다 — 정확한 절차와 왜 그것만으로 부족한지는 아래 §업데이트를 참고하세요. 훅 등록은 최초 1회 수동으로 합니다 (아래 §훅 등록 참조).
 
 **이 저장소가 배포하는 것은 Maestro 하나입니다.** `~/.claude/rules/` 에 놓는 파일은 `maestro-workflow.md` 뿐이고, 코딩 규율·보안 정책·메모리 규약처럼 상시 적용되는 것은 사람마다 다르므로 배포하지 않습니다 — 그 자리는 여러분의 것이고, 설치·갱신·제거 어느 것도 건드리지 않습니다.
+
+**그 한 파일도 ~60줄짜리 스텁입니다.** 목표 4개와 그것을 지키는 절대 규칙만 상주하고, 나머지는 `/maestro` 를 호출할 때 스킬로 로드됩니다. `/maestro` 를 쓰지 않는 세션까지 전문을 지고 다닐 이유가 없기 때문입니다 — compact 후 유실은 PostCompact 훅이 재주입으로 처리합니다.
+
+## Maestro 가 달성하려는 것
+
+**이 넷이 목표이고, 동시에 모든 규약의 판정 기준입니다.**
+
+1. **사용자가 계획을 먼저 본다** — 통제권이 사용자에게 있습니다
+2. **오케스트레이터는 직접 짜지 않고 위임한다** — 컨텍스트를 관리하고 전문성을 씁니다
+3. **"확인했다"는 말에 증거가 따른다** — 거짓 완료를 막습니다
+4. **되돌리기 어려운 결정에는 다른 관점이 붙는다** — 단일 시점의 오판을 막습니다
+
+강제되는 것은 목표당 최소선 하나씩이고, **절차·템플릿·판정표는 지시가 아니라 참고**(`skills/maestro/reference/`)입니다. 목표를 만족한다면 방법은 모델의 판단에 맡깁니다 — 다르게 했으면 무엇을 왜 다르게 했는지 기록하고, 그 기록으로 참고를 고치거나 강제로 승격시킵니다.
+
+> **왜 이렇게 바꿨나**: 이전 버전은 사고가 날 때마다 지시를 추가해 상주 348줄까지 왔습니다. 안정성은 얻었지만 그 대가로 성능을 제한했습니다 — 지시가 늘수록 개별 지시의 구속력이 떨어지고, 모델이 더 나은 방법을 알아도 절차가 막습니다. 그래서 판정 기준을 *"이 지시가 있으면 더 안전한가"*(답이 거의 항상 yes 라 규칙이 무한히 쌓입니다)에서 **"이 지시가 없으면 목표가 깨지는가"** 로 바꿨습니다. 매 런 로드량은 35,447자 → 12,904자가 됐고, 내려간 절차는 삭제된 게 아니라 참조에 그대로 있습니다.
 
 **`~/.claude/CLAUDE.md` 도 건드리지 않습니다.** `rules/*.md` 와 `CLAUDE.md` 는 시스템 프롬프트에 같은 tier 로 실리므로(둘 다 *user's private global instructions for all projects*), 룰 파일로 배포해도 동작이 같습니다. 덮어쓸 이유가 없으니 덮어쓰지 않습니다 — 여러분의 전역 지시는 그대로 유지됩니다.
 
@@ -32,14 +47,15 @@ Maestro 의 Codex 교차검증(Codex#1 / Codex#2)은 프로젝트 디렉터리�
 - **Framework-agnostic axis mechanism**: 검증 axis 는 프로젝트가 `.claude/maestro-axes.md` 로 opt-in 등록, 미등록 시 framework auto-detect fallback
 - **프로젝트 에이전트 자동 발견**: `~/.claude/agents/` + `.claude/agents/` + `agents/` 3 위치 스캔 (session-once cache). 도메인 매칭 시 글로벌 에이전트 preempt (예: 프로젝트 `@code-reviewer` → 글로벌 `@architect` 대체)
 - **Post-impl review (5d) — Reviewer·Codex#2 병렬 분업**: orchestrator 가 Reviewer (코드 axis — project R1 첫 매칭 또는 `@architect` fallback) 와 Codex#2 (test axis) 를 직접 병렬 호출 → 두 출력 통합 → fix-loop max 3 → 초과 시 `@architect` escalation
-- **Codex 이중 auto-trigger**: complex task 시 Codex#1 (plan adversarial, Phase 4) + Codex#2 (test verification, Phase 5d) 자동 invoke. user-explicit / stuck 5+ escalation 은 별도 카테고리
+- **Codex 교차검증 — 계획은 기본 on, 구현은 표적**: 계획 적대 검토는 complex 로 계획을 만들었으면 기본 실행합니다(끄는 경우는 셋 — 사용자 modifier·확립된 패턴의 단순 확장·simple 판정). **계획이 틀리면 그 뒤 작업이 전부 낭비이므로 여기가 가장 싸고 이익이 큽니다.** 구현 공격(mode A)은 공유 컴포넌트·클라이언트 상태·요청 간 상태 이동·Hard rule 인접, 그리고 **절차와 다르게 판단한 런**에만 겁니다 — 이미 만든 것이 대상이라 늦고 비싸기 때문입니다. user-explicit / stuck 5+ escalation 은 별도 카테고리
 - **Dynamic Workflows 하이브리드**: ≥5 독립·사전명세·자기검증 항목의 대규모 병렬 EXECUTE 를 Workflow 툴로 위임 가능 (never auto-fire — Phase 4 승인 필수, 완료 후 5c/5d Hard 의무)
-- **Skill 1차 시민화**: PATTERN 단계에서 사용 가능한 skill을 자동 매칭, 사용자 approval로 확정
+- **Skill 1차 시민화**: 스캔 단계에서 사용 가능한 skill을 자동 매칭, 사용자 approval로 확정
 - **선택적 Codex 통합**: companion CLI 직접 호출. 미설치 환경에선 무음 fallback (architect 단독 흐름 — 단 mode T 등가 대체일 뿐 교차벤더 적대 축은 미충족으로 남습니다)
 - **도구 기반 검증 (Phase 6)**: success criteria sign-off — 프로젝트에 `verify-*` 스킬이 있으면 활용, 없으면 `git diff` 리뷰 + 체크리스트 (테스트 실행은 5b/5c 에서 이미 완료)
 - **순수 오케스트레이터 역할**: 메인은 위임만, 직접 파일 수정은 hooks로 차단
 - **Context Embedding**: 서브에이전트에 스키마/패턴/제약 직접 주입 (5b output contract 요구사항 포함)
-- **4+1 패턴**: Chaining, Parallelization, Routing, Orchestrator-Workers, Evaluator
+- **알아들을 수 있는 보고**: 내부 용어를 숨기지도 그냥 던지지도 않습니다 — 처음 나올 때 `용어(쉬운 설명)` 로 한 번 풀어 쓰고, 결과는 **만든 것 / 확인한 방법 / 확인 못 한 것 / 할 일** 네 가지로 보고합니다
+- **검증 축이 없으면 완료를 선언하지 않음**: 테스트·린트·빌드가 전부 없는 프로젝트에서 `— 작업 완료 —` 를 출력하지 않습니다. 대신 무엇을 확인하지 못했는지와 직접 확인할 것을 알려줍니다 — 검증 수단 부재는 완료의 사유가 아니라 미완료의 내용이기 때문입니다
 - **4개 전문 에이전트**: architect (fable), frontend-engineer (opus), librarian (sonnet), document-writer (sonnet) + 자동 발견되는 프로젝트 에이전트
 - **State Persistence**: MEMORY.md로 세션 간 컨텍스트 유지
 
@@ -237,28 +253,18 @@ Windows는 복사 방식이라 `git pull`이 상류를 자동으로 추적하지
 
 1. **ANALYZE** - 작업 복잡도 평가 + 자연어 modifier 감지 + Architect prefilter (5 Effect + Hard rule)
    → **simple 판정이면 여기서 바로 5. EXECUTE 로 직행**합니다 (plan 없음). 아래 2~4 는 complex 이거나 `goal` modifier 가 있을 때만 거칩니다.
-2. **PATTERN** - 실행 패턴 선택 + 프로젝트 에이전트 자동 발견 (3 위치) + skill candidates
+2. **스캔** - 프로젝트 에이전트 자동 발견 (3 위치) + skill candidates
 3. **[PLAN MODE]** - built-in Plan agent (clean context) 가 plan 작성 + Architect mandatory/on/skip 마킹 → orchestrator 가 Architect 호출
-4. **APPROVE** - Codex#1 adversarial review (자동, complex task) + 사용자 승인
+4. **APPROVE** - Codex#1 adversarial review (Hard rule 영역 또는 되돌리기 어려운 변경일 때) + 사용자 승인
 5. **EXECUTE** - 5a 구현 → 5b worker self-test → 5c full suite + Anomaly Comparator → 5d Reviewer·Codex#2 병렬 분업 (fix-loop max 3)
 6. **[VERIFY]** - success criteria sign-off (프로젝트에 `verify-*` 스킬이 있으면 활용)
-
-### 패턴 선택 가이드
-
-| 패턴 | 사용 시점 | 예시 |
-|------|----------|------|
-| **Chaining** | 순차 의존 단계 | Build → Test → Deploy |
-| **Parallelization** | 독립 병렬 작업 (이전 `/swarm` 흡수) | 3개 API 동시 검색, 다중 소스 리서치 |
-| **Routing** | 조건부 분기 | 에러 타입별 핸들러 |
-| **Orchestrator-Workers** | 복잡한 다중 도메인 | 전체 기능 구현 |
-| **Evaluator** | 실행 결과 품질 검증 | 프로젝트가 `verify-*` 스킬을 제공하면 연동, PR 전 검증 |
 
 ### 자연어 Modifier (Phase 1 ANALYZE에서 자동 감지)
 
 | 표현 | 적용되는 동작 |
 |------|---|
 | `"맡길게"` / `"autonomous"` / `"끝까지"` | approval skip — 계획 후 바로 실행 |
-| `"병렬로"` / `"동시에"` | Parallelization 패턴 우선 선택 |
+| `"병렬로"` / `"동시에"` | 독립 항목의 병렬 위임 선호 |
 | `"완료될 때까지"` / `"until done"` | Claude Code 내장 `/goal` 자동 활성화 |
 | `"코덱스에게도"` / `"교차 검증"` / `"second opinion"` | Codex candidate ON (설치 시) |
 | `"코덱스 없이"` / `"main만"` | Codex 제외 |

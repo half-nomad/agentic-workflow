@@ -1,0 +1,26 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh -c 'if command -v powershell >/dev/null 2>&1; then powershell -NoProfile -ExecutionPolicy Bypass -File '/Users/mokka/Claude-project/agentic-workflow/.codex/hooks/maestro-guard.ps1'; else bash '/Users/mokka/Claude-project/agentic-workflow/.codex/hooks/maestro-guard.sh'; fi'"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Agent",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh -c 'if command -v powershell >/dev/null 2>&1; then powershell -NoProfile -ExecutionPolicy Bypass -File '/Users/mokka/Claude-project/agentic-workflow/.codex/hooks/verify-prompt.ps1'; else bash '/Users/mokka/Claude-project/agentic-workflow/.codex/hooks/verify-prompt.sh'; fi'"
+          }
+        ]
+      }
+    ]
+  }
+}

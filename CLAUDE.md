@@ -47,7 +47,7 @@ done
 python3 -c "import json;json.load(open('settings.json'))"
 ```
 
-`AGENTS.md` 는 **생성물이다** — 손으로 고치지 않는다. `CLAUDE.md` 를 고치면 `hooks/claude-md-sync.sh` 가 재생성한다. `diff CLAUDE.md AGENTS.md` 가 헤더 3줄만 보여야 정상.
+`AGENTS.md` 는 **생성물이다** — 손으로 고치지 않는다. `CLAUDE.md` 를 고치면 `hooks/claude-md-sync.sh` 가 재생성한다. 첫 줄의 `<!-- maestro-codex: sync-from-claude -->` 는 Maestro Codex 동기화 opt-in 이며, `diff CLAUDE.md AGENTS.md` 가 헤더 3줄만 보여야 정상이다. 동기화는 `CLAUDE.md` 본문만 복사하고 `~/.claude/rules/` 로딩 지시는 추가하지 않는다. 그 전역 규칙은 Claude Code 전용이며 Codex 지침과 충돌할 수 있다.
 
 ---
 

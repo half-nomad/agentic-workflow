@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed — Claude → Codex 지침 동기화 충돌
+
+- `claude-md-sync` 가 프로젝트 `AGENTS.md`에 `~/.claude/rules/*.md` 전체 로딩을 강제하던 문구를 제거했다. 대신 Maestro Codex opt-in 마커와 생성 헤더만 붙여 `CLAUDE.md` 본문을 동기화하므로, Claude Maestro 전역 룰이 Codex Maestro와 동시에 활성화되는 충돌을 만들지 않는다.
+
 ### Changed — v5.0.0: 목표 4개 + 최소 규약 · 나머지는 참고로 · 매 런 로드 63.6% 감소
 
 > **왜**: 이 워크플로는 사고가 날 때마다 지시를 추가해서 v4.5(상주 348줄)까지 왔다. **안정성은 얻었지만 그 대가로 성능을 스스로 제한했다** — 지시가 늘수록 개별 지시의 구속력이 떨어지고, 모델이 더 나은 방법을 알아도 절차가 막는다. v5.0 은 *조여서 확보한 하한선* 을 *훅이 보장하는 것 + 자율에서 나오는 추가 이익* 으로 바꾸는 전환이다.

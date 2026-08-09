@@ -42,14 +42,14 @@ if command -v realpath >/dev/null 2>&1; then
     _resolved=$(realpath "$FILE" 2>/dev/null) && [ -n "$_resolved" ] && { FILE="$_resolved"; RESOLVED=1; }
 fi
 
-HEADER="<!-- AUTO-SYNCED from CLAUDE.md — edit CLAUDE.md, not this file. (hooks/claude-md-sync) -->"
-RULES_NOTE="<!-- Also read ~/.claude/rules/*.md (maestro-workflow.md ships with this repo; the rest are the user's) and apply those rules identically when working here. -->"
+MARKER="<!-- maestro-codex: sync-from-claude -->"
+HEADER="<!-- AUTO-SYNCED from CLAUDE.md by Maestro Codex hook; keep the marker above to opt in. -->"
 
 sync_to() {
     local target="$1" note="$2"
     {
+        echo "$MARKER"
         echo "$HEADER"
-        echo "$RULES_NOTE"
         [ -n "$note" ] && echo "$note"
         echo
         cat "$FILE"
@@ -59,4 +59,3 @@ sync_to() {
 # 1) 같은 디렉토리 AGENTS.md — 이미 존재할 때만 (opt-in)
 SIBLING="$(dirname "$FILE")/AGENTS.md"
 [ -f "$SIBLING" ] && sync_to "$SIBLING"
-

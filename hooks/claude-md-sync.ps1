@@ -52,14 +52,16 @@ $resolvedFile = Resolve-FullPath $file
 if ($resolvedFile) { $file = $resolvedFile }
 $editedThroughUnresolvableLink = $script:LinkResolutionUnavailable
 
-$header = '<!-- AUTO-SYNCED from CLAUDE.md - edit CLAUDE.md, not this file. (hooks/claude-md-sync) -->'
-$rulesNote = '<!-- Also read ~/.claude/rules/*.md (maestro-workflow.md ships with this repo; the rest are the user''s) and apply those rules identically when working here. -->'
+$marker = '<!-- maestro-codex: sync-from-claude -->'
+$header = '<!-- AUTO-SYNCED from CLAUDE.md by Maestro Codex hook; keep the marker above to opt in. -->'
 $body = Get-Content $file -Raw
 
 # 1) 같은 디렉토리 AGENTS.md — 이미 존재할 때만 (opt-in)
 $sibling = Join-Path (Split-Path $file -Parent) 'AGENTS.md'
 if (Test-Path $sibling) {
-    Set-Content -Path $sibling -Value ($header + "`n" + $rulesNote + "`n`n" + $body) -Encoding utf8
+    $content = $marker + "`n" + $header + "`n`n" + $body
+    $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+    [System.IO.File]::WriteAllText($sibling, $content, $utf8NoBom)
 }
 
 exit 0

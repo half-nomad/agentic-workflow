@@ -56,9 +56,12 @@ $marker = '<!-- maestro-codex: sync-from-claude -->'
 $header = '<!-- AUTO-SYNCED from CLAUDE.md by Maestro Codex hook; keep the marker above to opt in. -->'
 $body = Get-Content $file -Raw
 
-# 1) 같은 디렉토리 AGENTS.md — 이미 존재할 때만 (opt-in)
+# 1) 같은 디렉토리 AGENTS.md — 파일이 있고 **마커도 있을 때만** (opt-in)
+#
+# 파일 존재만 조건으로 두면 헤더가 약속한 "keep the marker above to opt in" 이 거짓이 된다.
+# 마커를 지워 미러를 끊어 둔 프로젝트도 CLAUDE.md 편집 한 번에 통째로 덮인다.
 $sibling = Join-Path (Split-Path $file -Parent) 'AGENTS.md'
-if (Test-Path $sibling) {
+if ((Test-Path $sibling) -and ((Get-Content $sibling -Raw -ErrorAction SilentlyContinue) -like "*$marker*")) {
     $content = $marker + "`n" + $header + "`n`n" + $body
     $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
     [System.IO.File]::WriteAllText($sibling, $content, $utf8NoBom)

@@ -56,6 +56,12 @@ sync_to() {
     } > "$target" 2>/dev/null
 }
 
-# 1) 같은 디렉토리 AGENTS.md — 이미 존재할 때만 (opt-in)
+# 1) 같은 디렉토리 AGENTS.md — 파일이 있고 **마커도 있을 때만** (opt-in)
+#
+# 파일 존재만 조건으로 두면 헤더가 약속한 "keep the marker above to opt in" 이 거짓이 된다.
+# 마커를 지워 미러를 끊어 둔 프로젝트도 CLAUDE.md 편집 한 번에 통째로 덮여, 코덱스용으로
+# 갈라놓은 지침이 조용히 사라진다. 마커가 없으면 opt-out 으로 보고 건드리지 않는다.
 SIBLING="$(dirname "$FILE")/AGENTS.md"
-[ -f "$SIBLING" ] && sync_to "$SIBLING"
+if [ -f "$SIBLING" ] && grep -qF "$MARKER" "$SIBLING" 2>/dev/null; then
+    sync_to "$SIBLING"
+fi

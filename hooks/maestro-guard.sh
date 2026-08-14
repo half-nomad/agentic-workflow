@@ -71,6 +71,26 @@ if [ -f "$STATE_FILE" ]; then
         # Lexical (not realpath) so it also works for files that don't exist yet.
         FILE_PATH=$(normalize_path "$FILE_PATH")
 
+        # Scope by target. This guard exists to stop the orchestrator from
+        # writing code in THIS project. A target outside the project dir belongs
+        # to another repo or to global config, and that is not what maestro mode
+        # enforces — one session's mode must not gate another repo's work
+        # (2026-08-13: a session editing agentic-workflow was blocked by an
+        # unrelated maestro run in the current project).
+        #
+        # Fail closed: if the project root can't be established, no exemption.
+        # `${CLAUDE_PROJECT_DIR:-.}` would be wrong here — normalize_path folds
+        # "." to the empty string, every absolute path would read as "outside",
+        # and the guard would switch itself off. Relative targets skip the
+        # exemption too: they can't be compared against an absolute root.
+        PROJECT_ROOT=$(normalize_path "${CLAUDE_PROJECT_DIR:-$PWD}")
+        if [ -n "$PROJECT_ROOT" ] && [ "${FILE_PATH#/}" != "$FILE_PATH" ]; then
+            case "$FILE_PATH" in
+                "$PROJECT_ROOT"/*) ;;
+                *) exit 0 ;;
+            esac
+        fi
+
         # Allow MEMORY.md edits
         [[ "$FILE_PATH" =~ (^|/)MEMORY\.md$ ]] && exit 0
         # Allow memory/*.md siblings (project/feedback/user/reference)

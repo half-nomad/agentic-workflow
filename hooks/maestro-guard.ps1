@@ -40,6 +40,27 @@ if (Test-Path $stateFile) {
             }
         }
 
+        # Scope by target — twin of the same block in maestro-guard.sh, and the
+        # rationale lives there: this guard stops the orchestrator from writing
+        # code in THIS project, so a target outside the project dir (another
+        # repo, global config) is not its business. One session's mode must not
+        # gate another repo's work.
+        #
+        # Fail closed twice over. No project root -> no exemption. And the
+        # prefix test is case-INsensitive on purpose: on Windows the same path
+        # can differ in case, and a case mismatch would read as "outside" and
+        # wave the edit through. Erring toward "inside" keeps the guard on.
+        $projectRoot = $env:CLAUDE_PROJECT_DIR
+        if (-not $projectRoot) { $projectRoot = (Get-Location).Path }
+        if ($projectRoot) {
+            try { $projectRoot = [System.IO.Path]::GetFullPath($projectRoot) }
+            catch { $projectRoot = "" }
+        }
+        if ($projectRoot -and $filePath) {
+            $rootPrefix = $projectRoot.TrimEnd('/', '\') + [System.IO.Path]::DirectorySeparatorChar
+            if (-not $filePath.StartsWith($rootPrefix, [StringComparison]::OrdinalIgnoreCase)) { exit 0 }
+        }
+
         # Allow MEMORY.md edits
         if ($filePath -match "(^|[/\\])MEMORY\.md$") { exit 0 }
         # Allow memory/*.md siblings (project/feedback/user/reference)

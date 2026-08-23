@@ -1,6 +1,6 @@
 ---
 name: duet
-description: "Lightweight two-player workflow — Claude works natively, Codex enters at exactly two gates (plan critique with counter-proposal, then adversarial review). Use when a task carries uncertain design judgment, touches module boundaries/state/public contracts, would benefit from independent review, or is reversible but costly to redo. Not routed by file count."
+description: "EXPLICIT INVOCATION ONLY — never self-invoke. Runs only when the user types /duet. Lightweight two-player pilot workflow: Claude works natively while Codex enters at exactly two gates (plan critique with counter-proposal, then adversarial review). When a task looks like a fit (uncertain design judgment, module boundaries/state/public contracts, independent review would help, reversible but costly to redo), propose it in one line and let the user decide — do not launch it."
 argument-hint: "[task description]"
 ---
 
@@ -18,6 +18,22 @@ $ARGUMENTS
 > **마에스트로와의 관계**: 이 모드는 마에스트로를 대체하지 않는다. 마에스트로의 값 중
 > *다른 벤더의 눈* 하나만 남기고 나머지를 네이티브로 되돌린 것이다. 되돌리기 어려운
 > 작업은 여전히 `/maestro` 가 맞다 (아래 §라우팅).
+
+---
+
+## 발동 — 자동으로 켜지지 않는다
+
+**이 모드는 사용자가 `/duet` 을 칠 때만 실행된다.** 아래 기준에 맞아 보여도 **스스로 켜지 않는다.**
+
+맞아 보이면 **한 줄로 제안하고 사용자가 정한다:**
+
+> *"이건 설계 갈래가 둘이라 `/duet` 이 맞아 보입니다 — 켤까요?"*
+
+**왜 제안까지만 하나**: 지금 필요한 건 *"관문이 값을 하는가"* 인데, **스스로 켜면 무엇을 안 켰어야 했는지가
+기록에 안 남는다.** 수락·거절 기록이 곧 나중에 자동 발동으로 넘어갈 근거가 된다.
+
+**안 켜기로 판단했을 때도 한 줄 남긴다** — *"이건 답이 하나로 정해져 있어 그냥 하겠습니다"* 정도면 된다.
+켠 것만 기록에 남으면 **안 켜서 놓친 경우가 통째로 안 보인다.**
 
 ---
 
@@ -253,5 +269,5 @@ node "$CX" result <job-id>
 
 ---
 
-*duet v0.3.0 — pilot (첫 3~5런은 `@architect` 그림자 검토 동반). 마에스트로는 이 파일과 무관하게 그대로 동작한다.
+*duet v0.3.1 — pilot (명시 호출 전용) (첫 3~5런은 `@architect` 그림자 검토 동반). 마에스트로는 이 파일과 무관하게 그대로 동작한다.
 이 모드를 지우려면 `skills/duet/` 삭제 후 `./install.sh`.*

@@ -67,9 +67,6 @@ if (Test-Path $stateFile) {
         if ($filePath -match "[/\\]memory[/\\].+\.md$") { exit 0 }
         # Allow .agentic/ edits
         if ($filePath -match "\.agentic[/\\]") { exit 0 }
-        # Allow run records — parity with maestro-guard.sh. The log must live
-        # where git tracks it; `.agentic/` is commonly gitignored (2026-08-23).
-        if ($filePath -match "\.claude[/\\]agent-runs[/\\].+\.md$") { exit 0 }
         # Allow plan files
         # Allow Plan Mode system plan files (~/.claude/plans/*.md) — parity with maestro-guard.sh
         if ($filePath -match "\.claude[/\\]plans[/\\].+\.md$") { exit 0 }

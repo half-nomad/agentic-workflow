@@ -76,17 +76,31 @@ Hook enforcement: `hooks/maestro-guard.sh` (상세: `WORKFLOW.md` §Enforcement)
 완료 보고는 §사용자 보고 형식으로 — 내부 용어는 첫 등장에 `용어(쉬운 설명)` 병기.
 
 1. `.agentic/maestro-runs.md` 에 이번 런 기록 append — **다르게 한 것 / 그래서 나았나 / 놓친 것** (`WORKFLOW.md` §기록)
-2. MEMORY.md `## Next Session` 갱신:
+2. MEMORY.md `## Next Session` 갱신 — **여긴 이력이 아니라 상태다.** 다음 세션이 *이어서 할 것*만 적는다. 이번 런이 무엇을 끝냈는지는 여기 쓰지 않는다 — 그 자리는 `CHANGELOG.md` 와 `git log` 다.
+
+이어받을 것이 없으면 한 줄로 비운다:
 
 ```markdown
 ## Next Session
-- **Task**: <what was worked on>
-- **Status**: completed | in_progress | blocked
-- **Summary**: <what was accomplished>
-- **Pending**: <remaining items, if any>
+- **이어받을 작업 없음** — 남은 것은 <정본 위치>.
 ```
 
-status 가 `completed` 이고 pending 이 없으면 `## Next Session` 절을 비운다. 그다음 `.agentic/maestro-mode.state` 를 삭제한다.
+진행 중이거나 막힌 것이 있을 때만:
+
+```markdown
+## Next Session
+- **Task**: <아직 끝나지 않은 작업 한 줄>
+- **Next**: <다음 세션의 첫 행동 한 줄>
+- **Blocker**: <무엇에 막혀 있나 — 없으면 이 줄 생략>
+```
+
+**`Status:` 와 `Summary:` 필드는 쓰지 않는다.** 그 둘이 이 블록을 상태에서 이력으로 바꿔 놓은 원인이다 — *"달성한 것"* 을 묻는 칸이 있으면 채우게 되고, 채우면 다음 세션이 **이미 지나간 것을 재개 지점으로 읽는다.**
+
+**블록은 5줄 안쪽.** MEMORY.md 는 잘림 임계점(약 200줄)이 있는 **인덱스**이지 일지가 아니다. 길어지면 정본을 다른 곳에 두고 여기서는 가리킨다.
+
+**`## Next Session` 아래에 프로젝트가 만든 하위 절(`### ...`)이 있으면 지우지 않는다** — 그건 장기 상태다. 이번 런이 실제로 바꾼 줄만 갱신한다. 이 트리엔 git 이력이 없어 잘못 지우면 영구 소실이다.
+
+그다음 `.agentic/maestro-mode.state` 를 삭제한다.
 
 ---
 

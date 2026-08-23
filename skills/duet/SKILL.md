@@ -220,7 +220,7 @@ node "$CX" result <job-id>
 
 ## 기록 — 시험 중이므로 필수
 
-완료 시 `.agentic/duet-runs.md` 에 한 줄 append (없으면 헤더와 함께 생성):
+완료 시 `.claude/agent-runs/duet-runs.md` 에 한 줄 append (없으면 헤더와 함께 생성). **쓰기 전에 `git check-ignore` 로 그 경로가 무시되지 않는지 확인한다** — 무시되면 근거가 백업 없이 사라진다:
 
 ```markdown
 | 날짜 | 태스크 | 관문1 (findings / 바꾼 결정) | 관문2 (findings / 바꾼 결정) | 오탐 | 놓친 것(단순) | 중대 누락(확정) | 그림자 architect | 호출·시간 |

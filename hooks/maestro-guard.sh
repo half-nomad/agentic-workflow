@@ -97,6 +97,11 @@ if [ -f "$STATE_FILE" ]; then
         [[ "$FILE_PATH" =~ /memory/.+\.md$ ]] && exit 0
         # Allow .agentic/ edits
         [[ "$FILE_PATH" =~ \.agentic[/] ]] && exit 0
+        # Allow run records — the orchestrator writes its own run log, and that
+        # log must live where git tracks it. `.agentic/` is commonly gitignored
+        # as an "agent workspace", which silently discarded the only evidence
+        # this workflow measures itself with (2026-08-23).
+        [[ "$FILE_PATH" =~ \.claude/agent-runs/.+\.md$ ]] && exit 0
         # Allow plan files
         # Allow Plan Mode system plan files (~/.claude/plans/*.md)
         [[ "$FILE_PATH" =~ \.claude/plans/.+\.md$ ]] && exit 0

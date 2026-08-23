@@ -95,5 +95,5 @@ Phase 5 EXECUTE
       → orchestrator 가 통합 → security 이슈 1 → fix → re-review PASS
 Phase 6 VERIFY — verify-implementation skill → PASS
 사용자 보고 — "로그인/회원가입이 됩니다 / 테스트 58개 통과 · 화면 폰·PC 확인 / 비밀번호 재설정은 이번 범위 밖입니다"
-`.agentic/maestro-runs.md` 에 런 기록 1줄 append
+`.claude/agent-runs/maestro-runs.md` 에 런 기록 1줄 append
 ```

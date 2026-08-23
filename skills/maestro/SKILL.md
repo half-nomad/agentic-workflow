@@ -64,7 +64,7 @@ Examples (heuristics, not hard rules):
 
 ## Orchestrator Rules
 
-**ALLOWED**: Read, Glob, Grep, Task, TodoWrite, verification commands, MEMORY.md / `.agentic/` / plan file Write/Edit
+**ALLOWED**: Read, Glob, Grep, Task, TodoWrite, verification commands, MEMORY.md / `.agentic/` / `.claude/agent-runs/` / plan file Write/Edit
 **FORBIDDEN**: Write, Edit, Bash (file modification) — except above whitelist
 
 Hook enforcement: `hooks/maestro-guard.sh` (상세: `WORKFLOW.md` §Enforcement).
@@ -75,7 +75,7 @@ Hook enforcement: `hooks/maestro-guard.sh` (상세: `WORKFLOW.md` §Enforcement)
 
 완료 보고는 §사용자 보고 형식으로 — 내부 용어는 첫 등장에 `용어(쉬운 설명)` 병기.
 
-1. `.agentic/maestro-runs.md` 에 이번 런 기록 append — **다르게 한 것 / 그래서 나았나 / 놓친 것** (`WORKFLOW.md` §기록)
+1. `.claude/agent-runs/maestro-runs.md` 에 이번 런 기록 append — **다르게 한 것 / 그래서 나았나 / 놓친 것** (`WORKFLOW.md` §기록)
 2. MEMORY.md `## Next Session` 갱신:
 
 ```markdown

@@ -23,36 +23,20 @@ plan 헤더 표기: `Architect: mandatory (Hard rule: <...>)` / `on (Effect: <..
 
 ## Phase 2 — 에이전트 · 스킬 스캔
 
-세 위치를 모두 scan (session-once cache, CWD 변경 시 재scan):
-`~/.claude/agents/*.md` (global) · `.claude/agents/*.md` (project) · `agents/*.md` (정본 repo 내).
+가용 에이전트는 시스템 리마인더로 이미 노출된다 — **목록을 다시 만드는 절차는 두지 않는다.** 판단만 남긴다:
 
-1. 세 위치 모두 plan 에 listing — 글로벌이 시스템 프롬프트에 자동 노출돼도 명시 listing. orchestrator 가 가용 agent 를 한 눈에 보게 하기 위함
-2. **Domain match preempts global** — project `@code-reviewer` > `@architect` (post-impl review), `@<x>-engineer` > generic worker
-3. **Do not auto-delegate** — 사용자 승인 후
-4. Skill candidates 도 `[skill candidate] /skill-name` 로 plan 에 제안
-
-> 실행 형태(순차/병렬)에는 이름을 붙이지 않는다. 의존이 있으면 순차, 없으면 병렬 — 위임 계획을 짜면 자연히 결정된다.
+- **Domain match preempts global** — project `@code-reviewer` > `@architect` (post-impl review), `@<x>-engineer` > generic worker. 프로젝트 `.claude/agents/` 는 리마인더에 안 뜰 수 있으므로 그것만 직접 확인한다
+- **auto-delegate 금지** — 후보를 plan 에 싣고 사용자 승인 후에 부른다. skill 도 `[skill candidate] /skill-name` 로 제안까지만
 
 ## Phase 3 — PLAN MODE 절차
 
-```
-1. EnterPlanMode tool
-2. orchestrator → Task → built-in Plan agent (clean context — 누적 세션 컨텍스트 오염 회피)
-   prompt: task description + Phase 1 prefilter 결과 (5 Effect 매칭 + Hard rule 매칭)
-   Plan agent 가 plan 작성:
-     - "Architect 필요 여부" 마킹 (Hard rule 매칭 시 mandatory, 5 Effect 매칭 시 권장)
-     - "Codex 활성화" 마킹
-     - "Reviewer 선택" 마킹 (R1 first match)
-3. orchestrator 가 plan 결과 받음
-4. plan 의 Architect 마킹 → orchestrator 가 직접 Architect 호출
-   (Plan agent 는 Task tool 이 없어 스스로 부르지 못한다 → orchestrator fallback)
-   Architect 출력 → plan 문서에 통합
-5. plan 헤더에 Architect Decision 명시
-6. ExitPlanMode (user approval)
-```
+네이티브 plan mode(`EnterPlanMode` → 계획 → `ExitPlanMode` 승인)가 이 단계의 뼈대다. **그 위에 얹는 것만 적는다:**
 
-**Allowed in Plan Mode**: Task → Plan agent / Explore / @librarian / @architect · Read (최소) · WebSearch, WebFetch, MCP · Plan file Write/Edit · AskUserQuestion.
-**Forbidden**: 코드 파일 Write/Edit, 수정성 Bash, 구현 작업.
+- **계획 작성을 clean context 에 위임할 수 있다** — 누적 세션 컨텍스트가 계획을 오염시킨다고 판단될 때. 필수는 아니다
+- **Plan agent 는 Task tool 이 없어 스스로 @architect 를 못 부른다** — 계획이 Architect 필요로 마킹하면 **오케스트레이터가 직접** 호출하고 출력을 계획에 통합한다
+- **plan 헤더에 명시**: Architect 판정(`mandatory (Hard rule: <...>)` / `on (Effect: <...>)` / `skip (사유: <한 줄>)`) · Codex 활성화 · Reviewer 선택(R1 first match)
+
+**Plan mode 금지**: 코드 파일 Write/Edit · 수정성 Bash · 구현 작업.
 
 ## Phase 5 — 실행 substep
 
@@ -135,17 +119,9 @@ orchestrator: raw output 을 직접 받아 fix-loop input 으로 통합
 
 ## Phase 6 — VERIFY (조건부)
 
-테스트는 5b/5c 에서 이미 끝났다. Phase 6 는 **success criteria sign-off** 전용. 채점표 = `rubrics/success-criteria.md` (S1~S6 + 출력 계약).
+테스트는 5b/5c 에서 끝났다. 이 단계는 **success criteria sign-off** 전용이고, 프로젝트에 `verify-*` 스킬이 있을 때만 별도 값이 있다 — 그 SKILL.md 를 Task 프롬프트에 임베딩해 위임한다(템플릿 → `reference/delegation.md`). 없으면 완료 보고가 이 역할을 흡수한다.
 
-| Condition | Run VERIFY |
-|-----------|:----------:|
-| Project has `verify-*` skills | Yes |
-| 2+ agents, 3+ files | Yes |
-| User explicitly requests | Yes |
-| `approval skip` modifier + complex task | Yes |
-| Otherwise | No |
-
-verify-* 스킬이 있으면 그 SKILL.md 내용을 Task 프롬프트에 임베딩해 `general-purpose`(sonnet)에 위임 — 템플릿 → `reference/delegation.md`. 없으면 `git diff` 리뷰 + success criteria 체크리스트.
+채점표 = `rubrics/success-criteria.md` (S1~S6 + 출력 계약).
 
 ## Codex — 교차검증 상세
 

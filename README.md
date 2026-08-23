@@ -6,9 +6,9 @@ Claude Code를 위한 Maestro 오케스트레이션 시스템. 패턴 기반 에
 
 agentic-workflow는 Claude Code CLI에 최적화된 **Maestro** 오케스트레이션 시스템입니다. Claude가 오케스트레이터 역할을 수행하여 작업을 분석하고, 적절한 패턴을 선택하고, 필요한 에이전트를 식별한 후 계획을 제출합니다.
 
-이 저장소는 Maestro의 **배포본 소스**입니다. `git clone` 후 `install.sh` / `install.ps1`을 실행하면 에이전트 4개, 훅, `rules/maestro-workflow.md`, `skills/maestro/` 가 사용자의 `~/.claude/`에 심볼릭 링크(Windows는 복사)로 연결됩니다. 배포된 설정은 곧 이 저장소의 워킹트리이므로, 갱신의 본질은 `git pull`입니다 — 정확한 절차와 왜 그것만으로 부족한지는 아래 §업데이트를 참고하세요. 훅 등록은 최초 1회 수동으로 합니다 (아래 §훅 등록 참조).
+이 저장소는 Maestro의 **배포본 소스**입니다. `git clone` 후 `install.sh` / `install.ps1`을 실행하면 에이전트 4개, 훅, `rules/maestro-workflow.md`, `skills/maestro/`, `skills/duet/` 가 사용자의 `~/.claude/`에 심볼릭 링크(Windows는 복사)로 연결됩니다. 배포된 설정은 곧 이 저장소의 워킹트리이므로, 갱신의 본질은 `git pull`입니다 — 정확한 절차와 왜 그것만으로 부족한지는 아래 §업데이트를 참고하세요. 훅 등록은 최초 1회 수동으로 합니다 (아래 §훅 등록 참조).
 
-**이 저장소가 배포하는 것은 Maestro 하나입니다.** `~/.claude/rules/` 에 놓는 파일은 `maestro-workflow.md` 뿐이고, 코딩 규율·보안 정책·메모리 규약처럼 상시 적용되는 것은 사람마다 다르므로 배포하지 않습니다 — 그 자리는 여러분의 것이고, 설치·갱신·제거 어느 것도 건드리지 않습니다.
+**이 저장소가 배포하는 것은 Maestro 워크플로 하나입니다** (`/duet` 은 그 경량판이고, 상주 비용이 0 입니다 — 훅도 상주 룰도 쓰지 않습니다). `~/.claude/rules/` 에 놓는 파일은 `maestro-workflow.md` 뿐이고, 코딩 규율·보안 정책·메모리 규약처럼 상시 적용되는 것은 사람마다 다르므로 배포하지 않습니다 — 그 자리는 여러분의 것이고, 설치·갱신·제거 어느 것도 건드리지 않습니다.
 
 **그 한 파일도 ~60줄짜리 스텁입니다.** 목표 4개와 그것을 지키는 절대 규칙만 상주하고, 나머지는 `/maestro` 를 호출할 때 스킬로 로드됩니다. `/maestro` 를 쓰지 않는 세션까지 전문을 지고 다닐 이유가 없기 때문입니다 — compact 후 유실은 PostCompact 훅이 재주입으로 처리합니다.
 
@@ -326,7 +326,8 @@ Maestro 모드의 EXECUTE 단계는 다음 4 sub-step 으로 구성:
 
 | Skill | 설명 |
 |-------|------|
-| `/maestro [task]` | 단일 오케스트레이터 진입점. 자연어 modifier로 autonomy / parallel / goal / codex 자동 분기 |
+| `/maestro [task]` | 오케스트레이터 진입점. 자연어 modifier로 autonomy / parallel / goal / codex 자동 분기 |
+| `/duet [task]` | 경량판. 네이티브 plan mode 에 **코덱스 관문 둘**(설계 반증·대안 / 적대 mode A)만 붙인다. 훅·상태 파일 없음 |
 
 > `verify-*` · `manage-skills` 는 이 레포가 배포하지 않습니다 — 프로젝트에 있으면 Phase 6 에서 활용하고, 없으면 `git diff` 리뷰로 대체합니다 (선택 의존성).
 
@@ -334,12 +335,15 @@ Maestro 모드의 EXECUTE 단계는 다음 4 sub-step 으로 구성:
 자율 반복은 Claude Code 내장 `/goal`을 사용 (별도 ralph loop 불필요).
 Obsidian 노트 스킬은 별도 플러그인 [`my-note-skills`](https://github.com/half-nomad/my-note-skills).
 
-### Operating Mode (단일)
+### Operating Mode (3층)
 
 | 모드 | 활성화 | 특징 | 용도 |
 |------|--------|------|------|
-| **Default** | (명령 없음) | 일반 Claude 상호작용 | 단순 작업, 직접 지시 |
-| **Maestro** | `/maestro [task]` | 계획→승인→위임→리뷰→검증. 자연어 modifier로 동작 변화 | 복잡한 구현, 리스크 있는 변경 |
+| **Default** | (명령 없음) | 일반 Claude 상호작용 | 파일 1~2개, 되돌릴 수 있음 |
+| **Duet** | `/duet [task]` | 네이티브 구현 + 코덱스 관문 2회 고정. 위임 강제 없음 | 파일 여러 개지만 **되돌릴 수 있음** |
+| **Maestro** | `/maestro [task]` | 계획→승인→위임→리뷰→검증. 자연어 modifier로 동작 변화 | **되돌리기 어려움** — 마이그레이션·데이터 삭제/이동·배포·공개 API |
+
+> 작업 중 되돌리기 어려운 성격이 드러나면 `/duet` 은 그 자리에서 `/maestro` 로 올립니다.
 
 ### State Persistence (상태 유지)
 
@@ -389,7 +393,7 @@ Obsidian 노트 스킬은 별도 플러그인 [`my-note-skills`](https://github.
 ```
 agentic-workflow/
 ├── agents/           # 전문 에이전트 (architect, frontend, librarian, document-writer) — 파일 단위로 ~/.claude/agents/ 에 링크
-├── skills/           # Skills (maestro) — 디렉터리 단위로 ~/.claude/skills/ 에 링크
+├── skills/           # Skills (maestro · duet) — 디렉터리 단위로 ~/.claude/skills/ 에 링크
 ├── rules/            # maestro-workflow.md 하나뿐 — allowlist 로 ~/.claude/rules/ 에 링크 (나머지 rules/ 는 사용자 것)
 ├── hooks/            # Hook 스크립트 (maestro-guard, verify-prompt 등) — .ps1 + .sh 크로스 플랫폼, 파일 단위로 ~/.claude/hooks/ 에 링크
 ├── docs/             # 시점 기록 — 각 문서 상단에 작성일이 있고, 그때의 판단을 그대로 둡니다 (현재 동작은 rules/ 와 이 README 가 정본)
@@ -440,4 +444,4 @@ MIT
 
 ---
 
-*Maestro Workflow v5.2.0*
+*Maestro Workflow v5.3.0*

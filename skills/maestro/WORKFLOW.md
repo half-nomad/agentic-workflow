@@ -131,7 +131,7 @@ complex 또는 `goal` modifier → plan 을 작성해 **사용자 승인**을 �
 
 이전 Codex finding 을 메우는 작업이면 simple 이라도 강제한다.
 
-**호출 형태**: companion **직접 호출** + 프롬프트는 **stdin 또는 `--prompt-file`**. 서브에이전트 경유는 실패가 침묵돼 복구 규정이 발동하지 못한다. 명령 문법 → `reference/codex-cli.md`.
+**호출 형태**: Codex CLI(`codex exec`) **직접 호출** + 프롬프트는 **stdin**. openai-codex 플러그인(companion · `codex:*`)은 쓰지 않는다. 서브에이전트 경유는 실패가 침묵돼 복구 규정이 발동하지 못한다. 명령 문법 → `reference/codex-cli.md` (유일한 정본).
 
 **막히면 사람에게 간다** — 같은 지점에서 수정을 3회 반복했는데 안 되면 `@architect`, 그래도 막히면 사용자에게 blocker 로 보고한다. 무한히 돌지 않는다.
 

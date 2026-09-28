@@ -7,8 +7,6 @@
 INPUT=$(cat)
 if [ -z "$INPUT" ]; then exit 0; fi
 
-STATE_FILE="${CLAUDE_PROJECT_DIR:-.}/.agentic/maestro-mode.state"
-
 # JSON parser: jq preferred, python3 fallback (macOS ships with python3)
 json_get() {
     local json="$1" key="$2"
@@ -38,7 +36,10 @@ normalize_path() {
     for part in $p; do
         case "$part" in
             ''|.) ;;
-            ..) [ ${#stack[@]} -gt 0 ] && stack=("${stack[@]:0:${#stack[@]}-1}") ;;
+            # Pop with unset, not a slice: macOS /bin/bash 3.2 joins the elements of
+            # "${stack[@]:0:n}" with spaces while IFS='/', so `/a/b/.agentic/../x` came
+            # out as `/a b/x`, read as outside the project, and was waved through.
+            ..) [ ${#stack[@]} -gt 0 ] && unset "stack[$((${#stack[@]}-1))]" ;;
             *) stack+=("$part") ;;
         esac
     done
@@ -53,7 +54,27 @@ normalize_path() {
     printf '%s' "$result"
 }
 
-if [ -f "$STATE_FILE" ]; then
+# Maestro state is per session: `.agentic/maestro/<session id>.state`.
+# A single project-wide file leaked the guard into every session of the project
+# when a run died without cleanup (2026-09-09: usage limit hit mid-run), and
+# concurrent runs overwrote and deleted each other's file.
+# Same block in maestro-compact-reload.sh / verify-prompt.sh — keep them in sync.
+maestro_active() {
+    local dir="${CLAUDE_PROJECT_DIR:-.}/.agentic/maestro" sid="${CLAUDE_CODE_SESSION_ID:-}"
+    [ -z "$sid" ] && sid=$(json_get "$INPUT" ".session_id")
+    # Only a plain id may become a path segment; anything else counts as unknown.
+    [[ "$sid" =~ ^[A-Za-z0-9_-]+$ ]] || sid=""
+    # A run that could not learn its id writes unknown.state — it guards every session.
+    [ -f "$dir/unknown.state" ] && return 0
+    if [ -n "$sid" ]; then
+        [ -f "$dir/$sid.state" ]
+    else
+        # Id unknown here: fall back to the old project-wide behavior (fail closed).
+        compgen -G "$dir/*.state" >/dev/null
+    fi
+}
+
+if maestro_active; then
     TOOL_NAME=$(json_get "$INPUT" ".tool_name")
 
     if [[ "$TOOL_NAME" =~ ^(Write|Edit|MultiEdit)$ ]]; then
@@ -106,7 +127,7 @@ if [ -f "$STATE_FILE" ]; then
         [[ "$FILE_PATH" =~ (^|/)CHANGELOG(\.archive)?\.md$ ]] && exit 0
         [[ "$FILE_PATH" =~ (^|/)VERSION$ ]] && exit 0
 
-        echo "[MAESTRO GUARD] Orchestrator mode active. Delegate file modifications to agents via Agent tool." >&2
+        echo "[MAESTRO GUARD] Orchestrator mode active for this session (.agentic/maestro/). Delegate file modifications to agents via Agent tool. If this session is not running /maestro, the state file is a leftover — tell the user." >&2
         exit 2
     fi
 fi

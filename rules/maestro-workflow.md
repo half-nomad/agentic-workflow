@@ -21,4 +21,4 @@ description: "Maestro activation + absolute rules (resident stub — full workfl
 
 ## Enforcement · State
 
-`.agentic/maestro-mode.state` 존재 시 훅(`maestro-guard` · `maestro-compact-reload` · `verify-prompt`)이 자동 강제. 세션 간 재개는 MEMORY.md `## Next Session`. compact 요약엔 현재 작업·성공 조건·수정 중인 파일·위임 결과·Phase 5 위치·활성 모드를 보존한다.
+`.agentic/maestro/<세션 id>.state` 가 있는 **그 세션에서만** 훅(`maestro-guard` · `maestro-compact-reload` · `verify-prompt`)이 자동 강제 — 같은 프로젝트의 다른 세션은 막지 않는다. 세션 간 재개는 MEMORY.md `## Next Session` + `/maestro` 재진입(상태는 새 세션으로 따라가지 않는다). compact 요약엔 현재 작업·성공 조건·수정 중인 파일·위임 결과·Phase 5 위치·활성 모드를 보존한다.

@@ -15,8 +15,39 @@
 INPUT=$(cat)
 [ -z "$INPUT" ] && exit 0
 
-STATE_FILE="${CLAUDE_PROJECT_DIR:-.}/.agentic/maestro-mode.state"
-[ -f "$STATE_FILE" ] || exit 0   # maestro 모드가 아니면 조용히 통과
+# JSON parser: jq preferred, python3 fallback (macOS ships with python3)
+json_get() {
+    local json="$1" key="$2"
+    if command -v jq &>/dev/null; then
+        echo "$json" | jq -r "$key // empty" 2>/dev/null
+    else
+        echo "$json" | python3 -c "
+import sys, json, functools, operator
+d = json.load(sys.stdin)
+keys = '$key'.strip('.').split('.')
+try:
+    val = functools.reduce(operator.getitem, keys, d)
+    print(val if val is not None else '')
+except (KeyError, TypeError):
+    print('')
+" 2>/dev/null
+    fi
+}
+
+# 세션별 상태 파일 — 근거는 maestro-guard.sh 의 같은 블록. 세 훅이 같은 판정을 쓴다.
+maestro_active() {
+    local dir="${CLAUDE_PROJECT_DIR:-.}/.agentic/maestro" sid="${CLAUDE_CODE_SESSION_ID:-}"
+    [ -z "$sid" ] && sid=$(json_get "$INPUT" ".session_id")
+    [[ "$sid" =~ ^[A-Za-z0-9_-]+$ ]] || sid=""
+    [ -f "$dir/unknown.state" ] && return 0
+    if [ -n "$sid" ]; then
+        [ -f "$dir/$sid.state" ]
+    else
+        compgen -G "$dir/*.state" >/dev/null
+    fi
+}
+
+maestro_active || exit 0   # 이 세션이 maestro 가 아니면 조용히 통과
 
 WORKFLOW="$HOME/.claude/skills/maestro/WORKFLOW.md"
 [ -f "$WORKFLOW" ] || exit 0

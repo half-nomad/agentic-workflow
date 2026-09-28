@@ -5,10 +5,21 @@
 
 $raw = [Console]::In.ReadToEnd()
 if (-not $raw) { exit 0 }
+$payload = $raw | ConvertFrom-Json -ErrorAction SilentlyContinue
 
-$projectDir = if ($env:CLAUDE_PROJECT_DIR) { $env:CLAUDE_PROJECT_DIR } else { "." }
-$stateFile = Join-Path $projectDir ".agentic\maestro-mode.state"
-if (-not (Test-Path $stateFile)) { exit 0 }   # maestro 모드 아님
+# 세션별 상태 파일 — maestro-guard.ps1 의 Test-MaestroActive 와 같은 판정 (근거는 maestro-guard.sh).
+function Test-MaestroActive($payload) {
+    $root = if ($env:CLAUDE_PROJECT_DIR) { $env:CLAUDE_PROJECT_DIR } else { (Get-Location).Path }
+    $dir = Join-Path $root ".agentic/maestro"
+    $sid = $env:CLAUDE_CODE_SESSION_ID
+    if (-not $sid -and $payload) { $sid = [string]$payload.session_id }
+    if ($sid -notmatch '^[A-Za-z0-9_-]+$') { $sid = "" }
+    if (Test-Path -LiteralPath (Join-Path $dir "unknown.state")) { return $true }
+    if ($sid) { return (Test-Path -LiteralPath (Join-Path $dir "$sid.state")) }
+    return [bool](Get-ChildItem -LiteralPath $dir -Filter *.state -File -ErrorAction SilentlyContinue)
+}
+
+if (-not (Test-MaestroActive $payload)) { exit 0 }   # 이 세션이 maestro 가 아님
 
 $workflow = Join-Path $env:USERPROFILE ".claude\skills\maestro\WORKFLOW.md"
 if (-not (Test-Path $workflow)) { exit 0 }

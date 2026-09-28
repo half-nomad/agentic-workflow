@@ -26,12 +26,24 @@ except (KeyError, TypeError):
     fi
 }
 
+# 세션별 상태 파일 — 근거는 maestro-guard.sh 의 같은 블록. 세 훅이 같은 판정을 쓴다.
+maestro_active() {
+    local dir="${CLAUDE_PROJECT_DIR:-.}/.agentic/maestro" sid="${CLAUDE_CODE_SESSION_ID:-}"
+    [ -z "$sid" ] && sid=$(json_get "$INPUT" ".session_id")
+    [[ "$sid" =~ ^[A-Za-z0-9_-]+$ ]] || sid=""
+    [ -f "$dir/unknown.state" ] && return 0
+    if [ -n "$sid" ]; then
+        [ -f "$dir/$sid.state" ]
+    else
+        compgen -G "$dir/*.state" >/dev/null
+    fi
+}
+
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-.}"
 TOOL_NAME=$(json_get "$INPUT" ".tool_name")
 
 if [ "$TOOL_NAME" = "Agent" ]; then
-    STATE_FILE="$PROJECT_DIR/.agentic/maestro-mode.state"
-    if [ -f "$STATE_FILE" ]; then
+    if maestro_active; then
         # Emit INFORMATION, not exhortation. What the orchestrator cannot get for
         # free is "what did that agent actually change" — a tool call it would
         # otherwise have to spend. Reminders to run tests and check success

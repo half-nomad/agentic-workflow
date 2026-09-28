@@ -60,16 +60,9 @@ When invoked from Maestro Phase 3 Plan Mode — the prompt says *plan-stage* / *
 
 ## Codex Second Opinion (discretionary)
 
-For **high-risk decisions** or **ambiguous reviews**, you may call Codex directly as an independent second opinion. Call the companion via Bash — **not** the `codex:codex-rescue` subagent (nesting a subagent inside a subagent costs ~31k tokens and makes failures silent to the orchestrator):
+For **high-risk decisions** or **ambiguous reviews**, you may call Codex directly as an independent second opinion — through the Codex CLI via Bash (`codex exec -s read-only ... - < prompt`), **not** the openai-codex plugin or a `codex:*` subagent (nesting a subagent inside a subagent makes failures silent to the orchestrator). Pass the prompt on stdin only. Command reference — the single source: `~/.claude/skills/maestro/reference/codex-cli.md`.
 
-```bash
-CX=$(ls -d ~/.claude/plugins/cache/openai-codex/codex/*/scripts/codex-companion.mjs | tail -1)
-REQ=$(mktemp)   # fixed paths collide when architects run in parallel
-printf '%s' "<independent review request>" > "$REQ"
-node "$CX" task --prompt-file "$REQ"
-```
-
-Pass the prompt via `--prompt-file` or stdin only — a single-argument `task "..."` is re-tokenized and loses quotes and newlines. Full command reference: `skills/maestro/WORKFLOW.md` §Codex.
+**Do not call Codex when the caller says not to** — `/duet` gate 1 already runs Codex in parallel with you, and a second call from inside is the same review twice.
 
 **Use it when**: the decision affects 5+ files or core systems · trade-offs conflict with no clear winner · security- or performance-critical review · cross-domain expertise needed · you were called in for fix-loop escalation.
 

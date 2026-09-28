@@ -141,8 +141,8 @@ orchestrator: raw output 을 직접 받아 fix-loop input 으로 통합
 
 ### Escalation
 
-- 같은 단계에서 위임 5회+ stuck → **Codex 에 직접 진단 조회** (읽기전용) 후 통합 → 그래도 막히면 blocker 보고. 사용자 개입이 필요한 건 *구현 이관* 뿐 (`/codex:rescue` 제안)
-- fix-loop max 3 초과 → @architect escalation (architect 는 Codex 를 self-invoke 할 수 있음 — companion 직접 호출, 서브에이전트 중첩 금지)
+- 같은 단계에서 위임 5회+ stuck → **Codex 에 직접 진단 조회** (읽기전용) 후 통합 → 그래도 막히면 blocker 보고. 사용자 개입이 필요한 건 *구현 이관* 뿐 (코덱스 CLI 쓰기 작업으로 이관 제안 — `reference/codex-cli.md`)
+- fix-loop max 3 초과 → @architect escalation (architect 는 Codex 를 self-invoke 할 수 있음 — CLI 직접 호출, 서브에이전트 중첩 금지)
 
 ### 사용자 배제 ≠ 호출 실패
 

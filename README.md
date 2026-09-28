@@ -8,7 +8,7 @@ agentic-workflow는 Claude Code CLI에 최적화된 **Maestro** 오케스트레�
 
 이 저장소는 Maestro의 **배포본 소스**입니다. `git clone` 후 `install.sh` / `install.ps1`을 실행하면 에이전트 4개, 훅, `rules/maestro-workflow.md`, `skills/maestro/`, `skills/duet/` 가 사용자의 `~/.claude/`에 심볼릭 링크(Windows는 복사)로 연결됩니다. 배포된 설정은 곧 이 저장소의 워킹트리이므로, 갱신의 본질은 `git pull`입니다 — 정확한 절차와 왜 그것만으로 부족한지는 아래 §업데이트를 참고하세요. 훅 등록은 최초 1회 수동으로 합니다 (아래 §훅 등록 참조).
 
-**이 저장소가 배포하는 것은 Maestro 워크플로 하나입니다** (`/duet` 은 그 경량판이고, 상주 비용이 0 입니다 — 훅도 상주 룰도 쓰지 않습니다). `~/.claude/rules/` 에 놓는 파일은 `maestro-workflow.md` 뿐이고, 코딩 규율·보안 정책·메모리 규약처럼 상시 적용되는 것은 사람마다 다르므로 배포하지 않습니다 — 그 자리는 여러분의 것이고, 설치·갱신·제거 어느 것도 건드리지 않습니다.
+**이 저장소가 배포하는 것은 Maestro 워크플로 하나입니다** (`/duet` 은 그 경량판이자 v5.4.0 부터 기본 모드이고, 상주 비용이 0 입니다 — 훅도 상주 룰도 쓰지 않습니다). `~/.claude/rules/` 에 놓는 파일은 `maestro-workflow.md` 뿐이고, 코딩 규율·보안 정책·메모리 규약처럼 상시 적용되는 것은 사람마다 다르므로 배포하지 않습니다 — 그 자리는 여러분의 것이고, 설치·갱신·제거 어느 것도 건드리지 않습니다.
 
 **그 한 파일도 ~60줄짜리 스텁입니다.** 목표 4개와 그것을 지키는 절대 규칙만 상주하고, 나머지는 `/maestro` 를 호출할 때 스킬로 로드됩니다. `/maestro` 를 쓰지 않는 세션까지 전문을 지고 다닐 이유가 없기 때문입니다 — compact 후 유실은 PostCompact 훅이 재주입으로 처리합니다.
 
@@ -50,7 +50,7 @@ Maestro 의 Codex 교차검증(Codex#1 / Codex#2)은 프로젝트 디렉터리�
 - **Codex 교차검증 — 계획은 기본 on, 구현은 표적**: 계획 적대 검토는 complex 로 계획을 만들었으면 기본 실행합니다(끄는 경우는 셋 — 사용자 modifier·확립된 패턴의 단순 확장·simple 판정). **계획이 틀리면 그 뒤 작업이 전부 낭비이므로 여기가 가장 싸고 이익이 큽니다.** 구현 공격(mode A)은 공유 컴포넌트·클라이언트 상태·요청 간 상태 이동·Hard rule 인접, 그리고 **절차와 다르게 판단한 런**에만 겁니다 — 이미 만든 것이 대상이라 늦고 비싸기 때문입니다. user-explicit / stuck 5+ escalation 은 별도 카테고리
 - **Dynamic Workflows 하이브리드**: ≥5 독립·사전명세·자기검증 항목의 대규모 병렬 EXECUTE 를 Workflow 툴로 위임 가능 (never auto-fire — Phase 4 승인 필수, 완료 후 5c/5d Hard 의무)
 - **Skill 1차 시민화**: 스캔 단계에서 사용 가능한 skill을 자동 매칭, 사용자 approval로 확정
-- **선택적 Codex 통합**: companion CLI 직접 호출. 미설치 환경에선 무음 fallback (architect 단독 흐름 — 단 mode T 등가 대체일 뿐 교차벤더 적대 축은 미충족으로 남습니다)
+- **선택적 Codex 통합**: Codex CLI(`codex exec`) 직접 호출 — openai-codex 플러그인은 쓰지 않습니다. 미설치 환경에선 무음 fallback (architect 단독 흐름 — 단 mode T 등가 대체일 뿐 교차벤더 적대 축은 미충족으로 남습니다)
 - **도구 기반 검증 (Phase 6)**: success criteria sign-off — 프로젝트에 `verify-*` 스킬이 있으면 활용, 없으면 `git diff` 리뷰 + 체크리스트 (테스트 실행은 5b/5c 에서 이미 완료)
 - **순수 오케스트레이터 역할**: 메인은 위임만, 직접 파일 수정은 hooks로 차단
 - **Context Embedding**: 서브에이전트에 스키마/패턴/제약 직접 주입 (5b output contract 요구사항 포함)
@@ -326,8 +326,8 @@ Maestro 모드의 EXECUTE 단계는 다음 4 sub-step 으로 구성:
 
 | Skill | 설명 |
 |-------|------|
-| `/maestro [task]` | 오케스트레이터 진입점. 자연어 modifier로 autonomy / parallel / goal / codex 자동 분기 |
-| `/duet [task]` | 경량판. 네이티브 plan mode 에 **코덱스 관문 둘**(설계 반증·대안 / 적대 mode A)만 붙인다. 훅·상태 파일 없음 |
+| `/maestro [task]` | 오케스트레이터 진입점. **이름으로 부를 때만** — `/duet` 이 제안하지 않습니다. 자연어 modifier로 autonomy / parallel / goal / codex 자동 분기 |
+| `/duet [task]` | 기본 모드(v0.4.0). 네이티브 구현 + **코덱스 CLI 관문 둘**(설계 반증·대안 / 구현 검토·변형 검사) + 관문1 에 `@architect` 병렬. 되돌리기 어려운 작업은 규칙을 더해 받습니다. 훅·상태 파일 없음 |
 
 > `verify-*` · `manage-skills` 는 이 레포가 배포하지 않습니다 — 프로젝트에 있으면 Phase 6 에서 활용하고, 없으면 `git diff` 리뷰로 대체합니다 (선택 의존성).
 
@@ -340,11 +340,12 @@ Obsidian 노트 스킬은 별도 플러그인 [`my-note-skills`](https://github.
 | 모드 | 활성화 | 특징 | 용도 |
 |------|--------|------|------|
 | **Default** | (명령 없음) | 일반 Claude 상호작용 | 답이 하나로 정해져 있고, 실패해도 되돌리면 그만 |
-| **Duet** | `/duet [task]` | 네이티브 구현 + 코덱스 관문 2회 고정. 위임 강제 없음 | 불확실한 설계 판단 · 모듈 경계/상태/공개 계약에 영향 · 독립 검토가 유용 · 재작업 비용이 큼 (하나라도) |
-| **Maestro** | `/maestro [task]` | 계획→승인→위임→리뷰→검증. 자연어 modifier로 동작 변화 | **되돌리기 어려움** — 보안·결제·운영 데이터·마이그레이션·배포·공개 API·외부 발송 |
+| **Duet** | `/duet [task]` | 네이티브 구현 + 코덱스 관문 2회 + 관문1 `@architect` 병렬. 위임 강제 없음 | 불확실한 설계 판단 · 모듈 경계/상태/공개 계약에 영향 · 독립 검토가 유용 · 재작업 비용이 큼 · **되돌리기 어려움**(보안·결제·운영 데이터·마이그레이션·삭제·배포·공개 API·외부 발송 — 변형 검사 필수·지적 해결 확인·실행 승인을 더함) (하나라도) |
+| **Maestro** | `/maestro [task]` | 계획→승인→위임→리뷰→검증. 자연어 modifier로 동작 변화 | **이름으로 부를 때만** — 위임 중심 오케스트레이션을 원할 때 |
 
 > **파일 수로 나누지 않습니다.** 20개 파일의 기계적 rename 은 저위험이고, 한 파일의 인증 변경은 고위험입니다 — 세는 것으로는 위험이 안 잡힙니다.
-> 작업 중 되돌리기 어려운 성격이 드러나면 `/duet` 은 그 자리에서 `/maestro` 로 올립니다.
+> 작업 중 되돌리기 어려운 성격이 드러나면 `/duet` 은 그 자리에서 되돌리기 어려운 작업 규칙을 켭니다.
+> v5.4.0 에서 되돌리기 어려운 작업을 `/maestro` 에서 `/duet` 으로 옮겼습니다 — 값을 한 것(다른 눈)은 duet 에 그대로 있고, 오케스트레이터가 전달자가 되며 생기던 손실과 비용이 빠집니다(근거 → `CHANGELOG.md` v5.4.0).
 
 ### State Persistence (상태 유지)
 
@@ -353,6 +354,7 @@ Obsidian 노트 스킬은 별도 플러그인 [`my-note-skills`](https://github.
 **사용 방법**:
 - **계속하기**: "계속" 또는 "continue" 입력 시 이전 컨텍스트에서 재개
 - **새로 시작**: "새로 시작" 또는 "new" 입력 시 `## Next Session` 초기화
+- **마에스트로를 다른 세션에서 이어 갈 때**: `/maestro` 로 다시 들어옵니다 — 쓰기 차단 가드의 상태(`.agentic/maestro/<세션 id>.state`)는 세션에 묶여 있어 새 세션으로 따라가지 않습니다
 
 ## 사용 예시
 
@@ -386,7 +388,7 @@ Obsidian 노트 스킬은 별도 플러그인 [`my-note-skills`](https://github.
 /maestro 이 PR 아키텍처 리뷰, 코덱스에게도 의견 받아
 ```
 
-→ `@architect` 리뷰 + Codex second opinion (companion 직접 호출) → 두 의견 통합 보고
+→ `@architect` 리뷰 + Codex second opinion (CLI 직접 호출) → 두 의견 통합 보고
 (Codex 미설치 시 자동으로 architect 단독 흐름)
 
 ## 디렉토리 구조
@@ -445,4 +447,4 @@ MIT
 
 ---
 
-*Maestro Workflow v5.3.0*
+*Maestro Workflow v5.4.0*

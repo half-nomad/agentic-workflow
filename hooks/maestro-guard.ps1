@@ -12,9 +12,21 @@ $stdinReader = New-Object System.IO.StreamReader([Console]::OpenStandardInput())
 $payload = $stdinReader.ReadToEnd() | ConvertFrom-Json -ErrorAction SilentlyContinue
 if (-not $payload) { exit 0 }
 
-$stateFile = Join-Path $env:CLAUDE_PROJECT_DIR ".agentic/maestro-mode.state"
+# Maestro state is per session — twin of maestro_active() in maestro-guard.sh, where the
+# rationale lives. Same function in maestro-compact-reload.ps1 / verify-prompt.ps1.
+function Test-MaestroActive($payload) {
+    $root = if ($env:CLAUDE_PROJECT_DIR) { $env:CLAUDE_PROJECT_DIR } else { (Get-Location).Path }
+    $dir = Join-Path $root ".agentic/maestro"
+    $sid = $env:CLAUDE_CODE_SESSION_ID
+    if (-not $sid -and $payload) { $sid = [string]$payload.session_id }
+    # Only a plain id may become a path segment; anything else counts as unknown.
+    if ($sid -notmatch '^[A-Za-z0-9_-]+$') { $sid = "" }
+    if (Test-Path -LiteralPath (Join-Path $dir "unknown.state")) { return $true }
+    if ($sid) { return (Test-Path -LiteralPath (Join-Path $dir "$sid.state")) }
+    return [bool](Get-ChildItem -LiteralPath $dir -Filter *.state -File -ErrorAction SilentlyContinue)
+}
 
-if (Test-Path $stateFile) {
+if (Test-MaestroActive $payload) {
     $toolName = $payload.tool_name
 
     if ($toolName -match "^(Write|Edit|MultiEdit)$") {
@@ -76,7 +88,7 @@ if (Test-Path $stateFile) {
         if ($filePath -match "[/\\]CHANGELOG(\.archive)?\.md$") { exit 0 }
         if ($filePath -match "[/\\]VERSION$") { exit 0 }
 
-        [Console]::Error.WriteLine("[MAESTRO GUARD] Orchestrator mode active. Delegate file modifications to agents via Agent tool.")
+        [Console]::Error.WriteLine("[MAESTRO GUARD] Orchestrator mode active for this session (.agentic/maestro/). Delegate file modifications to agents via Agent tool. If this session is not running /maestro, the state file is a leftover — tell the user.")
         exit 2
     }
 }

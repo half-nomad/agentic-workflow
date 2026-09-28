@@ -20,7 +20,7 @@ function Test-MaestroActive($payload) {
     $sid = $env:CLAUDE_CODE_SESSION_ID
     if (-not $sid -and $payload) { $sid = [string]$payload.session_id }
     # Only a plain id may become a path segment; anything else counts as unknown.
-    if ($sid -notmatch '^[A-Za-z0-9_-]+$') { $sid = "" }
+    if ($sid -notmatch '\A[A-Za-z0-9_-]+\z') { $sid = "" }
     if (Test-Path -LiteralPath (Join-Path $dir "unknown.state")) { return $true }
     if ($sid) { return (Test-Path -LiteralPath (Join-Path $dir "$sid.state")) }
     return [bool](Get-ChildItem -LiteralPath $dir -Filter *.state -File -ErrorAction SilentlyContinue)

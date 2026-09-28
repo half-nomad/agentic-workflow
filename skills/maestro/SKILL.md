@@ -23,8 +23,10 @@ You are now in **Maestro Orchestrator Mode**.
    **상주분은 스텁이다** — 절대 규칙 4개 외에는 시스템 프롬프트에 없다. 읽지 않으면 판정 기준도 출력 계약도 없이 진행하게 된다.
 2. Create **this session's** state file to activate enforcement hooks:
 ```
-mkdir -p .agentic/maestro && echo "maestro" > ".agentic/maestro/${CLAUDE_CODE_SESSION_ID:-unknown}.state"
+SID="${CLAUDE_CODE_SESSION_ID:-}"; [[ "$SID" =~ ^[A-Za-z0-9_-]+$ ]] || SID=unknown
+mkdir -p .agentic/maestro && echo "maestro" > ".agentic/maestro/$SID.state"
 ```
+(훅과 같은 id 검사 — 형식이 이상한 값이 경로가 되지 않게 `unknown` 으로 바꾼다.)
 훅은 **파일 이름의 세션에서만** 작동한다 — 같은 프로젝트의 다른 세션은 막지 않고, 동시에 도는 마에스트로 런은 각자 파일을 갖는다. 종전 단일 파일(`.agentic/maestro-mode.state`)은 런이 중단되면 남아서 그 프로젝트의 모든 세션을 막았다(2026-09-09 사용 한도 중단). 이제 훅은 그 파일을 읽지 않는다.
 `CLAUDE_CODE_SESSION_ID` 가 비어 있으면(이 값을 주지 않는 오래된 Claude Code) `unknown.state` 가 생기고, 그땐 종전처럼 프로젝트 전체를 막는다 — 사용자에게 한 줄 알린다.
 **다른 세션에서 이어 가려면 `/maestro` 로 다시 들어온다** — 상태는 세션에 묶여 새 세션으로 따라가지 않는다.
@@ -87,7 +89,8 @@ Hook enforcement: `hooks/maestro-guard.sh` (상세: `WORKFLOW.md` §Enforcement)
 
 그다음 **이 세션의 상태 파일만** 삭제한다 — 다른 세션의 파일은 그 세션의 런이다:
 ```
-rm -f ".agentic/maestro/${CLAUDE_CODE_SESSION_ID:-unknown}.state"
+SID="${CLAUDE_CODE_SESSION_ID:-}"; [[ "$SID" =~ ^[A-Za-z0-9_-]+$ ]] || SID=unknown
+rm -f ".agentic/maestro/$SID.state"
 ```
 
 ---

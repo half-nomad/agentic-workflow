@@ -16,7 +16,7 @@ function Test-MaestroActive($payload) {
     $dir = Join-Path $root ".agentic/maestro"
     $sid = $env:CLAUDE_CODE_SESSION_ID
     if (-not $sid -and $payload) { $sid = [string]$payload.session_id }
-    if ($sid -notmatch '^[A-Za-z0-9_-]+$') { $sid = "" }
+    if ($sid -notmatch '\A[A-Za-z0-9_-]+\z') { $sid = "" }
     if (Test-Path -LiteralPath (Join-Path $dir "unknown.state")) { return $true }
     if ($sid) { return (Test-Path -LiteralPath (Join-Path $dir "$sid.state")) }
     return [bool](Get-ChildItem -LiteralPath $dir -Filter *.state -File -ErrorAction SilentlyContinue)

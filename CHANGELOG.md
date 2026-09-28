@@ -20,6 +20,7 @@ All notable changes to this project will be documented in this file.
   - 프로젝트에 검증 명령 등록 파일이 있으면 먼저 따른다.
 - **마에스트로 상태 파일을 세션별로** — `.agentic/maestro-mode.state`(프로젝트에 하나) → `.agentic/maestro/<CLAUDE_CODE_SESSION_ID>.state`. 훅 셋(sh·ps1)은 **지금 세션의 파일이 있을 때만** 작동한다. 세션 id 를 알 수 없으면 종전처럼 프로젝트 전체를 막는다(fail closed). 예전 파일은 읽지 않는다. 동시에 도는 마에스트로 런이 서로의 파일을 덮어쓰고, 먼저 끝난 쪽이 남의 파일까지 지우던 문제도 함께 사라진다. 세션 id 는 공식 문서상 훅 JSON 의 `session_id` 와 같은 값이고, 경로에 쓰기 전에 `[A-Za-z0-9_-]` 만 허용한다.
 - **코덱스는 CLI 로만** — `reference/codex-cli.md` 를 `codex exec` 기준으로 다시 쓰고 유일한 정본으로 삼았다. duet · WORKFLOW · phases · architect · README 의 companion 경로를 걷어냈다. 플러그인이 빠지자 그 경로를 본문에 고정해 둔 문서들이 빈 경로로 멈췄다 — 사본이 여럿이면 한쪽만 고쳐진다.
+- **훅 동작 표 `tests/hooktest.sh` 편입** — 상황 22가지 × 훅 셋 × sh·ps1 = 130칸, 임시 디렉터리의 가짜 프로젝트·가짜 홈에서 돈다. `CLAUDE.md` §검증에 한 줄. 이 레포의 첫 동작 검사다 — 종전엔 문법 검사뿐이라 아래 두 결함이 그대로 있었다. 변형 검사에서 살아남은 변형 12개(env/stdin 불일치 · `/` 없는 이상한 id)를 보고 칸을 보강했다.
 - **덤으로 찾은 기존 결함 2건** (이번 검사표가 드러냈다)
   - `maestro-guard.sh` 의 경로 정리가 macOS `/bin/bash` 3.2 에서 `..` 를 만나면 경로를 공백으로 뭉갰다(`/a/b/.agentic/../x` → `/a b/x`). 프로젝트 밖으로 읽혀 **가드를 통과**했다 — 배열 슬라이스 대신 `unset` 으로 pop.
   - `verify-prompt.ps1` 이 예약 변수 `$input` 에 대입해, 상태 파일과 변경이 있어도 아무것도 출력하지 않았다 — 가드와 같은 stdin 읽기로.

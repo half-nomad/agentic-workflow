@@ -22,9 +22,9 @@
         ]
       }
     ],
-    "PostCompact": [
+    "SessionStart": [
       {
-        "matcher": "*",
+        "matcher": "compact",
         "hooks": [
           {
             "type": "command",

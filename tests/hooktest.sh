@@ -40,7 +40,7 @@ check() {
   local json
   case "$hook" in
     maestro-guard) json="{\"tool_name\":\"Edit\",\"tool_input\":{\"file_path\":\"$fp\"}$sidfield$extra}" ;;
-    maestro-compact-reload) json="{\"hook_event_name\":\"PostCompact\",\"trigger\":\"auto\"$sidfield}" ;;
+    maestro-compact-reload) json="{\"hook_event_name\":\"SessionStart\",\"source\":\"${SRC:-compact}\"$sidfield}" ;;
     verify-prompt) json="{\"tool_name\":\"Agent\",\"hook_event_name\":\"PostToolUse\"$sidfield}" ;;
   esac
   local r; r=$(run "$fl" "$hook" "$esid" "$json")
@@ -56,12 +56,14 @@ check() {
   else fail=$((fail+1)); printf 'FAIL  %-4s %-24s %-44s %s (want %s)\n' "$fl" "$hook" "$label" "$r" "$expect"; fi
 }
 
-# check_msg <flavor> — compact-reload must emit valid JSON whose additionalContext
-# names both files to re-read. Since v5.5.0 the absolute rules live in SKILL.md,
-# not in a resident rule; the cells above only see "some output", not what it says.
+# check_msg <flavor> — compact-reload must emit valid JSON for the SessionStart event
+# whose additionalContext is a string telling the model to Read both files again.
+# Since v5.5.0 the absolute rules live in SKILL.md, not in a resident rule; the cells
+# above only see "some output", not what it says. The event name matters: v5.4.0 and
+# earlier answered as PostCompact, which cannot add context at all.
 check_msg() {
-  local fl="$1" out ok=0 label="message names SKILL.md + WORKFLOW.md"
-  local json="{\"hook_event_name\":\"PostCompact\",\"trigger\":\"auto\",\"session_id\":\"$A\"}"
+  local fl="$1" out ok=0 label="SessionStart context: Read SKILL.md + WORKFLOW.md"
+  local json="{\"hook_event_name\":\"SessionStart\",\"source\":\"compact\",\"session_id\":\"$A\"}"
   local -a envs=(env CLAUDE_PROJECT_DIR="$P" HOME="$FH" USERPROFILE="$FH" CLAUDE_CODE_SESSION_ID="$A")
   if [ "$fl" = sh ]; then
     out=$(printf '%s' "$json" | "${envs[@]}" bash "$HOOKS/maestro-compact-reload.sh" 2>/dev/null)
@@ -69,8 +71,9 @@ check_msg() {
     out=$(printf '%s' "$json" | "${envs[@]}" pwsh -NoProfile -File "$HOOKS/maestro-compact-reload.ps1" 2>/dev/null)
   fi
   printf '%s' "$out" | python3 -c 'import json,sys
-c=json.load(sys.stdin)["hookSpecificOutput"]["additionalContext"]
-sys.exit(0 if "SKILL.md" in c and "WORKFLOW.md" in c else 1)' 2>/dev/null && ok=1
+h=json.load(sys.stdin)["hookSpecificOutput"]; c=h["additionalContext"]
+sys.exit(0 if h["hookEventName"] == "SessionStart" and isinstance(c, str)
+         and "SKILL.md" in c and "WORKFLOW.md" in c and "Read" in c else 1)' 2>/dev/null && ok=1
   n=$((n+1))
   if [ $ok = 1 ]; then printf 'PASS  %-4s %-24s %s\n' "$fl" maestro-compact-reload "$label"
   else fail=$((fail+1)); printf 'FAIL  %-4s %-24s %s\n' "$fl" maestro-compact-reload "$label"; fi
@@ -116,6 +119,8 @@ for fl in $flavors; do
   check "whitelist TODO.md passes"       $fl maestro-guard $A $A pass "$P/TODO.md"
   check "outside project passes"         $fl maestro-guard $A $A pass "$OUT/x.rb"
   check "dotdot escape still blocked"    $fl maestro-guard $A $A block "$P/.agentic/../app.rb"
+  # compact-reload answers only a compaction, even when registered without a matcher
+  SRC=startup check "SessionStart startup -> silent" $fl maestro-compact-reload $A $A silent
   check_msg $fl
 done
 

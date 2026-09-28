@@ -31,7 +31,7 @@ compact 요약엔 현재 작업·성공 조건·수정 중인 파일·위임 결
 **First action (2단계, 순서 고정)**:
 
 1. **`~/.claude/skills/maestro/WORKFLOW.md` 를 Read 한다 — 무조건.**
-   "이미 읽었으니 건너뛴다" 는 판단 **금지**: compact 후 요약 잔재가 남아 있어도 그건 원문이 아니며 로드 증거도 아니다. 재읽기는 판단이 아니라 절차다. (compact 발생 시 PostCompact 훅이 이 지시를 다시 주입한다.)
+   "이미 읽었으니 건너뛴다" 는 판단 **금지**: compact 후 요약 잔재가 남아 있어도 그건 원문이 아니며 로드 증거도 아니다. 재읽기는 판단이 아니라 절차다. (compact 발생 시 SessionStart(compact) 훅이 이 지시를 다시 주입한다.)
    **이 파일엔 절대 규칙뿐이다** — 판정 기준도 출력 계약도 WORKFLOW.md 에 있다. 읽지 않으면 그것 없이 진행하게 된다.
 2. Create **this session's** state file to activate enforcement hooks:
 ```

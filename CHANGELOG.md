@@ -9,8 +9,10 @@ All notable changes to this project will be documented in this file.
 > **왜**: v5.4.0 으로 마에스트로는 사용자가 이름으로 부를 때만 쓰게 됐는데, 상주 스텁(1,972 바이트)과 스킬 설명문은 여전히 매 세션 실렸다. 부르지 않는 세션에 절대 규칙을 싣는 건 비용뿐이고, 설명문은 스스로 켤 여지를 남겼다. 에이전트 점검(실사용 트랜스크립트 약 30일)에서 frontend-engineer · librarian 은 호출 0, document-writer 는 대부분 마에스트로 런 안에서만 불렸다. 등록 에이전트는 설명문이 매 세션 목록에 실리고, 역할 지침은 general-purpose 에 담아 넘기면 된다.
 
 - **상주 룰 0** — `rules/maestro-workflow.md` 삭제. 절대 규칙 넷과 활성화 조건은 `skills/maestro/SKILL.md` 맨 위로 — compact 뒤 스킬 재첨부는 스킬마다 앞 5,000 토큰만 남기므로(공식 문서) 위치를 고정하고 그 위에 절을 넣지 말라고 적었다. 스킬에 `disable-model-invocation: true` — 설명문이 컨텍스트에서 빠지고 `/maestro` 로만 켜진다. 완료 절: 이어 갈 일이 남으면 Next Session 에 "재개는 `/maestro` 로" 를 함께 적는다 — 새 세션에 그걸 알려 주던 상주 룰이 없어졌다.
+- **README 의 `~/.claude/CLAUDE.md` 설명 정정** — "백업하고 저장소 링크로 대체한다" · "통째 링크" 는 설치 코드와 반대였다(설치는 그 파일을 건드리지 않는다).
 - **설치 계약** — install.sh · install.ps1 이 `~/.claude/rules/` 에 아무것도 놓지 않는다. 종전 링크는 끊긴 링크 정리가, Windows 사본은 은퇴 경로 처리가 치운다. 일반 파일로 바뀐 사본은 지우지 않고 알린다(install.sh 에 알림 추가 — 지문이 없어 사용자 파일과 구별할 수 없다). 대응표 → `docs/migrations.md` §v5.4 → v5.5.
-- **compact 재주입 문구** — "상주 스텁만 남았다" → "SKILL.md 와 WORKFLOW.md 를 다시 읽어라". 훅 동작 표에 문구 내용 칸 2개(JSON 유효 + 두 파일 이름) — 종전 표는 출력 유무만 봤다. 130 → 132칸.
+- **compact 재주입을 `SessionStart`(matcher `compact`)로 — 기존 결함 수정.** PostCompact 는 결정 제어가 없는 부수 작업용 이벤트라 `additionalContext` 를 모델에 넣지 못한다(공식 문서 hooks §PostCompact). v5.0 에서 상주분을 스텁으로 줄이며 기댄 재주입이 지금 문서 기준으로는 모델에 닿지 않는다(코덱스가 설치된 Claude Code 2.1.283 코드에서도 확인, 이전 버전에서 닿았는지는 확인하지 않았다) — 이번 관문2 코덱스 검토가 찾았다. 스크립트는 `source` 가 `compact` 일 때만 응답하고 이벤트 이름을 `SessionStart` 로 낸다. 등록 블록(`settings.json` · README 두 곳)도 옮겼다 — 사용자 `settings.json` 은 손으로 옮긴다(`docs/migrations.md`). 문구도 "상주 스텁만 남았다" → "SKILL.md 와 WORKFLOW.md 를 다시 읽어라".
+- **훅 동작 표 130 → 134칸** — compact 훅 출력의 내용 칸 2개(이벤트 이름 `SessionStart` · 문자열 · 두 파일 이름 · 재읽기 지시)와 startup 에는 침묵하는 칸 2개. 종전 표는 출력 유무만 봐서 이벤트 이름이 틀려도 초록이었다 — 변형 검사에서 살아남은 변형 3종(이벤트 이름 · 이름만 남긴 문구 · 배열 값)이 이제 죽는다.
 - **에이전트 은퇴** — frontend-engineer · librarian · document-writer. 마에스트로 시각 축 검증자는 general-purpose + `rubrics/visual-axis.md` 채점표로.
 - **`permission-mode:` 줄 삭제** (architect) — 공식 필드명은 `permissionMode` 이고 모르는 필드는 조용히 무시된다. 이 줄은 처음부터 동작하지 않았다. 고쳐서 켜지 않은 이유: architect 는 조언자라 확인 없이 파일을 고칠 권한이 필요 없다.
 

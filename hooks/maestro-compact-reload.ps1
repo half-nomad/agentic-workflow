@@ -1,5 +1,6 @@
 # maestro-compact-reload.ps1
-# PostCompact hook (Windows): maestro 모드에서 compact 발생 시 SKILL.md·WORKFLOW.md 재읽기 지시를 재주입
+# SessionStart hook (matcher "compact", Windows): maestro 모드에서 compact 발생 시 SKILL.md·WORKFLOW.md 재읽기 지시를 재주입
+# PostCompact 는 컨텍스트를 넣지 못한다 - 근거는 maestro-compact-reload.sh 주석.
 # 근거·동작은 maestro-compact-reload.sh 주석 참조.
 # Non-blocking: always exit 0
 
@@ -19,6 +20,7 @@ function Test-MaestroActive($payload) {
     return [bool](Get-ChildItem -LiteralPath $dir -Filter *.state -File -ErrorAction SilentlyContinue)
 }
 
+if (-not $payload -or [string]$payload.source -ne 'compact') { exit 0 }   # compact 로 시작한 경우만
 if (-not (Test-MaestroActive $payload)) { exit 0 }   # 이 세션이 maestro 가 아님
 
 $workflow = Join-Path $env:USERPROFILE ".claude\skills\maestro\WORKFLOW.md"
@@ -28,7 +30,7 @@ $msg = '[maestro] 컨텍스트가 요약됐다. 진행 중인 오케스트레이
 
 $out = @{
   hookSpecificOutput = @{
-    hookEventName    = 'PostCompact'
+    hookEventName    = 'SessionStart'
     additionalContext = $msg
   }
 }

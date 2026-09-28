@@ -1,6 +1,11 @@
 #!/bin/bash
 # maestro-compact-reload.sh
-# PostCompact hook: maestro 모드에서 compact 발생 시 SKILL.md·WORKFLOW.md 재읽기 지시를 재주입
+# SessionStart hook (matcher "compact"): maestro 모드에서 compact 발생 시 SKILL.md·WORKFLOW.md
+# 재읽기 지시를 재주입
+#
+# 왜 PostCompact 가 아닌가: PostCompact 는 결정 제어가 없는 부수 작업용 이벤트라 additionalContext 를
+# 모델에 넣지 못한다(공식 문서 hooks §PostCompact). v5.4.0 까지 이 훅은 PostCompact 에 등록돼 있어
+# 재주입이 모델에 닿지 않았다. compact 뒤 컨텍스트를 넣는 자리는 SessionStart(source=compact)다.
 #
 # 왜 필요한가: v5.5.0 부터 상주 룰이 없다. 절대 규칙 넷은 skills/maestro/SKILL.md 맨 위에,
 # 판정 기준·절차·출력 계약·검증 규약의 정본은 skills/maestro/WORKFLOW.md 에 있고 둘 다 대화에
@@ -48,6 +53,8 @@ maestro_active() {
     fi
 }
 
+# compact 로 시작한 경우만 — matcher 없이 등록돼 startup·resume·clear 에도 불려도 조용히 통과
+[ "$(json_get "$INPUT" ".source")" = compact ] || exit 0
 maestro_active || exit 0   # 이 세션이 maestro 가 아니면 조용히 통과
 
 WORKFLOW="$HOME/.claude/skills/maestro/WORKFLOW.md"
@@ -57,7 +64,7 @@ WORKFLOW="$HOME/.claude/skills/maestro/WORKFLOW.md"
 cat <<'JSON'
 {
   "hookSpecificOutput": {
-    "hookEventName": "PostCompact",
+    "hookEventName": "SessionStart",
     "additionalContext": "[maestro] 컨텍스트가 요약됐다. 진행 중인 오케스트레이션의 절대 규칙(~/.claude/skills/maestro/SKILL.md 맨 위)과 판정 기준·절차·출력 계약·검증 규약(~/.claude/skills/maestro/WORKFLOW.md)이 요약 과정에서 소실됐거나 잘렸을 수 있다 — 시스템 프롬프트에 상주하는 마에스트로 룰은 없다. 다음 행동 전에 SKILL.md 와 WORKFLOW.md 를 Read 로 다시 읽어라 — 요약본에 관련 내용이 남아 있어 보여도 원문이 아니고 로드 증거도 아니다."
   }
 }

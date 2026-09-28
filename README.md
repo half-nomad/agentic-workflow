@@ -6,11 +6,11 @@ Claude Code를 위한 Maestro 오케스트레이션 시스템. 패턴 기반 에
 
 agentic-workflow는 Claude Code CLI에 최적화된 **Maestro** 오케스트레이션 시스템입니다. Claude가 오케스트레이터 역할을 수행하여 작업을 분석하고, 적절한 패턴을 선택하고, 필요한 에이전트를 식별한 후 계획을 제출합니다.
 
-이 저장소는 Maestro의 **배포본 소스**입니다. `git clone` 후 `install.sh` / `install.ps1`을 실행하면 에이전트 4개, 훅, `rules/maestro-workflow.md`, `skills/maestro/`, `skills/duet/` 가 사용자의 `~/.claude/`에 심볼릭 링크(Windows는 복사)로 연결됩니다. 배포된 설정은 곧 이 저장소의 워킹트리이므로, 갱신의 본질은 `git pull`입니다 — 정확한 절차와 왜 그것만으로 부족한지는 아래 §업데이트를 참고하세요. 훅 등록은 최초 1회 수동으로 합니다 (아래 §훅 등록 참조).
+이 저장소는 Maestro의 **배포본 소스**입니다. `git clone` 후 `install.sh` / `install.ps1`을 실행하면 에이전트(architect), 훅, `skills/maestro/`, `skills/duet/` 가 사용자의 `~/.claude/`에 심볼릭 링크(Windows는 복사)로 연결됩니다. 배포된 설정은 곧 이 저장소의 워킹트리이므로, 갱신의 본질은 `git pull`입니다 — 정확한 절차와 왜 그것만으로 부족한지는 아래 §업데이트를 참고하세요. 훅 등록은 최초 1회 수동으로 합니다 (아래 §훅 등록 참조).
 
-**이 저장소가 배포하는 것은 Maestro 워크플로 하나입니다** (`/duet` 은 그 경량판이자 v5.4.0 부터 기본 모드이고, 상주 비용이 0 입니다 — 훅도 상주 룰도 쓰지 않습니다). `~/.claude/rules/` 에 놓는 파일은 `maestro-workflow.md` 뿐이고, 코딩 규율·보안 정책·메모리 규약처럼 상시 적용되는 것은 사람마다 다르므로 배포하지 않습니다 — 그 자리는 여러분의 것이고, 설치·갱신·제거 어느 것도 건드리지 않습니다.
+**이 저장소가 배포하는 것은 Maestro 워크플로 하나입니다** (`/duet` 은 그 경량판이자 v5.4.0 부터 기본 모드이고, 상주 비용이 0 입니다 — 훅도 상주 룰도 쓰지 않습니다). v5.5.0 부터 `~/.claude/rules/` 에는 아무것도 놓지 않습니다 — 마에스트로의 절대 규칙은 `/maestro` 를 칠 때만 로드되는 스킬 안으로 옮겼고, 스킬 설명문도 컨텍스트에 싣지 않습니다(`disable-model-invocation`). 그래서 `/maestro` 를 부르지 않는 세션에는 마에스트로가 한 글자도 실리지 않습니다. 코딩 규율·보안 정책·메모리 규약처럼 상시 적용되는 것은 사람마다 다르므로 배포하지 않습니다 — 그 자리는 여러분의 것이고, 설치·갱신·제거 어느 것도 건드리지 않습니다.
 
-**그 한 파일도 ~60줄짜리 스텁입니다.** 목표 4개와 그것을 지키는 절대 규칙만 상주하고, 나머지는 `/maestro` 를 호출할 때 스킬로 로드됩니다. `/maestro` 를 쓰지 않는 세션까지 전문을 지고 다닐 이유가 없기 때문입니다 — compact 후 유실은 PostCompact 훅이 재주입으로 처리합니다.
+**상주하는 것은 없습니다.** 절대 규칙 넷은 `/maestro` 를 호출할 때 로드되는 스킬 맨 위에 있고, 판정 기준·절차는 그 스킬이 읽게 하는 `WORKFLOW.md` 에 있습니다. v5.0 에서 348줄 상주를 ~60줄 스텁으로 줄였고, v5.5.0 에서 그 스텁까지 스킬로 옮겼습니다 — `/maestro` 를 쓰지 않는 세션까지 지고 다닐 이유가 없기 때문입니다. compact 후 유실은 PostCompact 훅의 재읽기 지시로 처리합니다.
 
 ## Maestro 가 달성하려는 것
 
@@ -56,7 +56,7 @@ Maestro 의 Codex 교차검증(Codex#1 / Codex#2)은 프로젝트 디렉터리�
 - **Context Embedding**: 서브에이전트에 스키마/패턴/제약 직접 주입 (5b output contract 요구사항 포함)
 - **알아들을 수 있는 보고**: 내부 용어를 숨기지도 그냥 던지지도 않습니다 — 처음 나올 때 `용어(쉬운 설명)` 로 한 번 풀어 쓰고, 결과는 **만든 것 / 확인한 방법 / 확인 못 한 것 / 할 일** 네 가지로 보고합니다
 - **검증 축이 없으면 완료를 선언하지 않음**: 테스트·린트·빌드가 전부 없는 프로젝트에서 `— 작업 완료 —` 를 출력하지 않습니다. 대신 무엇을 확인하지 못했는지와 직접 확인할 것을 알려줍니다 — 검증 수단 부재는 완료의 사유가 아니라 미완료의 내용이기 때문입니다
-- **4개 전문 에이전트**: architect (fable), frontend-engineer (opus), librarian (sonnet), document-writer (sonnet) + 자동 발견되는 프로젝트 에이전트
+- **에이전트**: architect (fable) — duet 관문1·마에스트로의 설계 검토 + 자동 발견되는 프로젝트 에이전트. 그 밖의 역할은 general-purpose 에 역할·맥락을 담아 부릅니다 (v5.5.0 에서 frontend-engineer·librarian·document-writer 은퇴)
 - **State Persistence**: MEMORY.md로 세션 간 컨텍스트 유지
 
 ## 설치 방법
@@ -235,10 +235,10 @@ Windows는 복사 방식이라 `git pull`이 상류를 자동으로 추적하지
 
 ## 주의사항
 
-1. **심볼릭 링크는 "통과해서" 쓰고, 절대 덮어쓰지 마세요.** `~/.claude/rules/maestro-workflow.md`는 저장소 안쪽을 가리키는 링크이므로, 그 파일을 편집하는 것이 곧 저장소를 편집하는 것입니다 — 이게 원래 의도입니다. 하지만 `sed -i`나, 임시 파일에 쓴 뒤 원래 이름으로 rename하며 저장하는 에디터는 **링크 자체를 일반 파일로 바꿔버립니다.** 그 순간 배포본이 저장소에서 조용히 갈라지고 이후 업데이트를 받지 못합니다. `find ~/.claude -maxdepth 2 -type f`로 후보를 찾을 수 있지만, 이 명령은 `settings.json`이나 `rules/`의 사용자 파일들, 개인 훅처럼 **원래부터 일반 파일이어야 하는 것들도 그대로 나열**하므로 결과는 걸러서 봐야 합니다 — 찾는 대상은 "원래 링크여야 하는데 일반 파일이 된 것"뿐입니다. 어느 쪽이든 판단이 서지 않으면 `install.sh`를 재실행하세요 — 이미 올바른 항목은 건드리지 않고, 갈라진 것만 링크로 되돌립니다.
+1. **심볼릭 링크는 "통과해서" 쓰고, 절대 덮어쓰지 마세요.** `~/.claude/hooks/maestro-guard.sh`는 저장소 안쪽을 가리키는 링크이므로, 그 파일을 편집하는 것이 곧 저장소를 편집하는 것입니다 — 이게 원래 의도입니다. 하지만 `sed -i`나, 임시 파일에 쓴 뒤 원래 이름으로 rename하며 저장하는 에디터는 **링크 자체를 일반 파일로 바꿔버립니다.** 그 순간 배포본이 저장소에서 조용히 갈라지고 이후 업데이트를 받지 못합니다. `find ~/.claude -maxdepth 2 -type f`로 후보를 찾을 수 있지만, 이 명령은 `settings.json`이나 `rules/`의 사용자 파일들, 개인 훅처럼 **원래부터 일반 파일이어야 하는 것들도 그대로 나열**하므로 결과는 걸러서 봐야 합니다 — 찾는 대상은 "원래 링크여야 하는데 일반 파일이 된 것"뿐입니다. 어느 쪽이든 판단이 서지 않으면 `install.sh`를 재실행하세요 — 이미 올바른 항목은 건드리지 않고, 갈라진 것만 링크로 되돌립니다.
 2. **배포된 skill 디렉터리 안쪽에는 절대 쓰지 마세요.** `~/.claude/skills/maestro`는 저장소의 `skills/maestro` 그 자체이므로, 거기에 쓴 것은 무엇이든 git 워킹트리에 그대로 들어갑니다.
 3. **저장소를 옮기면 제거가 깨지는 것보다 먼저 배포 전체가 깨집니다.** 체크아웃을 옮기는 순간 `~/.claude/`에 심어둔 링크 전부가 죽은 링크(dangling link)가 됩니다 — `rules/`가 조용히 로드를 멈추고(`secure-coding`도 예외가 아니므로 이는 곧 소리 없는 보안 회귀입니다), `hooks/`를 가리키던 모든 도구 호출이 에러를 내기 시작합니다 (증상은 §업데이트에서 설명한 것과 동일합니다). 그 위에 제거 스크립트도 깨집니다: 링크는 절대 경로를 기억하고, 제거 스크립트는 그 경로 접두사로 자신이 만든 링크인지 판별하는데, 체크아웃 위치를 옮기면 아무것도 매칭되지 않아 아무것도 지워지지 않습니다 (조용히 넘어가지 않고 명확히 알립니다). 옮기기 전에 제거하거나, 새 위치에서 `install.sh`를 다시 실행하세요.
-4. **`~/.claude/rules/`의 나머지 파일은 전부 사용자의 것입니다.** 이 저장소가 `rules/`에 놓는 것은 **`maestro-workflow.md` 하나뿐**이고, 인스톨러는 그 한 파일만 allowlist로 배치합니다 — glob이 아니라서, 나중에 이 저장소에 같은 이름의 룰이 추가돼도 당신 파일을 밀어내지 않습니다. `rules/`의 파일은 소유자와 무관하게 전부 `CLAUDE.md`처럼 모든 프로젝트에 로드되므로, 머신 한정이거나 개인적인 지시는 거기에 아무 이름으로나 적으면 됩니다. 설치 과정에서 밀려나는 파일은 전부 `~/.claude/.maestro-backup-<타임스탬프>/`로 옮겨지고 경로가 출력됩니다 — 조용히 지워지는 것은 없습니다. `~/.claude/CLAUDE.md`도 예외가 아닙니다 — 거기에 사용자 고유의 지시가 들어 있더라도 다른 모든 경로와 **똑같은 규칙**으로 백업되고(원본 바이트 그대로 남습니다), 그 자리에는 저장소를 가리키는 링크가 들어섭니다. 설치가 중단되지는 않습니다.
+4. **`~/.claude/rules/`의 파일은 전부 사용자의 것입니다.** v5.5.0 부터 이 저장소는 `rules/`에 아무것도 놓지 않습니다 — 그 전 버전이 놓았던 `maestro-workflow.md` 링크는 재설치 때 정리되고, 일반 파일로 바뀌어 있으면 인스톨러가 알리기만 합니다(`docs/migrations.md` §v5.5.0). `rules/`의 파일은 소유자와 무관하게 전부 `CLAUDE.md`처럼 모든 프로젝트에 로드되므로, 머신 한정이거나 개인적인 지시는 거기에 아무 이름으로나 적으면 됩니다. 설치 과정에서 밀려나는 파일은 전부 `~/.claude/.maestro-backup-<타임스탬프>/`로 옮겨지고 경로가 출력됩니다 — 조용히 지워지는 것은 없습니다. `~/.claude/CLAUDE.md`도 예외가 아닙니다 — 거기에 사용자 고유의 지시가 들어 있더라도 다른 모든 경로와 **똑같은 규칙**으로 백업되고(원본 바이트 그대로 남습니다), 그 자리에는 저장소를 가리키는 링크가 들어섭니다. 설치가 중단되지는 않습니다.
 5. **저장소 워킹트리가 곧 라이브 설정입니다.** 복사 방식은 "저장소 상태"와 "배포 상태" 사이에 완충 지대를 뒀지만, 심볼릭 링크는 그 완충을 의도적으로 없앴습니다. 이 체크아웃에서 하는 모든 git 작업 — 다른 브랜치로 `checkout`, `rebase`, `stash`, `reset --hard`, 심지어 커밋하지 않고 저장만 한 편집까지 — 이 `~/.claude`가 서빙하는 내용을 **즉시** 바꿉니다. 가드 훅과 보안 룰을 포함해서, 모든 프로젝트·모든 실행 중인 세션에 동시에요. 이 저장소 자체를 작업 대상으로 삼고 있다면 자신의 전역 설정이 지금 작업 중인 브랜치를 따라 함께 움직인다고 예상하세요 — 그걸 원치 않는 실험적 브랜치는 별도 clone(또는 worktree)에서 작업하고, 브랜치를 옮긴 뒤에는 항상 `install.sh`를 다시 실행해 추가·삭제된 파일을 재연결하세요.
 
 ## Maestro 워크플로우
@@ -309,10 +309,9 @@ Maestro 모드의 EXECUTE 단계는 다음 4 sub-step 으로 구성:
 
 | 에이전트 | 모델 | Tools | 용도 |
 |---------|------|-------|------|
-| 🔵 `@architect` | Opus | inherited | 전략적 자문, 아키텍처 결정 |
-| 🟢 `@frontend-engineer` | Opus | inherited | UI/UX, 컴포넌트, 스타일링 |
-| 🟡 `@librarian` | Sonnet | limited | 문서 리서치, API 레퍼런스 |
-| 🟣 `@document-writer` | Sonnet | inherited | README, 가이드 문서 작성 |
+| 🔵 `@architect` | Fable | inherited | 전략적 자문, 아키텍처 결정 — duet 관문1 에 상시 병렬 |
+
+frontend-engineer · librarian · document-writer 는 v5.5.0 에서 은퇴했습니다 — 실사용 약 30일 동안 마에스트로 밖 호출이 거의 없었고, 역할 지침은 general-purpose 에 담아 넘기면 됩니다.
 
 #### 동적 역할
 
@@ -331,7 +330,7 @@ Maestro 모드의 EXECUTE 단계는 다음 4 sub-step 으로 구성:
 
 > `verify-*` · `manage-skills` 는 이 레포가 배포하지 않습니다 — 프로젝트에 있으면 Phase 6 에서 활용하고, 없으면 `git diff` 리뷰로 대체합니다 (선택 의존성).
 
-에이전트는 `@architect`, `@frontend-engineer`, `@librarian`, `@document-writer`로 직접 호출합니다.
+에이전트는 `@architect` 로 직접 호출합니다. 다른 역할이 필요하면 general-purpose 에 역할·맥락을 담아 부릅니다.
 자율 반복은 Claude Code 내장 `/goal`을 사용 (별도 ralph loop 불필요).
 Obsidian 노트 스킬은 별도 플러그인 [`my-note-skills`](https://github.com/half-nomad/my-note-skills).
 
@@ -380,7 +379,7 @@ Obsidian 노트 스킬은 별도 플러그인 [`my-note-skills`](https://github.
 /maestro React, Vue, Angular 에러 핸들링 동시에 비교 조사
 ```
 
-→ `"동시에"` 감지 → Parallelization 패턴 **우선 선택**(강제가 아니라 preferred) → 3개 @librarian 병렬 → 결과 합성
+→ `"동시에"` 감지 → Parallelization 패턴 **우선 선택**(강제가 아니라 preferred) → 3개 general-purpose(리서치 역할) 병렬 → 결과 합성
 
 ### 예시 4: Codex 교차 검증
 
@@ -395,11 +394,10 @@ Obsidian 노트 스킬은 별도 플러그인 [`my-note-skills`](https://github.
 
 ```
 agentic-workflow/
-├── agents/           # 전문 에이전트 (architect, frontend, librarian, document-writer) — 파일 단위로 ~/.claude/agents/ 에 링크
+├── agents/           # architect 하나 — 파일 단위로 ~/.claude/agents/ 에 링크
 ├── skills/           # Skills (maestro · duet) — 디렉터리 단위로 ~/.claude/skills/ 에 링크
-├── rules/            # maestro-workflow.md 하나뿐 — allowlist 로 ~/.claude/rules/ 에 링크 (나머지 rules/ 는 사용자 것)
 ├── hooks/            # Hook 스크립트 (maestro-guard, verify-prompt 등) — .ps1 + .sh 크로스 플랫폼, 파일 단위로 ~/.claude/hooks/ 에 링크
-├── docs/             # 시점 기록 — 각 문서 상단에 작성일이 있고, 그때의 판단을 그대로 둡니다 (현재 동작은 rules/ 와 이 README 가 정본)
+├── docs/             # 시점 기록 — 각 문서 상단에 작성일이 있고, 그때의 판단을 그대로 둡니다 (현재 동작은 skills/ 와 이 README 가 정본)
 ├── CLAUDE.md         # 진입점 — 활성화 명령, 상태 관리. ~/.claude/CLAUDE.md 로 통째 링크
 ├── install.sh        # Linux/macOS/WSL 설치·업데이트 스크립트 (심볼릭 링크 방식)
 ├── install.ps1       # Windows 설치·업데이트 스크립트 (복사 + 매니페스트 기록)

@@ -56,6 +56,26 @@ check() {
   else fail=$((fail+1)); printf 'FAIL  %-4s %-24s %-44s %s (want %s)\n' "$fl" "$hook" "$label" "$r" "$expect"; fi
 }
 
+# check_msg <flavor> — compact-reload must emit valid JSON whose additionalContext
+# names both files to re-read. Since v5.5.0 the absolute rules live in SKILL.md,
+# not in a resident rule; the cells above only see "some output", not what it says.
+check_msg() {
+  local fl="$1" out ok=0 label="message names SKILL.md + WORKFLOW.md"
+  local json="{\"hook_event_name\":\"PostCompact\",\"trigger\":\"auto\",\"session_id\":\"$A\"}"
+  local -a envs=(env CLAUDE_PROJECT_DIR="$P" HOME="$FH" USERPROFILE="$FH" CLAUDE_CODE_SESSION_ID="$A")
+  if [ "$fl" = sh ]; then
+    out=$(printf '%s' "$json" | "${envs[@]}" bash "$HOOKS/maestro-compact-reload.sh" 2>/dev/null)
+  else
+    out=$(printf '%s' "$json" | "${envs[@]}" pwsh -NoProfile -File "$HOOKS/maestro-compact-reload.ps1" 2>/dev/null)
+  fi
+  printf '%s' "$out" | python3 -c 'import json,sys
+c=json.load(sys.stdin)["hookSpecificOutput"]["additionalContext"]
+sys.exit(0 if "SKILL.md" in c and "WORKFLOW.md" in c else 1)' 2>/dev/null && ok=1
+  n=$((n+1))
+  if [ $ok = 1 ]; then printf 'PASS  %-4s %-24s %s\n' "$fl" maestro-compact-reload "$label"
+  else fail=$((fail+1)); printf 'FAIL  %-4s %-24s %s\n' "$fl" maestro-compact-reload "$label"; fi
+}
+
 flavors="sh ps1"; [ -n "$ONLY" ] && flavors="$ONLY"
 for fl in $flavors; do
   for hook in maestro-guard maestro-compact-reload verify-prompt; do
@@ -96,6 +116,7 @@ for fl in $flavors; do
   check "whitelist TODO.md passes"       $fl maestro-guard $A $A pass "$P/TODO.md"
   check "outside project passes"         $fl maestro-guard $A $A pass "$OUT/x.rb"
   check "dotdot escape still blocked"    $fl maestro-guard $A $A block "$P/.agentic/../app.rb"
+  check_msg $fl
 done
 
 rm -rf "$T"

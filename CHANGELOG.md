@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Changed — v5.5.0 (2026-09-28): 마에스트로 상주 룰 해제 · 에이전트 3개 은퇴 · `permission-mode` 줄 삭제
+
+> **왜**: v5.4.0 으로 마에스트로는 사용자가 이름으로 부를 때만 쓰게 됐는데, 상주 스텁(1,972 바이트)과 스킬 설명문은 여전히 매 세션 실렸다. 부르지 않는 세션에 절대 규칙을 싣는 건 비용뿐이고, 설명문은 스스로 켤 여지를 남겼다. 에이전트 점검(실사용 트랜스크립트 약 30일)에서 frontend-engineer · librarian 은 호출 0, document-writer 는 대부분 마에스트로 런 안에서만 불렸다. 등록 에이전트는 설명문이 매 세션 목록에 실리고, 역할 지침은 general-purpose 에 담아 넘기면 된다.
+
+- **상주 룰 0** — `rules/maestro-workflow.md` 삭제. 절대 규칙 넷과 활성화 조건은 `skills/maestro/SKILL.md` 맨 위로 — compact 뒤 스킬 재첨부는 스킬마다 앞 5,000 토큰만 남기므로(공식 문서) 위치를 고정하고 그 위에 절을 넣지 말라고 적었다. 스킬에 `disable-model-invocation: true` — 설명문이 컨텍스트에서 빠지고 `/maestro` 로만 켜진다. 완료 절: 이어 갈 일이 남으면 Next Session 에 "재개는 `/maestro` 로" 를 함께 적는다 — 새 세션에 그걸 알려 주던 상주 룰이 없어졌다.
+- **설치 계약** — install.sh · install.ps1 이 `~/.claude/rules/` 에 아무것도 놓지 않는다. 종전 링크는 끊긴 링크 정리가, Windows 사본은 은퇴 경로 처리가 치운다. 일반 파일로 바뀐 사본은 지우지 않고 알린다(install.sh 에 알림 추가 — 지문이 없어 사용자 파일과 구별할 수 없다). 대응표 → `docs/migrations.md` §v5.4 → v5.5.
+- **compact 재주입 문구** — "상주 스텁만 남았다" → "SKILL.md 와 WORKFLOW.md 를 다시 읽어라". 훅 동작 표에 문구 내용 칸 2개(JSON 유효 + 두 파일 이름) — 종전 표는 출력 유무만 봤다. 130 → 132칸.
+- **에이전트 은퇴** — frontend-engineer · librarian · document-writer. 마에스트로 시각 축 검증자는 general-purpose + `rubrics/visual-axis.md` 채점표로.
+- **`permission-mode:` 줄 삭제** (architect) — 공식 필드명은 `permissionMode` 이고 모르는 필드는 조용히 무시된다. 이 줄은 처음부터 동작하지 않았다. 고쳐서 켜지 않은 이유: architect 는 조언자라 확인 없이 파일을 고칠 권한이 필요 없다.
+
 ### Changed — v5.4.0 (2026-09-28): `/duet` 기본 모드화(v0.4.0) · 마에스트로 상태 파일 세션 분리 · 코덱스 CLI 전환
 
 > **왜**: 실사용 프로젝트 한 곳의 세션 기록(최근 약 한 달)을 재 보니 마에스트로 세션의 출력 토큰 중앙값이 duet 의 약 2.2배였다(작업 난이도는 통제 안 된 비교). 2026-09-09 마에스트로 런이 사용 한도로 중단되자 단일 상태 파일이 남아, 그 프로젝트의 **모든 세션**에서 쓰기 차단 가드가 켜져 있었다. 마에스트로 런 기록의 "놓친 것" 칸에는 오케스트레이터가 전달자가 되며 생긴 손실이 4회 있었다(리뷰어 주장을 열어 보지 않고 지침에 옮김 2회 · 워커 수치를 직접 잰 것처럼 보고 · "오케스트레이터라 못 고친다" 며 변형 검사를 접음).

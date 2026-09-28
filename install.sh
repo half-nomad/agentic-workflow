@@ -7,9 +7,8 @@
 #
 # Granularity is a safety property, not a style choice:
 #   agents/ hooks/         -> per FILE  (your own files live in those dirs)
-#   rules/                 -> ALLOWLIST (maestro-workflow.md only; the rest of
-#                             ~/.claude/rules/ is yours and we never claim it)
 #   skills/<name>/         -> per DIR   (each shipped skill dir is wholly ours)
+#   rules/                 -> nothing since v5.5.0 — ~/.claude/rules/ is yours
 # A directory symlink over ~/.claude/rules or ~/.claude/hooks would erase the
 # files you keep there.
 #
@@ -116,6 +115,8 @@ expected_target() {
     esac
     case "$rel" in
         */*/*)                              return 0 ;;  # deeper than we deploy
+        # rules/* stays although nothing ships there now: the link a pre-v5.5.0
+        # install left at rules/maestro-workflow.md must still be swept.
         agents/*|rules/*|hooks/*|skills/*)  printf '%s\n' "$REPO/$rel" ;;
     esac
 }
@@ -142,7 +143,7 @@ echo "  repo: $REPO"
 echo "  into: $CLAUDE_HOME"
 echo ""
 
-mkdir -p "$CLAUDE_HOME/agents" "$CLAUDE_HOME/rules" "$CLAUDE_HOME/hooks" "$CLAUDE_HOME/skills"
+mkdir -p "$CLAUDE_HOME/agents" "$CLAUDE_HOME/hooks" "$CLAUDE_HOME/skills"
 
 # ~/.claude/CLAUDE.md is deliberately NOT deployed. It is yours.
 #
@@ -162,17 +163,12 @@ for d in agents hooks; do
     done
 done
 
-# rules/ is an ALLOWLIST, not a glob — deliberately asymmetric with the loops
-# above and below. The contract is that install places exactly one rule file and
-# that every other file in ~/.claude/rules/ belongs to you: your own global.md,
-# secure-coding.md, personal.md and so on live there and this repo must never
-# claim them. A glob would mean that adding a same-named rule upstream displaces
-# your file on the next reinstall (loudly backed up, but displaced all the same).
-# Adding a rule here is a deliberate act; make it one.
-for f in maestro-workflow.md; do
-    [ -f "$REPO/rules/$f" ] || continue
-    link "$REPO/rules/$f" "$CLAUDE_HOME/rules/$f"
-done
+# rules/ ships nothing since v5.5.0. Every file in ~/.claude/rules/ loads into
+# every session, and maestro's absolute rules only matter inside a /maestro run,
+# so they moved into skills/maestro/SKILL.md (loaded when the user types
+# /maestro). ~/.claude/rules/ is wholly yours: your own global.md, personal.md
+# and so on live there and this repo never claims them. If a rule ever has to
+# ship again, list it by name here — never glob this directory.
 
 # skills/ stays a glob: unlike rules/, whatever sits in this repo's skills/ is
 # wholly ours by definition, and a name collision with one of your own skills is
@@ -196,6 +192,18 @@ fi
 # ~/.codex/AGENTS.md — see "Codex" in the project README.
 
 sweep_dangling "$CLAUDE_HOME" 2
+
+# The sweep only removes a link that still points at this checkout. A retired
+# file that was turned into a plain file (an editor that saves by rename does
+# that) keeps loading — the rule into every session, an agent into every agent
+# list — and without a fingerprint it cannot be told apart from a file of yours.
+# So say so instead of deleting it.
+for retired in rules/maestro-workflow.md agents/document-writer.md \
+               agents/frontend-engineer.md agents/librarian.md; do
+    [ -e "$CLAUDE_HOME/$retired" ] || [ -L "$CLAUDE_HOME/$retired" ] || continue
+    printf '\n  NOTE: ~/.claude/%s is no longer shipped (retired in v5.5.0) but is still there.\n' "$retired"
+    printf '        If this repo put it there, delete it — it still loads.\n'
+done
 
 if [ -d "$BACKUP_ROOT" ]; then
     echo ""

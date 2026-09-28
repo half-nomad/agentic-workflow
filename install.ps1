@@ -7,7 +7,7 @@
 #
 # Granularity mirrors install.sh and is a safety property:
 #   agents\* hooks\*  -> per FILE   (your own files live there)
-#   rules\             -> ALLOWLIST (maestro-workflow.md only; CLAUDE.md is NOT deployed)
+#   rules\             -> nothing since v5.5.0 (~\.claude\rules\ is yours; CLAUDE.md is NOT deployed)
 #   skills\<name>\                         -> per DIR  (each is wholly ours)
 #
 # Every deployed path is recorded in ~\.claude\.maestro-manifest.txt, and
@@ -131,7 +131,7 @@ Write-Host ('  repo: ' + $repo)
 Write-Host ('  into: ' + $claudeHome)
 Write-Host ''
 
-foreach ($sub in @('agents', 'rules', 'hooks', 'skills')) {
+foreach ($sub in @('agents', 'hooks', 'skills')) {
     $d = Join-Path $claudeHome $sub
     if (-not (Test-Path -LiteralPath $d)) { New-Item -ItemType Directory -Path $d -Force | Out-Null }
 }
@@ -154,17 +154,12 @@ foreach ($sub in @('agents', 'hooks')) {
     }
 }
 
-# rules\ is an ALLOWLIST, not a glob - deliberately asymmetric with the loops
-# above and below. This installer places exactly one rule file; every other file
-# in ~\.claude\rules\ is yours (your own global.md, personal.md, ...). A glob
-# would mean that adding a same-named rule upstream displaces your file on the
-# next reinstall. Adding a rule here is a deliberate act; make it one.
-foreach ($ruleName in @('maestro-workflow.md')) {
-    $src = Join-Path (Join-Path $repo 'rules') $ruleName
-    if (Test-Path -LiteralPath $src) {
-        Deploy-File $src (Join-Path (Join-Path $claudeHome 'rules') $ruleName)
-    }
-}
+# rules\ ships nothing since v5.5.0 - maestro's absolute rules moved into
+# skills\maestro\SKILL.md, loaded only when the user types /maestro, and every
+# file in ~\.claude\rules\ is yours. The copy an older install left there is
+# handled by the retired-paths pass below: moved to the backup root when it is
+# unmodified, reported and kept when it is not. If a rule ever has to ship
+# again, list it by name here - never glob this directory.
 
 # skills\ stays a glob: whatever sits in this repo's skills\ is wholly ours.
 $skillsDir = Join-Path $repo 'skills'

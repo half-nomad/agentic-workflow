@@ -87,12 +87,12 @@ baseline **출처도 명시** (commit message 메타는 stale 가능 → 의심�
 |---|---|---|
 | Reviewer | 코드 품질 (구조 / 일관성 / 위험 패턴 / 가독성) | R1 first match — project `*-reviewer.md` → `@code-reviewer` → `@architect` fallback |
 | Codex#2 | mode T = test verification / mode A = implementation attack | trigger → `WORKFLOW.md` §교차검증 |
-| frontend-engineer | 시각 디자인 (실제 렌더 vs 디자인 레퍼런스) | UI-bearing 청크만 |
+| 시각 검증자 (general-purpose + `rubrics/visual-axis.md`) | 시각 디자인 (실제 렌더 vs 디자인 레퍼런스) | UI-bearing 청크만 |
 
 ```
   ┌─ Reviewer          input: diff + worker self-test 출력
   ├─ Codex#2           input: mode T = test 코드 + 결과 / mode A = 구현 diff + 공격 표면 목록
-  └─ frontend-engineer input: 변경 페이지 + 디자인 레퍼런스
+  └─ 시각 검증자       input: 변경 페이지 + 디자인 레퍼런스 + 채점표
 
 orchestrator: raw output 을 직접 받아 fix-loop input 으로 통합
 ```

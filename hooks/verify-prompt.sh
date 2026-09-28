@@ -47,7 +47,7 @@ if [ "$TOOL_NAME" = "Agent" ]; then
         # Emit INFORMATION, not exhortation. What the orchestrator cannot get for
         # free is "what did that agent actually change" — a tool call it would
         # otherwise have to spend. Reminders to run tests and check success
-        # criteria are already binding in rules/maestro-workflow.md (§5b output
+        # criteria are already binding in skills/maestro/WORKFLOW.md (§5b output
         # contract, §Result Integration); repeating them after every single Agent
         # return is noise that trains the reader to skim past this block.
         DIFF_STAT=$(git -C "$PROJECT_DIR" diff --stat 2>/dev/null)

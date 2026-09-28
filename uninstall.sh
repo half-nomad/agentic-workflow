@@ -73,9 +73,9 @@ Left in place, on purpose:
                                 snippet in the project README. Leaving them
                                 behind makes every matching tool call error,
                                 because the hook scripts are now gone.
-  ~/.claude/rules/*             everything except maestro-workflow.md is yours.
-                                install places that one file and nothing else,
-                                so the rest was never installed and is never
-                                removed.
+  ~/.claude/rules/*             yours. Since v5.5.0 install places nothing
+                                there (an older install's maestro-workflow.md
+                                link was removed above like any other link
+                                into this repo), so nothing else is touched.
 EOF
 echo ""

@@ -104,3 +104,24 @@ skills/codex-image/  skills/session-summary/  skills/multi-worktree-safety/
 ```bash
 rm -f ~/.claude/.agentic-workflow-source ~/.claude/.agentic-workflow-manifest
 ```
+
+## v5.4 → v5.5 (2026-09-28)
+
+**업그레이드**: `git pull && ./install.sh` (Windows 는 `git pull` 후 `install.ps1`). **설치 계약이 바뀐다** — `~/.claude/rules/` 로 아무것도 배포하지 않는다.
+
+| 이전 (v5.4) | 신규 (v5.5) |
+|---|---|
+| `rules/maestro-workflow.md` 상주 스텁 — 매 세션 로드 | 삭제. 절대 규칙 넷은 `skills/maestro/SKILL.md` 맨 위. 스킬은 `disable-model-invocation` 이라 설명문도 컨텍스트에 안 실리고 `/maestro` 로만 켜진다 |
+| 에이전트 4개 | `architect` 하나. frontend-engineer · librarian · document-writer 은퇴 — 역할은 general-purpose 에 담아 부른다 |
+| `permission-mode:` 프런트매터 | 삭제. 공식 필드명이 `permissionMode` 라 처음부터 조용히 무시되고 있었다(동작 불변) |
+
+**재설치가 무엇을 치우고 무엇을 남기나** — 은퇴한 경로 4개(`rules/maestro-workflow.md`, `agents/` 3개) 기준:
+
+| 설치 상태 | 재설치 결과 | 할 일 |
+|---|---|---|
+| macOS/Linux, 이 체크아웃을 가리키는 링크 | 끊긴 링크로 제거, `removed dangling …` 출력 | 없음 |
+| macOS/Linux, 링크가 일반 파일로 바뀐 경우(rename 저장 에디터) 또는 다른 체크아웃을 가리키는 링크 | 지우지 않고 `NOTE: … is no longer shipped` 출력 — 지문이 없어 사용자 파일과 구별할 수 없다 | 이 저장소에서 온 것이면 직접 삭제 (예: `rm ~/.claude/rules/maestro-workflow.md`) |
+| Windows, 설치 때 그대로인 사본 | 백업 폴더로 이동, `RETIRED: … -> <backup>` 출력 | 없음 |
+| Windows, 수정한 사본 또는 지문 없는 구형 manifest | 그대로 두고 `RETIRED: … kept in place` 출력 | 확인 후 직접 삭제 |
+
+남은 옛 룰은 매 세션 "상주 스텁" 을 자처하며 로드되고, 새 SKILL.md 는 상주 룰이 없다고 말한다 — 두 진술이 충돌하므로 알림이 나오면 지우는 것이 맞다.

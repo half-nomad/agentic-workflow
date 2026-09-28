@@ -124,7 +124,7 @@ Task(subagent_type: general-purpose, model: sonnet):
 | 5a Impl | worker(s) | 코드 변경 |
 | 5b Self-test | each worker | tests / lint / build 결과 + known_gaps |
 | 5c Full suite | orchestrator | 풀 슈트 실행 + Anomaly Comparator |
-| 5d Review | Reviewer (R1) + Codex#2 (trigger 시) + frontend-engineer (UI 청크) **병렬 분업** | orchestrator 가 통합 + fix-loop |
+| 5d Review | Reviewer (R1) + Codex#2 (trigger 시) + 시각 검증자 (UI 청크 — general-purpose + 채점표) **병렬 분업** | orchestrator 가 통합 + fix-loop |
 | 6 Sanity | 프로젝트 verify-* (있으면) | success criteria (조건부) |
 
 → Simple task 면 "N/A" 한 줄로 대체 가능.

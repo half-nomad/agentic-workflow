@@ -11,7 +11,7 @@
 | 읽기 전용 검토 (기본) | `codex exec -s read-only -C <repo> -o <result.md> - < prompt.md > <log> 2>&1` |
 | 쓰기가 필요한 일 (변형 검사 등) | `-s workspace-write -C <격리 worktree>` — 이 CLI 에는 `--full-auto` 가 없다 |
 | 완료 대기 | 위 명령을 **백그라운드 Bash** 로 실행 → 끝나면 자동 재호출. 폴링하지 않는다 |
-| 세션 id | 로그 머리의 `session id: <uuid>` — 보고에 `codex resume <uuid>` 로 한 줄 남긴다 |
+| 세션 id | **자기 실행 로그** 머리의 `session id: <uuid>` — 보고에 `codex resume <uuid>` 로 한 줄 남긴다. 로그를 남기지 않았다고 `~/.codex/sessions` 의 최근 파일에서 고르지 않는다 — 동시에 도는 다른 세션의 id 를 집는다 |
 | 같은 스레드 후속 | `codex exec resume <uuid> - < followup.md` (지적 해결 확인 등) |
 
 ## 구속 규칙

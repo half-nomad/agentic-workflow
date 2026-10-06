@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Changed — architect 모델 (2026-10-06)
+
+- `agents/architect.md` 를 `model: fable` → `model: opus` + `effort: xhigh` 로. Fable 실패 시 opus 재위임 규칙은 대상이 없어져 삭제하고, 부르는 쪽이 `model` 을 적지 않는다는 규칙으로 바꿨다(호출 때 적은 모델이 정의 파일을 덮어쓴다). maestro `SKILL.md`·`reference/rationale.md`·README 의 Fable 언급 갱신. `docs/maestro-v4.5-rules-archive.md` 는 보관본이라 그대로.
+
 ### Fixed — 코덱스 의뢰서 어휘 (2026-10-06)
 
 - `reference/phases.md` mode A 프롬프트 규약과 `agents/architect.md` 의 Codex 대체 프레이밍에서 "공격 표면·적대" 를 "점검 대상·이 구현/설계가 틀렸을 경우를 찾아라" 로. 그 단어들이 코덱스 모더레이션에 걸려 리뷰가 시작되지 않는다. 내부 명칭 `mode A (implementation-attack)` 은 그대로.

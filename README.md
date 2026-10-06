@@ -56,7 +56,7 @@ Maestro 의 Codex 교차검증(Codex#1 / Codex#2)은 프로젝트 디렉터리�
 - **Context Embedding**: 서브에이전트에 스키마/패턴/제약 직접 주입 (5b output contract 요구사항 포함)
 - **알아들을 수 있는 보고**: 내부 용어를 숨기지도 그냥 던지지도 않습니다 — 처음 나올 때 `용어(쉬운 설명)` 로 한 번 풀어 쓰고, 결과는 **만든 것 / 확인한 방법 / 확인 못 한 것 / 할 일** 네 가지로 보고합니다
 - **검증 축이 없으면 완료를 선언하지 않음**: 테스트·린트·빌드가 전부 없는 프로젝트에서 `— 작업 완료 —` 를 출력하지 않습니다. 대신 무엇을 확인하지 못했는지와 직접 확인할 것을 알려줍니다 — 검증 수단 부재는 완료의 사유가 아니라 미완료의 내용이기 때문입니다
-- **에이전트**: architect (fable) — duet 관문1·마에스트로의 설계 검토 + 자동 발견되는 프로젝트 에이전트. 그 밖의 역할은 general-purpose 에 역할·맥락을 담아 부릅니다 (v5.5.0 에서 frontend-engineer·librarian·document-writer 은퇴)
+- **에이전트**: architect (opus, effort xhigh) — duet 관문1·마에스트로의 설계 검토 + 자동 발견되는 프로젝트 에이전트. 그 밖의 역할은 general-purpose 에 역할·맥락을 담아 부릅니다 (v5.5.0 에서 frontend-engineer·librarian·document-writer 은퇴)
 - **State Persistence**: MEMORY.md로 세션 간 컨텍스트 유지
 
 ## 설치 방법
@@ -309,7 +309,7 @@ Maestro 모드의 EXECUTE 단계는 다음 4 sub-step 으로 구성:
 
 | 에이전트 | 모델 | Tools | 용도 |
 |---------|------|-------|------|
-| 🔵 `@architect` | Fable | inherited | 전략적 자문, 아키텍처 결정 — duet 관문1 에 상시 병렬 |
+| 🔵 `@architect` | Opus (effort xhigh) | inherited | 전략적 자문, 아키텍처 결정 — duet 관문1 에 상시 병렬 |
 
 frontend-engineer · librarian · document-writer 는 v5.5.0 에서 은퇴했습니다 — 실사용 약 30일 동안 마에스트로 밖 호출이 거의 없었고, 역할 지침은 general-purpose 에 담아 넘기면 됩니다.
 

@@ -15,7 +15,7 @@ You are now in **Maestro Orchestrator Mode** — Claude 는 **순수 오케스�
 
 ## 절대 규칙 — modifier 로도 끌 수 없는 최소선 넷
 
-> **이 절은 파일 맨 위에 둔다 — 위로 다른 절을 넣지 않는다.** compact 뒤 Claude Code 는 호출된 스킬을 다시 붙이되 스킬마다 앞 5,000 토큰만 남긴다(공식 문서 skills §lifecycle). v5.4.0 까지 이 넷은 상주 룰(`rules/maestro-workflow.md`)이라 compact 로 사라지지 않았다 — 이제 그 자리가 여기다.
+> **이 절은 파일 맨 위에 둔다 — 위로 다른 절을 넣지 않는다.** compact 뒤 Claude Code 는 호출된 스킬을 다시 붙이되 스킬마다 앞 5,000 토큰만 남긴다(공식 문서 skills §lifecycle).
 
 1. **사용자가 계획을 먼저 본다** — 승인받은 검증 단계를 재량으로 건너뛰지 않는다.
 2. **직접 짜지 않고 위임한다** — 오케스트레이터는 코드 파일을 고치지 않는다. 훅이 `Write|Edit` 를 막지만 `sed -i`·`>` redirect·`NotebookEdit` 는 못 잡으므로 그 경로도 금지.
@@ -39,7 +39,7 @@ SID="${CLAUDE_CODE_SESSION_ID:-}"; [[ "$SID" =~ ^[A-Za-z0-9_-]+$ ]] || SID=unkno
 mkdir -p .agentic/maestro && echo "maestro" > ".agentic/maestro/$SID.state"
 ```
 (훅과 같은 id 검사 — 형식이 이상한 값이 경로가 되지 않게 `unknown` 으로 바꾼다.)
-훅은 **파일 이름의 세션에서만** 작동한다 — 같은 프로젝트의 다른 세션은 막지 않고, 동시에 도는 마에스트로 런은 각자 파일을 갖는다. 종전 단일 파일(`.agentic/maestro-mode.state`)은 런이 중단되면 남아서 그 프로젝트의 모든 세션을 막았다(2026-09-09 사용 한도 중단). 이제 훅은 그 파일을 읽지 않는다.
+훅은 **파일 이름의 세션에서만** 작동한다 — 같은 프로젝트의 다른 세션은 막지 않고, 동시에 도는 마에스트로 런은 각자 파일을 갖는다. `.agentic/maestro-mode.state` 가 남아 있어도 훅은 읽지 않으니 무시한다.
 `CLAUDE_CODE_SESSION_ID` 가 비어 있으면(이 값을 주지 않는 오래된 Claude Code) `unknown.state` 가 생기고, 그땐 종전처럼 프로젝트 전체를 막는다 — 사용자에게 한 줄 알린다.
 **다른 세션에서 이어 가려면 `/maestro` 로 다시 들어온다** — 상태는 세션에 묶여 새 세션으로 따라가지 않는다.
 On `— 작업 완료 —` — **또는 런을 중단하거나 다른 모드로 넘어갈 때** — delete this session's file (§On Completion 마지막 줄).
@@ -50,7 +50,7 @@ Detect modifier intent from natural language. No flags needed.
 
 **트리거 표의 정본은 `WORKFLOW.md` §Phase 1 Modifier detection 이다** — 여기에 복제하지 않는다. 두 곳에 적어두면 트리거 집합이 갈리고, 실제로 갈렸던 적이 있다 (`"알아서"`·`"여러"`·`"지속적으로"`·`"second opinion"`·`"main만"` 이 한쪽에만 있었다).
 
-> Fable 은 modifier 가 아니라 **@architect frontmatter 고정** — 상세 `agents/architect.md` §Model.
+> architect 의 모델·깊이(opus, effort xhigh)는 modifier 가 아니라 **@architect frontmatter 고정** — 부를 때 `model` 을 적지 않는다. 상세 `agents/architect.md` §Model.
 
 Modifiers compose. Example: "이거 병렬로 맡길게" → 병렬 위임 선호 + approval skip.
 

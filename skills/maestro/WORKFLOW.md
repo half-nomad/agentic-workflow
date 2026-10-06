@@ -1,7 +1,7 @@
 # Maestro Workflow
 
 > **로딩**: `/maestro` 진입 시 **무조건** 읽는다 (compact 후 요약 잔재는 로드 증거가 아니다).
-> **정본 관계**: `~/.claude/skills/maestro/SKILL.md` 맨 위가 절대 규칙 넷(v5.5.0 부터 상주 룰 없음). 이 파일이 규약의 정본이고, `reference/` 는 방법의 참고 자료다.
+> **정본 관계**: `~/.claude/skills/maestro/SKILL.md` 맨 위가 절대 규칙 넷. 이 파일이 규약의 정본이고, `reference/` 는 방법의 참고 자료다.
 
 **이 문서는 목표와 최소 규약만 담는다.** 절차·템플릿·판정표는 `reference/` 에 있고 **지시가 아니라 참고**다. 방법은 당신이 정한다 — 목표를 더 잘 달성하는 방법이 있으면 그걸 쓰고, 무엇을 왜 다르게 했는지 한 줄 남긴다 (§기록).
 
@@ -94,7 +94,7 @@ complex 또는 `goal` modifier → plan 을 작성해 **사용자 승인**을 �
 
 **Hard rule (사용자 modifier 로도 off 불가)**: task 가 **ownership**(누가 데이터를 보유하나) / **invariants**(불변 조건) / **failure modes**(실패 시 어떻게 되나) 중 하나라도 바꾸면 **`@architect` 호출은 필수**다. 코드 변경이 없으면(md/TODO only) 해당 없음.
 
-**구현이 끝나면 만든 사람이 아닌 관점이 한 번 본다** — 프로젝트 리뷰어가 있으면 그쪽, 없으면 `@code-reviewer` 또는 `@architect`.
+**구현이 끝나면 만든 사람이 아닌 관점이 한 번 본다** — 프로젝트 리뷰어(예: 프로젝트 `@code-reviewer`)가 있으면 그쪽, 없으면 `@architect`.
 
 **교차검증(Codex)**:
 
@@ -109,8 +109,8 @@ complex 또는 `goal` modifier → plan 을 작성해 **사용자 승인**을 �
 
 | 축 | 작업자 = Claude (기본) | 작업자 = Codex |
 |---|---|---|
-| 리뷰 (대조·관례·회귀) | `@code-reviewer` | Codex 새 스레드 (**배경 절 필수**) |
-| 구현 공격 (mode A) | Codex | `@code-reviewer` 또는 `@architect` |
+| 리뷰 (대조·관례·회귀) | 프로젝트 리뷰어, 없으면 `@architect` | Codex 새 스레드 (**배경 절 필수**) |
+| 구현 공격 (mode A) | Codex | 프로젝트 리뷰어 또는 `@architect` |
 
 **외부 사실 확인 (옵션 — modifier 로만 켠다)**
 
@@ -228,4 +228,4 @@ mode A(구현된 코드를 일부러 깨뜨려보는 적대적 검토)에서 2�
 
 ---
 
-*Maestro WORKFLOW v5.2.0 — 목표 4개 + 최소 규약. 방법은 `reference/`(참고). 이전 전량 상주 버전 → `docs/maestro-v4.5-rules-archive.md`. 변경 이력 → `CHANGELOG.md`.*
+*Maestro WORKFLOW v5.5.0 — 목표 4개 + 최소 규약. 방법은 `reference/`(참고). 이전 전량 상주 버전 → `docs/maestro-v4.5-rules-archive.md`. 변경 이력 → `CHANGELOG.md`.*

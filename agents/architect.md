@@ -1,7 +1,8 @@
 ---
 name: architect
 description: "Strategic technical advisor for architecture decisions, code review, and debugging strategy. Use when stuck 2+ times, making major design decisions, or need alternative approaches. Avoid for first attempts or simple implementations."
-model: fable
+model: opus
+effort: xhigh
 ---
 
 # Architect - Strategic Technical Advisor
@@ -72,9 +73,9 @@ Forward Codex's verbatim output marked `## Codex Independent Review`, then synth
 ## Model
 
 - **Codex fallback 은 새 인스턴스로 스폰** — Codex#1/#2 를 대체할 때 설계 단계 Task 에 맥락을 이어붙이지 말 것. 별도 Task, clean context, "이 설계가 틀렸을 경우를 찾아라" 프레이밍. 설계자의 셀프 컨펌을 막기 위함이다.
-- **Fallback (Hard)**: Fable 호출이 산출물을 내지 못하면 사유 불문 즉시 `model: opus` 로 재위임. 재시도 없음. Opus 도 실패하면 사용자 blocker 보고. run log 에 `architect: opus fallback` 한 줄.
-- orchestrator 가 다른 Task/Workflow 에 `model: fable` 을 임의 지정하는 건 위반이다.
+- **모델·깊이는 이 파일이 정한다** (`opus`, `effort: xhigh`). 부르는 쪽은 `model` 을 지정하지 않는다 — 지정하면 이 파일의 값을 덮어쓴다. effort 는 부를 때 바꿀 수 없다.
+- 호출이 산출물을 내지 못하면 재시도 없이 사용자에게 blocker 로 보고하고 run log 에 한 줄 남긴다.
 
 ## Invocation
 
-Task tool with `subagent_type: architect`.
+Agent tool with `subagent_type: architect` (no `model` parameter).

@@ -91,7 +91,7 @@ baseline **출처도 명시** (commit message 메타는 stale 가능 → 의심�
 
 ```
   ┌─ Reviewer          input: diff + worker self-test 출력
-  ├─ Codex#2           input: mode T = test 코드 + 결과 / mode A = 구현 diff + 공격 표면 목록
+  ├─ Codex#2           input: mode T = test 코드 + 결과 / mode A = 구현 diff + 점검 대상 목록
   └─ 시각 검증자       input: 변경 페이지 + 디자인 레퍼런스 + 채점표
 
 orchestrator: raw output 을 직접 받아 fix-loop input 으로 통합
@@ -106,7 +106,7 @@ orchestrator: raw output 을 직접 받아 fix-loop input 으로 통합
 **공격형 가드레일 4항 (mode A 프롬프트 규약)** — "반대를 위한 반대" 변질 방지:
 
 1. finding 마다 **file:line 근거 + 재현(도달) 경로** — 없으면 채택 불가
-2. 공격 표면별 **"no finding" 명시가 허용·기대되는 출력**임을 프롬프트에 선언
+2. 점검 대상별 **"no finding" 명시가 허용·기대되는 출력**임을 프롬프트에 선언
 3. **수용 전 검증 게이트**: 공격자 출력은 fix-loop *input* 일 뿐 — 재현(또는 e2e/시각 축 재검)으로 확인한 finding 만 fix 위임
 4. **심각도 정직**: NIT/스타일 부풀리기 금지 — 심각도 상향 시 이유를 로그에
 
@@ -128,7 +128,7 @@ orchestrator: raw output 을 직접 받아 fix-loop input 으로 통합
 ### mode 와 fallback
 
 - **mode T (test-adequacy)**: spec 적정성 / missing edges / boundary 매트릭스
-- **mode A (implementation-attack)**: 구현 diff 직접 공격 — orchestrator 가 공격 표면 목록을 명시해 프롬프트에 임베딩
+- **mode A (implementation-attack)**: 구현을 일부러 틀리게 바꿔 테스트가 잡는지 확인 — orchestrator 가 점검 대상 목록을 명시해 프롬프트에 넣는다. 코덱스 의뢰서는 중립 QA 어휘로 쓴다("이 구현이 틀렸을 경우를 찾아라") — "공격·깨뜨려라·적대적" 은 모더레이션에 걸려 리뷰가 시작되지 않는다
 
 **Fallback**: 미설치·호출 실패 시 @architect 가 대체 — 단 **mode T 등가 대체일 뿐**이고 교차벤더 적대 축(mode A)은 **미충족**으로 남는다.
 

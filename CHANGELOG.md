@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed — 코덱스 의뢰서 어휘 (2026-10-06)
+
+- `reference/phases.md` mode A 프롬프트 규약과 `agents/architect.md` 의 Codex 대체 프레이밍에서 "공격 표면·적대" 를 "점검 대상·이 구현/설계가 틀렸을 경우를 찾아라" 로. 그 단어들이 코덱스 모더레이션에 걸려 리뷰가 시작되지 않는다. 내부 명칭 `mode A (implementation-attack)` 은 그대로.
+
 ### Changed — v5.5.0 (2026-09-28): 마에스트로 상주 룰 해제 · 에이전트 3개 은퇴 · `permission-mode` 줄 삭제
 
 > **왜**: v5.4.0 으로 마에스트로는 사용자가 이름으로 부를 때만 쓰게 됐는데, 상주 스텁(1,972 바이트)과 스킬 설명문은 여전히 매 세션 실렸다. 부르지 않는 세션에 절대 규칙을 싣는 건 비용뿐이고, 설명문은 스스로 켤 여지를 남겼다. 에이전트 점검(실사용 트랜스크립트 약 30일)에서 frontend-engineer · librarian 은 호출 0, document-writer 는 대부분 마에스트로 런 안에서만 불렸다. 등록 에이전트는 설명문이 매 세션 목록에 실리고, 역할 지침은 general-purpose 에 담아 넘기면 된다.

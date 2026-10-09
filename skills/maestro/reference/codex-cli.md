@@ -1,6 +1,6 @@
 # 참조 — Codex CLI 호출 명령 (유일한 정본)
 
-> **언제 읽나**: 실제로 Codex 를 호출하기 직전. **언제·누가 부르는가는 부르는 쪽 워크플로가 정한다** (maestro `WORKFLOW.md` §Codex Integration · duet `SKILL.md` §관문). 이 파일은 *어떻게* 만 갖는다 — 다른 문서는 명령을 복제하지 않고 여기를 가리킨다. 사본이 여럿이면 한쪽만 고쳐진다.
+> **언제 읽나**: 실제로 Codex 를 호출하기 직전. **언제·누가 부르는가는 부르는 쪽 워크플로가 정한다** (maestro `WORKFLOW.md` §Codex Integration · duet `SKILL.md` §계획 검토 · §구현 검토). 이 파일은 *어떻게* 만 갖는다 — 다른 문서는 명령을 복제하지 않고 여기를 가리킨다. 사본이 여럿이면 한쪽만 고쳐진다.
 
 **2026-09-28 부터 CLI 직접 호출만 쓴다.** openai-codex 플러그인(companion `codex-companion.mjs` · `codex:codex-rescue` 서브에이전트 · `/codex:*` 명령)은 쓰지 않는다 — 플러그인이 빠지자 그 경로를 고정해 둔 문서들이 빈 경로로 멈췄다.
 

@@ -50,7 +50,7 @@ Detect modifier intent from natural language. No flags needed.
 
 **트리거 표의 정본은 `WORKFLOW.md` §Phase 1 Modifier detection 이다** — 여기에 복제하지 않는다. 두 곳에 적어두면 트리거 집합이 갈리고, 실제로 갈렸던 적이 있다 (`"알아서"`·`"여러"`·`"지속적으로"`·`"second opinion"`·`"main만"` 이 한쪽에만 있었다).
 
-> architect 의 모델·깊이(opus, effort xhigh)는 modifier 가 아니라 **@architect frontmatter 고정** — 부를 때 `model` 을 적지 않는다. 상세 `agents/architect.md` §Model.
+> architect 의 모델·깊이(fable, effort high)는 modifier 가 아니라 **@architect frontmatter 고정** — 부를 때 `model` 을 적지 않는다. 상세 `agents/architect.md` §Model.
 
 Modifiers compose. Example: "이거 병렬로 맡길게" → 병렬 위임 선호 + approval skip.
 

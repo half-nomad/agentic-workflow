@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Changed — architect 모델 Fable 5.2 (2026-11-10)
+
+> **왜**: 설계 검토는 런마다 한두 번 불리고 틀리면 그 뒤 작업이 전부 낭비라, 가장 강한 모델을 쓸 자리다. Fable 5.2 는 토큰 단가가 Opus 5.5 의 2배($8/$40 대 $4/$20, 100만 토큰당)지만 호출 수가 적어 전체 비용에서 차지하는 몫이 작다. duet 시험 표의 "architect 가 결정을 바꾼 적이 없으면 축소" 를 판정하기 전에, 모델이 약해서였는지를 가릴 기회이기도 하다.
+
+- `agents/architect.md` 를 `model: opus` + `effort: xhigh` → `model: fable` + `effort: high` 로. 2026-10-06 에 Fable → Opus 로 내렸던 것을 다시 올린다. 깊이를 `high` 로 낮춘 것은 Fable 은 `high` 위의 이득이 고르지 않아 이득이 확인된 곳에만 `xhigh` 를 쓰라는 제공사 안내를 따른 것이다. maestro `SKILL.md` · `reference/rationale.md` · README 동기화.
+- 설치한 쪽에서 Fable 을 쓸 수 없는 요금제나 조직이면 architect 호출이 실패한다. 이때 `agents/architect.md` §Model 의 규칙대로 blocker 로 보고된다. 개인 설정에서 `model: "opus"` 를 적어 부르면 정의 파일의 값을 덮어쓸 수 있다.
+
 ### Changed — duet v0.5.1 (2026-10-09): 클로드의 첫 해석이 검토 전체를 물들이는 것 막기
 
 > **왜**: 클로드가 정리한 글(배경·계획)만 받은 검토자는 클로드의 첫 해석이 틀렸을 때 그 틀 안에서만 본다. 같은 종류가 반복됐다 — 사용자 말을 서브에이전트에 잘못 옮겨 4분 안에 방향이 네 번 바뀜 · 정본 문서의 전제를 확인 없이 계획에 실어 코덱스도 그 전제로 권고 · 계획서가 기존 화면과 어긋났는데 모든 검토가 "계획대로" 만 봄. 창에만 있던 사용자 지시와 자료는 compact 뒤 다시 받아야 했다.

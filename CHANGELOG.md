@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Changed — 코덱스 모델 지정 안내 (2026-11-10)
+
+- `skills/duo/reference/codex-cli.md`: 모델·추론 강도는 기본값을 쓰고, `-m` · `-c model_reasoning_effort` 는 **사용자가 그 호출에 지정했을 때만** 쓴다고 좁혔다 — 이전 문구("바꿀 땐 `-m`")는 Claude 가 스스로 모델을 바꿔도 되는 것으로 읽혔다. `CLAUDE.md` 의 "rules 는 매 세션 전부 로드" 를 `paths` 조건부 규칙에 맞게 고쳤다.
+
 ### Removed — v6.0.0 (2026-11-10): maestro 은퇴 · duo v0.6.0
 
 > **왜**: 세션 기록(2026-09 ~ 11-10)에서 `/maestro` 가 실제로 켜진 세션은 9월 초 4개이고 그 뒤 두 달간 0, 같은 기간 duo(옛 duet)는 34세션이었다. 쓰지 않는데도 maestro 훅 3개는 매 세션 파일 편집 · 서브에이전트 호출 · compact 마다 돌았고, 문서 약 65KB · 훅 715줄 · 훅 시험표 134칸을 함께 고쳐야 했다. 상주 지침은 v5.5.0 에서 이미 빠져 있어 이번 은퇴로 줄어드는 상주 분량은 작다(개인 지침의 몇 줄) — 줄어드는 것은 매 호출의 훅 실행과 관리 비용이다. duo 런 기록에는 maestro 의 기능이 나았을 순간이 3번 있었다(컨텍스트 초과 1 — 위임 중심이 맞았다 · 사용 한도 2 — 구현을 코덱스에 맡기는 자리). 이 둘을 duo 에서 어떻게 대신할지는 따로 정한다.

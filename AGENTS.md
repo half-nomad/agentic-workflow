@@ -15,7 +15,7 @@
 | `skills/duo/` | `~/.claude/skills/` |
 | `agents/*.md` · `hooks/*` | `~/.claude/` 각 디렉터리 |
 
-**`~/.claude/CLAUDE.md` 와 `~/.claude/rules/` 는 건드리지 않는다.** 그 자리는 사용자 것이고, 거기 놓인 것은 매 세션 전부 로드된다. 룰을 다시 배포해야 할 일이 생기면 install 의 allowlist 로 이름을 적어 넣는다 — glob 금지.
+**`~/.claude/CLAUDE.md` 와 `~/.claude/rules/` 는 건드리지 않는다.** 그 자리는 사용자 것이고, 거기 놓인 것은 (`paths` 조건이 없으면) 매 세션 로드된다. 룰을 다시 배포해야 할 일이 생기면 install 의 allowlist 로 이름을 적어 넣는다 — glob 금지.
 
 코딩 규율·보안 정책·메모리 규약처럼 상시 적용되는 것은 **배포 대상이 아니다** — 사람마다 다르고 시한부인 경우도 있다. 각자의 `rules/` 에 둔다.
 

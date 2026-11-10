@@ -25,4 +25,4 @@
 - 기본은 `-s read-only`. 쓰기가 필요하면 **격리 worktree 를 `-C` 로** 주고 `-s workspace-write` — 사용자 작업 트리에 쓰기 권한을 주지 않는다.
 - `-o` 파일은 마지막 메시지만 담는다. 중간 명령·추론은 로그에 있다.
 - **로그 정지 ≠ 멈춤.** 수십 분 안 움직여도 긴 추론 구간일 수 있다. 프로세스가 살아 있으면 기다린다.
-- 모델·추론 강도는 `~/.codex/config.toml` 기본값을 쓴다. 바꿀 땐 `-m <model>` · `-c model_reasoning_effort=<level>`.
+- 모델·추론 강도는 `~/.codex/config.toml` 기본값을 쓴다. 사용자가 그 호출에 지정했을 때만 `-m <model>` · `-c model_reasoning_effort=<level>`.

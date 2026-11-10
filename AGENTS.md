@@ -4,7 +4,7 @@
 # agentic-workflow — 이 저장소에서 작업할 때
 
 > 이 파일은 **이 저장소의 기여자용** 지침이다. 사용자 환경에는 배포되지 않는다.
-> Maestro 의 절대 규칙은 `skills/maestro/SKILL.md` 맨 위, 규약의 정본은 `skills/maestro/WORKFLOW.md` 다. v5.5.0 부터 `~/.claude/rules/` 로는 아무것도 배포하지 않는다.
+> duo 의 규칙은 `skills/duo/SKILL.md`, 코덱스 호출 명령의 정본은 `skills/duo/reference/codex-cli.md` 다. maestro 는 은퇴했다(태그 `maestro-final`, 되살리는 법은 `CHANGELOG.md` v6.0.0).
 
 ---
 
@@ -12,10 +12,10 @@
 
 | 배포 | 대상 |
 |---|---|
-| `skills/maestro/` · `skills/duo/` | `~/.claude/skills/` |
+| `skills/duo/` | `~/.claude/skills/` |
 | `agents/*.md` · `hooks/*` | `~/.claude/` 각 디렉터리 |
 
-**`~/.claude/CLAUDE.md` 와 `~/.claude/rules/` 는 건드리지 않는다.** 그 자리는 사용자 것이고, 거기 놓인 것은 매 세션 전부 로드된다. 마에스트로 규칙은 `/maestro` 런에서만 의미가 있으므로 스킬 안에 둔다(`disable-model-invocation` — 설명문도 컨텍스트에 안 실린다). 룰을 다시 배포해야 할 일이 생기면 install 의 allowlist 로 이름을 적어 넣는다 — glob 금지.
+**`~/.claude/CLAUDE.md` 와 `~/.claude/rules/` 는 건드리지 않는다.** 그 자리는 사용자 것이고, 거기 놓인 것은 매 세션 전부 로드된다. 룰을 다시 배포해야 할 일이 생기면 install 의 allowlist 로 이름을 적어 넣는다 — glob 금지.
 
 코딩 규율·보안 정책·메모리 규약처럼 상시 적용되는 것은 **배포 대상이 아니다** — 사람마다 다르고 시한부인 경우도 있다. 각자의 `rules/` 에 둔다.
 
@@ -25,9 +25,10 @@
 
 **워킹트리가 곧 라이브 설정이다.** 심볼릭 링크 배포라 복사 시절의 완충이 없다.
 
-- `skills/` 나 `hooks/` 를 고치면 **스킬과 가드 훅이 그 즉시 바뀐다** — 실행 중인 모든 세션·모든 프로젝트에서
+- `skills/` 나 `hooks/` 를 고치면 **스킬과 훅이 그 즉시 바뀐다** — 실행 중인 모든 세션·모든 프로젝트에서
 - 브랜치 전환 · `stash` · `reset --hard` 도 마찬가지다. 실험용 브랜치는 별도 클론(또는 worktree)에서
 - 브랜치를 옮긴 뒤에는 `./install.sh` 를 다시 실행한다 — 추가·삭제된 파일의 링크를 맞춘다
+- 훅 파일을 지우거나 이름을 바꿀 때는 그 훅의 `settings.json` 등록을 **먼저** 지운다 — 등록이 남은 채 파일이 사라지면 매칭되는 도구 호출마다 훅이 실패한다
 
 **설치 스크립트는 실제 `$HOME` 에 대고 테스트하지 않는다.**
 
@@ -47,10 +48,9 @@ for f in install.ps1 uninstall.ps1 hooks/*.ps1; do
   pwsh -NoProfile -Command "\$e=\$null;[void][System.Management.Automation.Language.Parser]::ParseFile('$PWD/$f',[ref]\$null,[ref]\$e);if(\$e.Count){'FAIL $f'}"
 done
 python3 -c "import json;json.load(open('settings.json'))"
-bash tests/hooktest.sh hooks    # 훅(maestro-guard · compact-reload · verify-prompt)을 고쳤을 때 — 동작 표 134칸
 ```
 
-`AGENTS.md` 는 **생성물이다** — 손으로 고치지 않는다. `CLAUDE.md` 를 고치면 `hooks/claude-md-sync.sh` 가 재생성한다. 첫 줄의 `<!-- maestro-codex: sync-from-claude -->` 는 Maestro Codex 동기화 opt-in 이며, `diff CLAUDE.md AGENTS.md` 가 헤더 3줄만 보여야 정상이다. 동기화는 `CLAUDE.md` 본문만 복사하고 `~/.claude/rules/` 로딩 지시는 추가하지 않는다. 그 전역 규칙은 Claude Code 전용이며 Codex 지침과 충돌할 수 있다.
+`AGENTS.md` 는 **생성물이다** — 손으로 고치지 않는다. `CLAUDE.md` 를 고치면 `hooks/claude-md-sync.sh` 가 재생성한다. 첫 줄의 `<!-- maestro-codex: sync-from-claude -->` 는 동기화 opt-in 표시이며(이름은 기존 opt-in 을 끊지 않으려고 그대로 둔다), `diff CLAUDE.md AGENTS.md` 가 헤더 3줄만 보여야 정상이다. 동기화는 `CLAUDE.md` 본문만 복사하고 `~/.claude/rules/` 로딩 지시는 추가하지 않는다. 그 전역 규칙은 Claude Code 전용이며 Codex 지침과 충돌할 수 있다.
 
 ---
 
@@ -63,7 +63,7 @@ bash tests/hooktest.sh hooks    # 훅(maestro-guard · compact-reload · verify-
 3. 보안·유출 소지
 4. 로컬 전용 민감 정보
 
-판단축은 관리 편의가 아니라 **대상 독자**다. 이 저장소는 *maestro 라는 오케스트레이션 워크플로우* 하나를 배포한다.
+판단축은 관리 편의가 아니라 **대상 독자**다. 이 저장소는 *duo 라는 코딩 워크플로* 하나를 배포한다.
 
 ---
 

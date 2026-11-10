@@ -2,7 +2,7 @@
 
 **Date**: 2026-08-01 (수집)
 **Purpose**: 이전 버전에서 올라오는 사용자를 위한 변경 대응표. 원래 `README.md` 에 있었으나, README 는 처음 설치하는 사람을 위한 문서라 여기로 옮겼다.
-**Status**: 각 절은 해당 버전 전환 시점의 기록이며 고쳐 쓰지 않는다. 현재 동작은 `skills/maestro/WORKFLOW.md` 와 `README.md` 가 정본.
+**Status**: 각 절은 해당 버전 전환 시점의 기록이며 고쳐 쓰지 않는다. 현재 동작은 `skills/duo/SKILL.md` 와 `README.md` 가 정본 (maestro 는 v6.0.0 에서 은퇴 — 태그 `maestro-final`).
 
 ---
 
@@ -137,3 +137,29 @@ rm -f ~/.claude/.agentic-workflow-source ~/.claude/.agentic-workflow-manifest
 | 런 기록 `.agentic/duet-runs.md` | 그대로 — 기존 기록과 이어 쓴다 |
 
 `git pull` 뒤 `./install.sh`(Windows 는 `install.ps1`)를 다시 실행한다. 옛 `~/.claude/skills/duet` 은 위 v5.4 → v5.5 표와 같은 방식으로 치워진다(macOS/Linux 는 끊긴 링크 제거, Windows 는 그대로인 사본을 백업 폴더로). 개인 룰이나 CLAUDE.md 에 `/duet` 을 적어 두었다면 `/duo` 로 고친다.
+
+## v5.5 → v6.0 (2026-11-10) — maestro 은퇴
+
+| 이전 | 이후 |
+|---|---|
+| `/maestro [task]` · `skills/maestro/` | 없음 — duo(`/duo`)가 기본이자 유일한 워크플로 |
+| 훅 `maestro-guard` · `verify-prompt` · `maestro-compact-reload` (`.sh` · `.ps1`) | 없음 — `claude-md-sync` 하나만 남고 등록은 선택 |
+| 코덱스 명령 정본 `skills/maestro/reference/codex-cli.md` | `skills/duo/reference/codex-cli.md` |
+| `tests/hooktest.sh` | 없음 (시험 대상 훅이 모두 은퇴) |
+
+**순서가 중요하다 — 훅 등록을 먼저 지운다.** v5.5 의 compact 훅 이전과 달리, 이번에는 스크립트 자체가 사라진다. `settings.json` 에 등록이 남은 채 `git pull` 하면 등록된 명령이 없는 파일을 부르게 되어(종료 코드 127) 매칭되는 도구 호출 — 파일 편집 · 서브에이전트 호출 · compact — 마다 훅 오류가 난다.
+
+1. `~/.claude/settings.json` 의 `hooks` 에서 `command` 에 `maestro-guard` · `verify-prompt` · `maestro-compact-reload` 가 들어간 **항목만** 지운다. 같은 matcher 아래 다른 훅이 있으면 그 훅은 남긴다. 비어버린 배열은 함께 지운다. 프로젝트 `.claude/settings.json` 에 같은 등록을 해 두었다면 거기서도 지운다.
+2. `git pull` 후 `./install.sh`(Windows 는 `install.ps1`).
+3. 열려 있는 Claude Code 세션을 모두 재시작한다 — 세션이 시작할 때 읽은 훅 등록을 계속 쓸 수 있다.
+4. 개인 스킬·에이전트·CLAUDE.md 가 `skills/maestro/reference/codex-cli.md` 를 가리키고 있으면 `skills/duo/reference/codex-cli.md` 로 고친다. `/maestro` 를 언급하는 개인 지시도 정리한다.
+
+**재설치가 무엇을 치우나** — v5.4 → v5.5 표와 같은 규칙이다: macOS/Linux 에서 이 체크아웃을 가리키는 링크는 끊긴 링크로 제거되고, 일반 파일로 바뀌었거나 다른 체크아웃을 가리키는 것은 지우지 않고 `NOTE: … (retired in v6.0.0)` 로 알린다. Windows 는 설치 때 그대로인 사본을 백업 폴더로 옮기고, 수정한 사본은 남기고 알린다.
+
+**되살리는 법** — 마지막 상태는 git 태그 `maestro-final` 이다.
+
+1. `git checkout maestro-final -- skills/maestro hooks/maestro-guard.sh hooks/maestro-guard.ps1 hooks/maestro-compact-reload.sh hooks/maestro-compact-reload.ps1 hooks/verify-prompt.sh hooks/verify-prompt.ps1 tests/hooktest.sh`
+2. `skills/maestro/reference/codex-cli.md` 는 복원하지 말거나 복원 후 지운다 — 정본은 `skills/duo/reference/codex-cli.md` 하나로 둔다. maestro 문서가 옛 경로를 가리키면 새 경로로 고친다.
+3. `agents/architect.md` 의 maestro 전용 줄(Phase 3 설계 위임 · Phase 5d 리뷰 대체 · fix-loop escalation)은 `git diff maestro-final -- agents/architect.md` 를 보고 필요한 것만 되돌린다.
+4. `git show maestro-final:settings.json` 의 `hooks` 에서 세 훅의 등록 블록**만** `~/.claude/settings.json` 에 이어붙인다 — 파일을 통째로 덮어쓰면 그 뒤의 개인 변경까지 되돌아간다.
+5. `./install.sh` 후 Claude Code 재시작.

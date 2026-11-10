@@ -2,7 +2,7 @@
 
 **Date**: 2026-02-18
 **Purpose**: v1.8 시점의 시스템 전체 요약 — 동기, 패턴 선택 근거, 그때까지의 작업 내용.
-**Status**: 그 시점 기록. 현재 동작은 `skills/maestro/WORKFLOW.md`(목표·강제 규약) · `skills/maestro/SKILL.md`(절대 규칙 — v5.5.0 부터 상주 룰 없음) · `README.md`(사용법) 가 정본.
+**Status**: 그 시점 기록. maestro 는 v6.0.0 에서 은퇴했다 — 마지막 상태는 git 태그 `maestro-final`, 현재 배포물은 `skills/duo/` 와 `README.md` 가 정본.
 
 > Claude Code를 위한 패턴 기반 오케스트레이션 시스템
 

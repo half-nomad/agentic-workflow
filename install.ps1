@@ -154,9 +154,7 @@ foreach ($sub in @('agents', 'hooks')) {
     }
 }
 
-# rules\ ships nothing since v5.5.0 - maestro's absolute rules moved into
-# skills\maestro\SKILL.md, loaded only when the user types /maestro, and every
-# file in ~\.claude\rules\ is yours. The copy an older install left there is
+# rules\ ships nothing since v5.5.0 - every file in ~\.claude\rules\ is yours. The copy an older install left there is
 # handled by the retired-paths pass below: moved to the backup root when it is
 # unmodified, reported and kept when it is not. If a rule ever has to ship
 # again, list it by name here - never glob this directory.

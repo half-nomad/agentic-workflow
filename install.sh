@@ -164,10 +164,8 @@ for d in agents hooks; do
 done
 
 # rules/ ships nothing since v5.5.0. Every file in ~/.claude/rules/ loads into
-# every session, and maestro's absolute rules only matter inside a /maestro run,
-# so they moved into skills/maestro/SKILL.md (loaded when the user types
-# /maestro). ~/.claude/rules/ is wholly yours: your own global.md, personal.md
-# and so on live there and this repo never claims them. If a rule ever has to
+# every session, so ~/.claude/rules/ is wholly yours: your own global.md,
+# personal.md and so on live there and this repo never claims them. If a rule ever has to
 # ship again, list it by name here — never glob this directory.
 
 # skills/ stays a glob: unlike rules/, whatever sits in this repo's skills/ is
@@ -196,13 +194,19 @@ sweep_dangling "$CLAUDE_HOME" 2
 # The sweep only removes a link that still points at this checkout. A retired
 # file that was turned into a plain file (an editor that saves by rename does
 # that) keeps loading — the rule into every session, an agent into every agent
-# list — and without a fingerprint it cannot be told apart from a file of yours.
-# So say so instead of deleting it.
-for retired in rules/maestro-workflow.md agents/document-writer.md \
-               agents/frontend-engineer.md agents/librarian.md; do
+# list, a skill into every skill list, a hook wherever settings.json still
+# registers it — and without a fingerprint it cannot be told apart from a file
+# of yours. So say so instead of deleting it. Each entry is path:version.
+for entry in rules/maestro-workflow.md:v5.5.0 agents/document-writer.md:v5.5.0 \
+             agents/frontend-engineer.md:v5.5.0 agents/librarian.md:v5.5.0 \
+             skills/maestro:v6.0.0 \
+             hooks/maestro-guard.sh:v6.0.0 hooks/maestro-guard.ps1:v6.0.0 \
+             hooks/maestro-compact-reload.sh:v6.0.0 hooks/maestro-compact-reload.ps1:v6.0.0 \
+             hooks/verify-prompt.sh:v6.0.0 hooks/verify-prompt.ps1:v6.0.0; do
+    retired="${entry%:*}"; version="${entry##*:}"
     [ -e "$CLAUDE_HOME/$retired" ] || [ -L "$CLAUDE_HOME/$retired" ] || continue
-    printf '\n  NOTE: ~/.claude/%s is no longer shipped (retired in v5.5.0) but is still there.\n' "$retired"
-    printf '        If this repo put it there, delete it — it still loads.\n'
+    printf '\n  NOTE: ~/.claude/%s is no longer shipped (retired in %s) but is still there.\n' "$retired" "$version"
+    printf '        If this repo put it there, delete it (and, for a hook, its settings.json entry).\n'
 done
 
 if [ -d "$BACKUP_ROOT" ]; then
@@ -214,11 +218,15 @@ cat <<'EOF'
 
 Done. Restart Claude Code to pick up the changes.
 
-ONE-TIME STEP — hooks are not registered automatically.
+OPTIONAL — the claude-md-sync hook is not registered automatically.
   settings.json is yours: it holds personal keys and interleaves your own
-  security hooks with this repo's, so no script writes to it. Copy the
-  "hooks" block from the project README into ~/.claude/settings.json once.
-  Nothing else about it ever needs to change.
+  security hooks with this repo's, so no script writes to it. If you want
+  CLAUDE.md -> AGENTS.md sync, copy the "hooks" block from the project README
+  into ~/.claude/settings.json once.
+
+UPGRADING FROM v5.x — maestro is retired. Remove the maestro-guard,
+  verify-prompt and maestro-compact-reload entries from settings.json, then
+  restart Claude Code: those scripts are gone. See docs/migrations.md.
 
 To update:
   git -C REPO_PATH pull && REPO_PATH/install.sh

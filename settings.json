@@ -11,28 +11,6 @@
     ]
   },
   "hooks": {
-    "PreToolUse": [
-      {
-        "matcher": "Write|Edit|MultiEdit",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "sh -c 'if command -v powershell >/dev/null 2>&1; then powershell -NoProfile -ExecutionPolicy Bypass -File \"$HOME/.claude/hooks/maestro-guard.ps1\"; else bash \"$HOME/.claude/hooks/maestro-guard.sh\"; fi'"
-          }
-        ]
-      }
-    ],
-    "SessionStart": [
-      {
-        "matcher": "compact",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "sh -c 'if command -v powershell >/dev/null 2>&1; then powershell -NoProfile -ExecutionPolicy Bypass -File \"$HOME/.claude/hooks/maestro-compact-reload.ps1\"; else bash \"$HOME/.claude/hooks/maestro-compact-reload.sh\"; fi'"
-          }
-        ]
-      }
-    ],
     "PostToolUse": [
       {
         "matcher": "Edit|Write|MultiEdit",
@@ -40,15 +18,6 @@
           {
             "type": "command",
             "command": "sh -c 'if command -v powershell >/dev/null 2>&1; then powershell -NoProfile -ExecutionPolicy Bypass -File \"$HOME/.claude/hooks/claude-md-sync.ps1\"; else bash \"$HOME/.claude/hooks/claude-md-sync.sh\"; fi'"
-          }
-        ]
-      },
-      {
-        "matcher": "Agent",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "sh -c 'if command -v powershell >/dev/null 2>&1; then powershell -NoProfile -ExecutionPolicy Bypass -File \"$HOME/.claude/hooks/verify-prompt.ps1\"; else bash \"$HOME/.claude/hooks/verify-prompt.sh\"; fi'"
           }
         ]
       }

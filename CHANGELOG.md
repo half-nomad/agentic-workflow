@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Removed — v6.0.0 (2026-11-10): maestro 은퇴 · duo v0.6.0
+
+> **왜**: 세션 기록(2026-09 ~ 11-10)에서 `/maestro` 가 실제로 켜진 세션은 9월 초 4개이고 그 뒤 두 달간 0, 같은 기간 duo(옛 duet)는 34세션이었다. 쓰지 않는데도 maestro 훅 3개는 매 세션 파일 편집 · 서브에이전트 호출 · compact 마다 돌았고, 문서 약 65KB · 훅 715줄 · 훅 시험표 134칸을 함께 고쳐야 했다. 상주 지침은 v5.5.0 에서 이미 빠져 있어 이번 은퇴로 줄어드는 상주 분량은 작다(개인 지침의 몇 줄) — 줄어드는 것은 매 호출의 훅 실행과 관리 비용이다. duo 런 기록에는 maestro 의 기능이 나았을 순간이 3번 있었다(컨텍스트 초과 1 — 위임 중심이 맞았다 · 사용 한도 2 — 구현을 코덱스에 맡기는 자리). 이 둘을 duo 에서 어떻게 대신할지는 따로 정한다.
+
+- **지움**: `skills/maestro/`(SKILL · WORKFLOW · reference 5 · rubrics 2) · `hooks/maestro-guard.*` · `hooks/maestro-compact-reload.*` · `hooks/verify-prompt.*` · `tests/hooktest.sh`(시험 대상이 세 훅뿐) · `.codex/hooks.json`(레포에 없는 `.codex/hooks/` 를 가리키던 코덱스 쪽 등록). 템플릿 `settings.json` · 프로젝트 `.claude/settings.json` 의 등록도 지웠다.
+- **옮김**: 코덱스 명령 정본 `skills/maestro/reference/codex-cli.md` → `skills/duo/reference/codex-cli.md`. duo · architect 가 이 경로를 읽는다.
+- **남김**: `hooks/claude-md-sync.*`(CLAUDE.md → AGENTS.md 동기화 — maestro 기능이 아님, 등록은 선택. opt-in 표시 `maestro-codex: sync-from-claude` 는 기존 opt-in 을 끊지 않으려고 그대로) · Windows 설치 기록 `.maestro-manifest.txt` · `.maestro-backup-*` 이름(바꾸면 기존 설치가 기록을 못 찾는다) · `docs/` 의 maestro 설계 기록(역사).
+- **duo v0.6.0**: maestro 관계 단락 → 은퇴 사실과 태그 · `/maestro` 라우팅 줄과 `"마에스트로로"` modifier 삭제 · 런 기록의 `마에스트로·Workflow 였다면` 칸은 유지하되 "은퇴한 maestro 를 되살릴 후보" 로.
+- **architect**: maestro 전용 역할(Phase 3 설계 위임 · Phase 5d 리뷰 대체 · Codex#1/#2 대체) 정리. **Plan-Stage 문단은 지우지 않고 "계획 검토 · 읽기 전용 의뢰" 로 일반화** — duo 의뢰서는 사용자 원 요청 원문을 그대로 싣는데, 그 안의 명령문("커밋 푸시 해줘" 등)을 실행 지시로 읽지 않게 하는 유일한 문단이다.
+- **install.sh**: 은퇴 알림 목록에 maestro 스킬과 훅 6개 추가, 알림 문구의 고정 버전 "(retired in v5.5.0)" 을 경로별 버전으로. 끝 안내에 v5.x 에서 올라오는 사람의 훅 등록 정리를 추가. README 를 duo 중심으로 다시 썼다.
+- **보존과 되살리기**: 마지막 상태는 git 태그 `maestro-final`. 되살리는 순서(파일 복원 · `codex-cli.md` 정본 하나 유지 · 훅 등록 블록만 병합 · 재설치·재시작) → `docs/migrations.md` §v5.5 → v6.0.
+- **기존 설치자는 훅 등록을 먼저 지운다** — 등록이 남은 채 스크립트가 사라지면 매칭되는 도구 호출마다 훅이 실패한다(종료 코드 127). 순서 → `docs/migrations.md` §v5.5 → v6.0.
+
 ### Changed — duet → duo v0.5.2 (2026-11-10): 이름만 바꿈
 
 > **왜**: Anthropic 이 2026-10-21 에 같은 이름의 에이전트 제품 Claude Duet 을 냈다. 이 스킬이 먼저 쓴 이름이지만, Claude Code 용 공개 배포물이 공식 제품과 같은 이름이면 공식 확장으로 읽히고 검색에서도 섞인다.

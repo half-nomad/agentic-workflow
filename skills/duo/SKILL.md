@@ -1,10 +1,10 @@
 ---
-name: duet
-description: "Default workflow for non-trivial work: Claude implements natively; Codex (CLI) runs a plan review (critique + counter-proposal) and an implementation review (read review + mutation testing), and @architect reviews the plan in parallel. Use it when there is an uncertain design choice, a module boundary/state/public-contract change, real value in an independent review, costly rework, or hard-to-reverse work (security, payments, production data, migrations, deletion, deploy, public API, external sends — added rules apply). Claude decides on its own: announce in one line (\"duet 으로 진행합니다 — <reason>\") and start; do not ask first. The user can stop it. Also runs on /duet."
+name: duo
+description: "Default workflow for non-trivial work: Claude implements natively; Codex (CLI) runs a plan review (critique + counter-proposal) and an implementation review (read review + mutation testing), and @architect reviews the plan in parallel. Use it when there is an uncertain design choice, a module boundary/state/public-contract change, real value in an independent review, costly rework, or hard-to-reverse work (security, payments, production data, migrations, deletion, deploy, public API, external sends — added rules apply). Claude decides on its own: announce in one line (\"duo 로 진행합니다 — <reason>\") and start; do not ask first. The user can stop it. Also runs on /duo."
 argument-hint: "[task description]"
 ---
 
-# Duet Mode
+# Duo Mode
 
 $ARGUMENTS
 
@@ -17,7 +17,7 @@ $ARGUMENTS
 
 > **마에스트로와의 관계 (v0.4.0)**: 되돌리기 어려운 작업도 이 모드가 받는다(§되돌리기 어려운 작업).
 > `/maestro` 는 **사용자가 이름으로 부를 때만** 쓰고, 클로드는 제안하지 않는다. 근거: 실사용 프로젝트에서
-> 마에스트로 세션의 출력 토큰 중앙값이 duet 의 약 2.2배였고(작업 난이도는 통제 안 된 비교), 오케스트레이터가
+> 마에스트로 세션의 출력 토큰 중앙값이 duo 의 약 2.2배였고(작업 난이도는 통제 안 된 비교), 오케스트레이터가
 > 전달자가 되면서 중간 전달 손실이 4회 기록됐다. 값을 한 것 — 다른 눈 — 은 이 모드에 그대로 있다.
 
 ---
@@ -26,15 +26,17 @@ $ARGUMENTS
 
 아래 §라우팅 기준에 맞으면 **묻지 않고 켠다.** 한 줄로 알리고 바로 시작한다:
 
-> *"duet 으로 진행합니다 — 설계 갈래가 둘이라 계획 검토를 붙입니다."*
+> *"duo 로 진행합니다 — 설계 갈래가 둘이라 계획 검토를 붙입니다."*
 
-사용자가 멈추라고 하면 멈춘다. `/duet` 을 직접 쳐도 켜진다.
+사용자가 멈추라고 하면 멈춘다. `/duo` 를 직접 쳐도 켜진다.
 
 **왜 묻지 않나**: 사용자는 작업이 얼마나 복잡한지 미리 판단할 정보가 없다. 물으면 돌아오는 답은 독립 판정이 아니라 클로드 판단을 믿는다는 표시라, 수락 기록이 판단의 정확도를 재지 못한다.
 그리고 "필요하면 알아서 부른다" 는 규칙이 없을 때 일어나지 않았다 — 워크플로 밖에서 클로드가 스스로 architect·코덱스를 부른 적이 없다. 그래서 켜는 판단은 클로드에게, 켠 뒤의 검토는 약속으로 둔다.
 
 **안 켜기로 판단했을 때도 경계선이면 한 줄 남긴다** — *"이건 답이 하나로 정해져 있어 그냥 하겠습니다"* 정도면 된다.
 켠 것만 기록에 남으면 **안 켜서 놓친 경우가 통째로 안 보인다.**
+
+**런 기록 파일 이름**: 이 스킬의 옛 이름이 `duet` 이라 기록 파일은 `.agentic/duet-runs.md` 다 — 같은 워크플로의 기록을 이어 쓰려고 이름을 그대로 둔다. 파일 안의 "duet" 도 이 스킬이다.
 
 **발동 기록**: 켜거나 경계선에서 안 켰을 때마다 `.agentic/duet-runs.md` 의 `## 발동 기록` 절에 한 줄 — `날짜 · 작업 · 판단(켬 / 안 켬) · 결과`.
 `결과` 는 작업이 끝날 때 채운다: `맞음` · `켰는데 불필요` (검토가 아무 결정도 바꾸지 못했고 작업도 단순했다) · `안 켰는데 필요` (나중에 드러난 결함이 검토 대상이었다) · `사용자가 멈춤`.
@@ -49,7 +51,7 @@ $ARGUMENTS
 고위험이다. 세는 것으로는 위험이 안 잡힌다 — v5.0 이 *"파일 3개면 무조건 complex"* 판정표를
 오분류 유도라는 이유로 이미 삭제했는데, 그 실수를 다시 하지 않는다.
 
-**`/duet` 기준 — 하나라도 해당하면:**
+**`/duo` 기준 — 하나라도 해당하면:**
 
 - **불확실한 설계 판단이 있다** — 갈래가 둘 이상이고 어느 쪽이 맞는지 코드만 봐서는 안 갈린다
 - **모듈 경계 · 상태 · 공개 계약에 영향** — 남이 의존하는 모양이 바뀐다
@@ -186,7 +188,7 @@ $ARGUMENTS
 
 대상: **보안 · 결제 · 운영 데이터 · 마이그레이션 · 데이터 삭제/이동 · 배포 · 공개 API · 외부 발송.**
 이 작업이면 아래를 더한다. **클로드 판단으로 끄지 못한다.** `"코덱스 없이"` 는 어디서나 **계획 검토의 코덱스만** 끈다 —
-구현 검토(읽기 검토 · 변형 검사 · 해결 확인)의 코덱스는 남는다. 코덱스를 아예 빼고 싶다는 뜻이면 duet 이 아니라 기본 모드이므로, 그렇게 확인하고 진행한다.
+구현 검토(읽기 검토 · 변형 검사 · 해결 확인)의 코덱스는 남는다. 코덱스를 아예 빼고 싶다는 뜻이면 duo 가 아니라 기본 모드이므로, 그렇게 확인하고 진행한다.
 
 1. **A-mut 필수 — 변형할 구현과 자동 단언이 있을 때.** 격리는 코드 트리만이 아니라 **DB · 파일 저장소 · 외부 서비스**까지 확인한다
    (테스트 설정이 운영 자원이나 실제 발송에 닿지 않는가). 변형할 대상이 없는 작업(예: 메일 발송)은
@@ -317,5 +319,5 @@ $ARGUMENTS
 
 ---
 
-*duet v0.5.1 — pilot (클로드가 정하고 알리고 진행). 계획 검토는 계획 밖(원 요청 대조 · 기존 대조 · 계획에 없는 영향)까지 · 계획서에 사용자가 준 것을 남김 · 서브에이전트 보고는 직접 재확인 · 추가 서브에이전트는 작업마다 판단·기록. 계획 검토에 `@architect` 상시 병렬 · 되돌리기 어려운 작업 수용 · 코덱스는 CLI 로만.
-마에스트로는 사용자가 이름으로 부를 때만 동작한다. 이 모드를 지우려면 `skills/duet/` 삭제 후 `./install.sh`.*
+*duo v0.5.2 — pilot (클로드가 정하고 알리고 진행). 계획 검토는 계획 밖(원 요청 대조 · 기존 대조 · 계획에 없는 영향)까지 · 계획서에 사용자가 준 것을 남김 · 서브에이전트 보고는 직접 재확인 · 추가 서브에이전트는 작업마다 판단·기록. 계획 검토에 `@architect` 상시 병렬 · 되돌리기 어려운 작업 수용 · 코덱스는 CLI 로만.
+마에스트로는 사용자가 이름으로 부를 때만 동작한다. 이 모드를 지우려면 `skills/duo/` 삭제 후 `./install.sh`.*

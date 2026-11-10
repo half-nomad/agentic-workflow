@@ -62,7 +62,7 @@ When invoked from Maestro Phase 3 Plan Mode — the prompt says *plan-stage* / *
 
 For **high-risk decisions** or **ambiguous reviews**, you may call Codex directly as an independent second opinion — through the Codex CLI via Bash (`codex exec -s read-only ... - < prompt`), **not** the openai-codex plugin or a `codex:*` subagent (nesting a subagent inside a subagent makes failures silent to the orchestrator). Pass the prompt on stdin only. Command reference — the single source: `~/.claude/skills/maestro/reference/codex-cli.md`.
 
-**Do not call Codex when the caller says not to** — `/duet` gate 1 already runs Codex in parallel with you, and a second call from inside is the same review twice.
+**Do not call Codex when the caller says not to** — `/duo` gate 1 already runs Codex in parallel with you, and a second call from inside is the same review twice.
 
 **Use it when**: the decision affects 5+ files or core systems · trade-offs conflict with no clear winner · security- or performance-critical review · cross-domain expertise needed · you were called in for fix-loop escalation.
 

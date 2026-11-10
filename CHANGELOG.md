@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Changed — duet → duo v0.5.2 (2026-11-10): 이름만 바꿈
+
+> **왜**: Anthropic 이 2026-10-21 에 같은 이름의 에이전트 제품 Claude Duet 을 냈다. 이 스킬이 먼저 쓴 이름이지만, Claude Code 용 공개 배포물이 공식 제품과 같은 이름이면 공식 확장으로 읽히고 검색에서도 섞인다.
+
+- `skills/duet/` → `skills/duo/`, 명령 `/duet` → `/duo`, 발동 알림 문구 "duo 로 진행합니다". 동작은 그대로.
+- 런 기록 파일 `.agentic/duet-runs.md` 는 이름을 유지한다 — 여러 프로젝트에 쌓인 기록과 이어 쓰기 위해서다.
+- README · CLAUDE.md · `agents/architect.md` · `reference/codex-cli.md` 의 표기 동기화. 이전 안내 → `docs/migrations.md` §duet → duo. 과거 변경 이력의 `duet` 표기는 그 시점 기록이라 그대로 둔다.
+
 ### Changed — architect 모델 Fable 5.2 (2026-11-10)
 
 > **왜**: 설계 검토는 런마다 한두 번 불리고 틀리면 그 뒤 작업이 전부 낭비라, 가장 강한 모델을 쓸 자리다. Fable 5.2 는 토큰 단가가 Opus 5.5 의 2배($8/$40 대 $4/$20, 100만 토큰당)지만 호출 수가 적어 전체 비용에서 차지하는 몫이 작다. duet 시험 표의 "architect 가 결정을 바꾼 적이 없으면 축소" 를 판정하기 전에, 모델이 약해서였는지를 가릴 기회이기도 하다.

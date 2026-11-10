@@ -128,3 +128,12 @@ rm -f ~/.claude/.agentic-workflow-source ~/.claude/.agentic-workflow-manifest
 **훅 등록은 손으로 옮긴다** — `settings.json` 은 어떤 스크립트도 쓰지 않는다. `hooks` 의 `PostCompact` 항목 중 `maestro-compact-reload` 를 부르는 것을 지우고, README §훅 등록의 `SessionStart` 블록(matcher `compact`)을 이어붙인다. 옮기지 않아도 오류는 없다 — 새 스크립트는 `source` 가 `compact` 가 아니면 조용히 끝나므로 옛 등록 아래선 아무것도 하지 않는다(옛 등록으로는 원래도 효과가 없었다).
 
 남은 옛 룰은 매 세션 "상주 스텁" 을 자처하며 로드되고, 새 SKILL.md 는 상주 룰이 없다고 말한다 — 두 진술이 충돌하므로 알림이 나오면 지우는 것이 맞다.
+
+## duet → duo (2026-11-10)
+
+| 이전 | 이후 |
+|---|---|
+| `/duet [task]` · `skills/duet/` | `/duo [task]` · `skills/duo/` |
+| 런 기록 `.agentic/duet-runs.md` | 그대로 — 기존 기록과 이어 쓴다 |
+
+`git pull` 뒤 `./install.sh`(Windows 는 `install.ps1`)를 다시 실행한다. 옛 `~/.claude/skills/duet` 은 위 v5.4 → v5.5 표와 같은 방식으로 치워진다(macOS/Linux 는 끊긴 링크 제거, Windows 는 그대로인 사본을 백업 폴더로). 개인 룰이나 CLAUDE.md 에 `/duet` 을 적어 두었다면 `/duo` 로 고친다.

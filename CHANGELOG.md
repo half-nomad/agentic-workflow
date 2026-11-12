@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Changed — 런 기록 파일 이름 `duo-runs.md` (2026-11-12)
+
+> **왜**: 스킬 이름을 duo 로 바꾼 뒤에도 기록 파일만 `duet-runs.md` 로 남아, 같은 작업의 파일 이름이 섞였다(계획서는 `duo-plan-…`, 기록은 `duet-runs`).
+
+- `skills/duo/SKILL.md`: 런 기록 파일을 `.agentic/duo-runs.md` 로. 옛 `duet-runs.md` 만 있으면 새로 만들지 말고 이름을 바꿔 이어 쓰라고 안내한다 — 기록이 두 파일로 갈라지지 않게. 이전 안내 → `docs/migrations.md` §런 기록 파일 이름.
+
 ### Changed — 코덱스 모델 지정 안내 (2026-11-10)
 
 - `skills/duo/reference/codex-cli.md`: 모델·추론 강도는 기본값을 쓰고, `-m` · `-c model_reasoning_effort` 는 **사용자가 그 호출에 지정했을 때만** 쓴다고 좁혔다 — 이전 문구("바꿀 땐 `-m`")는 Claude 가 스스로 모델을 바꿔도 되는 것으로 읽혔다. `CLAUDE.md` 의 "rules 는 매 세션 전부 로드" 를 `paths` 조건부 규칙에 맞게 고쳤다.

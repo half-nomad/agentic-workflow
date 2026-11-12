@@ -138,6 +138,14 @@ rm -f ~/.claude/.agentic-workflow-source ~/.claude/.agentic-workflow-manifest
 
 `git pull` 뒤 `./install.sh`(Windows 는 `install.ps1`)를 다시 실행한다. 옛 `~/.claude/skills/duet` 은 위 v5.4 → v5.5 표와 같은 방식으로 치워진다(macOS/Linux 는 끊긴 링크 제거, Windows 는 그대로인 사본을 백업 폴더로). 개인 룰이나 CLAUDE.md 에 `/duet` 을 적어 두었다면 `/duo` 로 고친다.
 
+## 런 기록 파일 이름 (2026-11-12)
+
+| 이전 | 이후 |
+|---|---|
+| `.agentic/duet-runs.md` | `.agentic/duo-runs.md` |
+
+각 프로젝트에서 `mv .agentic/duet-runs.md .agentic/duo-runs.md`. 안 옮겨도 duo 가 다음 런에서 옛 파일을 보고 이름을 바꿔 이어 쓴다. 위 duet → duo 표의 "그대로" 는 그 시점의 결정이다.
+
 ## v5.5 → v6.0 (2026-11-10) — maestro 은퇴
 
 | 이전 | 이후 |
